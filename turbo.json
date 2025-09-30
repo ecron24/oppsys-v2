@@ -8,6 +8,9 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
+    "typegen": {
+      "dependsOn": ["^typegen"]
+    },
     "dev": {
       "persistent": true,
       "cache": false

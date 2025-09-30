@@ -6,6 +6,7 @@
   "scripts": {
     "check-types": "pnpm turbo check-types",
     "lint": "pnpm turbo lint",
+    "typegen": "pnpm turbo typegen",
     "format": "prettier . --write",
     "prepare": "husky"
   },

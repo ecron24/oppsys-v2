@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "typegen": "supabase gen types typescript --project-id zwvzkmundpcoidwanoau > src/database.types.ts"
   },
   "author": "",
   "license": "ISC",

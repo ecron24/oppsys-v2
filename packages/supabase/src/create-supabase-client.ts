@@ -3,6 +3,7 @@ import {
   SupabaseClient,
   type SupabaseClientOptions,
 } from "@supabase/supabase-js";
+import type { Database, DefaultSchema } from "./database.types";
 
 export function createSupabaseClient(
   supabaseUrl: string,
@@ -13,9 +14,8 @@ export function createSupabaseClient(
 }
 
 export type OppSysSupabaseClient = SupabaseClient<
-  any,
+  Database,
   "public",
   "public",
-  any,
-  any
+  DefaultSchema
 >;
