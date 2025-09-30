@@ -11,13 +11,16 @@
     "check-types": "tsc -b"
   },
   "dependencies": {
+    "@oppsys/supabase": "workspace:*",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@typescript-eslint/parser": "^8.45.0",
     "@vitejs/plugin-react-swc": "^4.1.0",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
