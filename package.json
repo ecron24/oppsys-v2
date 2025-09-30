@@ -1,0 +1,26 @@
+{
+  "name": "oppsys-v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format": "prettier . --write",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.3",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.8"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,jsx,tsx,json,css,md}": [
+      "npm run format"
+    ]
+  }
+}

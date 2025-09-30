@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+generated
+coverage
+.vscode
+.husky
+.prettierignore
+datalocal
+.next
+pnpm-lock.yaml
+.turbo
+
