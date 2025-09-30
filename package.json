@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "pnpm turbo check-types",
+    "lint": "pnpm turbo lint",
     "format": "prettier . --write",
     "prepare": "husky"
   },
