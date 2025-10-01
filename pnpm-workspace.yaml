@@ -4,3 +4,7 @@ packages:
 catalog:
   zod: ^4.1.11
   "hono": "^4.9.9"
+  "react": "^19.1.1"
+  "react-dom": "^19.1.1"
+  "@types/react": "^19.1.13"
+  "@types/react-dom": "^19.1.9"
