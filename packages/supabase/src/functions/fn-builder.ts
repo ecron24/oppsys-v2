@@ -84,19 +84,11 @@ export class FnBuilder<
         const input = this.inputSchema.parse(rawInput) as Input;
         const output = await this.handler(ctx, input);
 
-        if (
-          typeof output === "object" &&
-          output !== null &&
-          "success" in output &&
-          output.success === false
-        ) {
-          return output as BuilderResult<
-            Output,
-            Kind | NewKind | DefaultErrorKind
-          >;
+        if (output.success == false) {
+          return output;
         }
 
-        const parsedOutput = (this.outputSchema as any).parse(output);
+        const parsedOutput = this.outputSchema.parse(output.data);
         return { success: true, data: parsedOutput };
       } catch (error: unknown) {
         return {

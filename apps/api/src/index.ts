@@ -4,7 +4,10 @@ import { Hono } from "hono";
 import { supabase } from "./lib/supabase";
 import { apiRouter, type ApiRouter } from "./api-router";
 import { getUserProfileForService } from "@oppsys/supabase";
+import { createLogger } from "@oppsys/logger";
 
+const logger = createLogger();
+logger.error("dsaf", "fdsaf");
 const app = new Hono();
 app.get("/", async (c) => {
   // const a = await supabase.rpc("get_dashboard_overview", {
@@ -13,10 +16,13 @@ app.get("/", async (c) => {
   // console.log(a);
   const prof = await getUserProfileForService(
     { supabase: supabase },
-    { userId: "45377f20-8b85-42a1-b7c6-f" }
+    { userId: "45377f20-8b85-42a1-b7c6-fb93491ec386" }
   );
-
-  console.log("prof", prof);
+  if (prof.success) {
+    logger.info("prof", prof);
+  } else {
+    logger.error("[error]", prof.error);
+  }
 
   return c.text("Hello Hono!");
 });

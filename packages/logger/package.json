@@ -1,5 +1,5 @@
 {
-  "name": "@oppsys/n8n",
+  "name": "@oppsys/logger",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
@@ -11,11 +11,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.19.18",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@oppsys/supabase": "workspace:*",
-    "@oppsys/logger": "workspace:*",
+    "winston": "^3.18.2",
     "zod": "catalog:"
   }
 }

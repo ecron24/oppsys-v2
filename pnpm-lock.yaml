@@ -38,6 +38,12 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.7.3
         version: 0.7.3(hono@4.9.9)(zod@4.1.11)
+      '@oppsys/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@oppsys/n8n':
+        specifier: workspace:*
+        version: link:../../packages/n8n
       '@oppsys/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
@@ -134,7 +140,33 @@ importers:
         specifier: ^7.1.7
         version: 7.1.7(@types/node@20.19.18)(tsx@4.20.6)(yaml@2.8.1)
 
+  packages/logger:
+    dependencies:
+      winston:
+        specifier: ^3.18.2
+        version: 3.18.2
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.11
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.18
+        version: 20.19.18
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/n8n:
+    dependencies:
+      '@oppsys/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@oppsys/supabase':
+        specifier: workspace:*
+        version: link:../supabase
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.11
     devDependencies:
       typescript:
         specifier: ^5.9.3
