@@ -12,10 +12,10 @@
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
-    "baseUrl": ".",
     "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@oppsys/ui/*": ["./src/*"]
     }
   },
   "include": ["src"],

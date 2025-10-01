@@ -1,21 +1,20 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "new-york",
-  "rsc": false,
+  "rsc": true,
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/styles/globals.css",
+    "css": "../../packages/ui/src/styles/globals.css",
     "baseColor": "neutral",
-    "cssVariables": true,
-    "prefix": ""
+    "cssVariables": true
   },
+  "iconLibrary": "lucide",
   "aliases": {
-    "components": "@oppsys/ui/components",
+    "components": "@/src/components",
+    "hooks": "@/src/hooks",
+    "lib": "@/src/lib",
     "utils": "@oppsys/ui/lib/utils",
-    "hooks": "@oppsys/ui/hooks",
-    "lib": "@oppsys/ui/lib",
     "ui": "@oppsys/ui/components"
-  },
-  "iconLibrary": "lucide"
+  }
 }

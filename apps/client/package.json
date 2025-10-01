@@ -11,16 +11,21 @@
     "check-types": "tsc -b"
   },
   "dependencies": {
-    "@oppsys/supabase": "workspace:*",
     "@oppsys/api": "workspace:*",
+    "@oppsys/supabase": "workspace:*",
     "@oppsys/ui": "workspace:*",
+    "@tailwindcss/vite": "^4.1.13",
+    "hono": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "hono": "catalog:",
+    "react-router": "^7.9.3",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/node": "^24.6.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@typescript-eslint/parser": "^8.45.0",
