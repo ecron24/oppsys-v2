@@ -29,6 +29,7 @@ packages/
 
 ## Architecture du backend (api)
 
+```bash
 src/ # Code source principal
 lib/ # Librairies internes (ex: hono-router, supabase)
 modules/ # Modules métier
@@ -36,9 +37,11 @@ app/ # Cas d'utilisation liés à l'application et logique metier
 domain/ # Entités et repositories du domaine
 infra/ # Implémentations des repositories (ex: Supabase)
 presentation/ # Routes et contrôleurs
+```
 
 # Architecture du frontend (client)
 
+```bash
 src/ # Code source principal du front
 app/ # Pages principales (home, search)
 home-page.tsx
@@ -51,3 +54,4 @@ env.ts # Variables d'environnement
 index.css # Styles globaux
 main.tsx # Point d'entrée de l'application
 public/ # Fichiers statiques (images, icônes)
+```
