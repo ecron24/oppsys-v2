@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@oppsys/supabase": "workspace:*",
+    "@oppsys/api": "workspace:*",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "hono": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

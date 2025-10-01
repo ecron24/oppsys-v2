@@ -3,3 +3,4 @@ packages:
   - apps/*
 catalog:
   zod: ^4.1.11
+  "hono": "^4.9.9"

@@ -1,11 +1,10 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { appo } from "./appo";
-import { supabase } from "./supabase";
+import { supabase } from "./lib/supabase";
+import { apiRouter, type ApiRouter } from "./api-router";
 
 const app = new Hono();
-appo();
 app.get("/", async (c) => {
   const a = await supabase.rpc("get_dashboard_overview", {
     p_user_id: "12",
@@ -13,6 +12,7 @@ app.get("/", async (c) => {
   console.log(a);
   return c.text("Hello Hono!");
 });
+app.route("/", apiRouter);
 
 serve(
   {
@@ -23,3 +23,5 @@ serve(
     console.log(`Server is running on http://localhost:${info.port}`);
   }
 );
+
+export type { ApiRouter };
