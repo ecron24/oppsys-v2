@@ -33,9 +33,9 @@ packages/
 src/ # Code source principal
 lib/ # Librairies internes (ex: hono-router, supabase)
 modules/ # Modules métier
-app/ # Cas d'utilisation liés à l'application et logique metier
-domain/ # Entités et repositories du domaine
-infra/ # Implémentations des repositories (ex: Supabase)
+    app/ # Cas d'utilisation liés à l'application et logique metier
+    domain/ # Entités et repositories du domaine
+    infra/ # Implémentations des repositories (ex: Supabase)
 presentation/ # Routes et contrôleurs
 ```
 
@@ -44,9 +44,9 @@ presentation/ # Routes et contrôleurs
 ```bash
 src/ # Code source principal du front
 app/ # Pages principales (home, search)
-home-page.tsx
-search/
-search-page.tsx
+    home-page.tsx
+    search/
+    search-page.tsx
 components/ # Composants React globaux (providers, etc.)
 lib/ # Librairies et utilitaires (hono-client, supabase)
 features # Fonctionnalite reutilisatle
