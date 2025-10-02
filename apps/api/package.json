@@ -14,11 +14,12 @@
     "@hono/node-server": "^1.19.5",
     "@hono/zod-validator": "^0.7.3",
     "@oppsys/logger": "workspace:*",
-    "@oppsys/types": "workspace:*",
     "@oppsys/n8n": "workspace:*",
     "@oppsys/supabase": "workspace:*",
+    "@oppsys/types": "workspace:*",
     "dotenv": "^17.2.3",
     "hono": "catalog:",
+    "hono-rate-limiter": "^0.4.2",
     "winston": "^3.18.2",
     "zod": "catalog:"
   },
