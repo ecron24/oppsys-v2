@@ -1,12 +1,49 @@
-# oppsys-v2
+# OppSys
 
-## Structure du projet
+## Build, Lint, and Test Commands
+
+- **Build**: `pnpm build`
+- **Lint**: `pnpm lint`
+- **Typecheck**: `pnpm check-types`
+- **Format**: `pnpm format`
+
+## Code Style Guidelines
+
+### General
+
+- This is a pnpm monorepo with two main apps: `api` and `web`.
+- Each app has its own linting configuration.
+- Prefer `type` over `interface` in TypeScript unless it's really an interface to be implemented by classes.
+- Don't add any comments unless absolutely necessary. Code should be self-explanatory.
+
+### Imports
+
+- Use ES module imports (`import ... from '...'`).
+
+### Exports
+
+- Always use named exports for functions and variables unless we have no other choice.
+
+### Formatting
+
+- Formatting is enforced by ESLint. Run `pnpm lint --fix` to automatically fix formatting issues.
+
+### Types
+
+- The project uses TypeScript. Make sure to add types to all new code.
+- Run `pnpm check-types` to check for type errors.
+
+### Naming Conventions
+
+- Use camelCase for variables and functions.
+- Use PascalCase for classes and components.
+
+## Folder structure
+
+### Structure du projet
 
 ```bash
-package.json
-pnpm-lock.yaml
 pnpm-workspace.yaml
-README.md
 turbo.json
 apps/
   api/        # Backend API (routes, logique métier, intégration Supabase)
@@ -19,7 +56,7 @@ packages/
   types/      # Shared types
 ```
 
-## Architecture du backend (api)
+### Architecture du backend (api)
 
 ```bash
 src/ # Code source principal
@@ -39,7 +76,7 @@ user/ # Modules métier
   infra/ # Implémentations des repositories (ex: Supabase)
 ```
 
-## Architecture du frontend (client)
+### Architecture du frontend (client)
 
 ```bash
 src/ # Code source principal du front
@@ -58,3 +95,8 @@ index.css # Styles globaux
 main.tsx # Point d'entrée de l'application
 public/ # Fichiers statiques (images, icônes)
 ```
+
+## Architecture
+
+- Frontend: Please refer to `.ai/frontend-architecture.md` for detailed frontend architecture guidelines.
+- Backend: Please refer to `.ai/backend-architecture.md` for detailed backend architecture guidelines.
