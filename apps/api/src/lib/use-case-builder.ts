@@ -1,3 +1,4 @@
+import type { Result } from "@oppsys/types";
 import type { Context } from "src/get-context";
 import { z } from "zod";
 import type { ZodType } from "zod";
@@ -12,16 +13,11 @@ export function buildUseCase<Kind extends string = DefaultErrorKind>() {
   return new UseCaseBuilder<unknown, unknown, Kind | DefaultErrorKind>();
 }
 
-export type BuilderResult<T, Kind extends string = DefaultErrorKind> =
-  | {
-      readonly success: true;
-      readonly data: T;
-    }
-  | {
-      readonly success: false;
-      readonly error: Error | ZodError;
-      readonly kind: Kind | DefaultErrorKind;
-    };
+export type BuilderResult<T, Kind extends string = DefaultErrorKind> = Result<
+  T,
+  Error | ZodError,
+  Kind | DefaultErrorKind
+>;
 
 export class UseCaseBuilder<
   Input = unknown,

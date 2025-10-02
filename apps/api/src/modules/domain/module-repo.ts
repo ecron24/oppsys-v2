@@ -1,4 +1,4 @@
-import type { Result } from "src/result-type";
+import type { Result } from "@oppsys/types";
 import type { ListModulesQuery, Module } from "./module";
 
 export type GetModulesResult = Result<Module[], Error, "UNKNOWN_ERROR">;

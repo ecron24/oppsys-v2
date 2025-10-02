@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import type { Result } from "src/result-type";
+import type { Result } from "@oppsys/types";
 
 export function handleResultResponse<TData, TStatusCode extends 200>(
   c: Context,
