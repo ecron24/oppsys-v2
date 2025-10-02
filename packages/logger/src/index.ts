@@ -14,10 +14,11 @@ export function createLogger() {
     winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     winston.format.printf(({ timestamp, level, message, ...meta }) => {
       const stripped = JSON.parse(JSON.stringify(meta));
+      const { service, ...cleanMeta } = stripped;
 
       const metaStr =
-        Object.keys(stripped).length > 0
-          ? util.inspect(stripped, { depth: null, colors: true })
+        Object.keys(cleanMeta).length > 0
+          ? util.inspect(cleanMeta, { depth: null, colors: true })
           : "";
 
       return `${timestamp} [${level}]: ${message} ${metaStr}`;

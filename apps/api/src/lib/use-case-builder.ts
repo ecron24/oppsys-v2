@@ -1,12 +1,15 @@
+import type { Context } from "src/get-context";
 import { z } from "zod";
 import type { ZodType } from "zod";
 import { ZodError } from "zod";
-import type { FnContext } from "./fn-context";
 
-type DefaultErrorKind = "VALIDATION_ERROR" | "INTERNAL_ERROR" | "SCHEMA_ERROR";
+export type DefaultErrorKind =
+  | "VALIDATION_ERROR"
+  | "INTERNAL_ERROR"
+  | "SCHEMA_ERROR";
 
-export function createFn<Kind extends string = DefaultErrorKind>() {
-  return new FnBuilder<unknown, unknown, Kind | DefaultErrorKind>();
+export function buildUseCase<Kind extends string = DefaultErrorKind>() {
+  return new UseCaseBuilder<unknown, unknown, Kind | DefaultErrorKind>();
 }
 
 export type BuilderResult<T, Kind extends string = DefaultErrorKind> =
@@ -20,7 +23,7 @@ export type BuilderResult<T, Kind extends string = DefaultErrorKind> =
       readonly kind: Kind | DefaultErrorKind;
     };
 
-export class FnBuilder<
+export class UseCaseBuilder<
   Input = unknown,
   Output = unknown,
   Kind extends string = DefaultErrorKind,
@@ -28,26 +31,26 @@ export class FnBuilder<
   private inputSchema?: ZodType<Input>;
   private outputSchema?: ZodType<Output>;
   private handler?: (
-    ctx: FnContext,
+    ctx: Context,
     input: Input
   ) => Promise<BuilderResult<Output, Kind>>;
 
   input<T extends ZodType<any>>(schema: T) {
     this.inputSchema = schema;
-    return this as unknown as FnBuilder<z.infer<T>, Output, Kind>;
+    return this as unknown as UseCaseBuilder<z.infer<T>, Output, Kind>;
   }
 
   output<T extends ZodType<any>>(schema: T) {
     this.outputSchema = schema;
-    return this as unknown as FnBuilder<Input, z.infer<T>, Kind>;
+    return this as unknown as UseCaseBuilder<Input, z.infer<T>, Kind>;
   }
 
-  handle<NewKind extends string = DefaultErrorKind>(
+  handle<NewKind extends string = DefaultErrorKind, O = Output>(
     cb: (
-      ctx: FnContext,
+      ctx: Context,
       input: Input
     ) => Promise<
-      | BuilderResult<Output, Kind | DefaultErrorKind>
+      | BuilderResult<O, Kind | NewKind | DefaultErrorKind>
       | {
           success: false;
           error: Error;
@@ -58,9 +61,9 @@ export class FnBuilder<
     this.handler = cb as any;
 
     return async (
-      ctx: FnContext,
+      ctx: Context,
       rawInput: Input
-    ): Promise<BuilderResult<Output, Kind | NewKind | DefaultErrorKind>> => {
+    ): Promise<BuilderResult<O, Kind | NewKind | DefaultErrorKind>> => {
       try {
         if (!this.inputSchema)
           return {
@@ -89,7 +92,7 @@ export class FnBuilder<
         }
 
         const parsedOutput = this.outputSchema.parse(output.data);
-        return { success: true, data: parsedOutput };
+        return { success: true, data: parsedOutput as unknown as O };
       } catch (error: unknown) {
         return {
           success: false,

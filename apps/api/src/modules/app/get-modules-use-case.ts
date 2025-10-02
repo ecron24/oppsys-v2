@@ -1,16 +1,12 @@
-import type { ListModulesQuery } from "../domain/module";
-import type { ModuleRepo } from "../domain/module-repo";
+import { buildUseCase } from "src/lib/use-case-builder";
+import { ListModulesQuerySchema } from "../domain/module";
 
-type Ctx = {
-  moduleRepo: ModuleRepo;
-};
-
-export const getModulesUseCase =
-  (ctx: Ctx) =>
-  async (query: ListModulesQuery = {}) => {
+export const getModulesUseCase = buildUseCase()
+  .input(ListModulesQuerySchema)
+  .handle(async (ctx, query) => {
     const modules = await ctx.moduleRepo.getAll(query);
     return {
       success: true,
       data: modules,
     } as const;
-  };
+  });

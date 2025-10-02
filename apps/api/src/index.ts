@@ -7,7 +7,6 @@ import { getUserProfileForService } from "@oppsys/supabase";
 import { createLogger } from "@oppsys/logger";
 
 const logger = createLogger();
-logger.error("dsaf", "fdsaf");
 const app = new Hono();
 app.get("/", async (c) => {
   // const a = await supabase.rpc("get_dashboard_overview", {
@@ -34,7 +33,7 @@ serve(
     port: 3000,
   },
   (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
+    logger.info(`Server is running on http://localhost:${info.port}`);
   }
 );
 
