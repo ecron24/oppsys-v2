@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import type { Result } from "@oppsys/types";
+import z, { ZodError } from "zod";
 
 export function handleResultResponse<TData, TStatusCode extends 200>(
   c: Context,
@@ -13,9 +14,15 @@ export function handleResultResponse<TData, TStatusCode extends 200>(
   if (kind.includes("not_found")) {
     return c.json({ error: "Not found", details: result.error.message }, 404);
   }
+  if (result.error instanceof ZodError) {
+    return c.json(
+      { error: "Validation error", details: z.prettifyError(result.error) },
+      400
+    );
+  }
   if (kind.includes("validation_error")) {
     return c.json(
-      { error: "Unauthorized", details: result.error.message },
+      { error: "Validation error", details: result.error.message },
       400
     );
   }

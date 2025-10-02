@@ -67,12 +67,6 @@ export class UseCaseBuilder<
             error: new Error("Input schema not defined"),
             kind: "SCHEMA_ERROR",
           };
-        if (!this.outputSchema)
-          return {
-            success: false,
-            error: new Error("Output schema not defined"),
-            kind: "SCHEMA_ERROR",
-          };
         if (!this.handler)
           return {
             success: false,
@@ -87,8 +81,11 @@ export class UseCaseBuilder<
           return output;
         }
 
-        const parsedOutput = this.outputSchema.parse(output.data);
-        return { success: true, data: parsedOutput as unknown as O };
+        if (this.outputSchema) {
+          const parsedOutput = this.outputSchema.parse(output.data);
+          return { success: true, data: parsedOutput as unknown as O };
+        }
+        return { success: true, data: output.data as unknown as O };
       } catch (error: unknown) {
         return {
           success: false,

@@ -9,7 +9,7 @@ export const ModuleSchema = z.object({
   description: z.string().nullable(),
   is_active: z.boolean().nullable(),
   created_at: z.string(),
-  config: z.string(),
+  config: z.record(z.string(), z.any()),
   category: z.string().nullable(),
 });
 export type Module = z.infer<typeof ModuleSchema>;
