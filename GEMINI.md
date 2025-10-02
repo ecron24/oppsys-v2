@@ -56,7 +56,7 @@ packages/
   types/      # Shared types
 ```
 
-### Architecture du backend (api)
+### Folder for backend (api)
 
 ```bash
 src/ # Code source principal
@@ -76,7 +76,7 @@ user/ # Modules métier
   infra/ # Implémentations des repositories (ex: Supabase)
 ```
 
-### Architecture du frontend (client)
+### Folder for frontend (client)
 
 ```bash
 src/ # Code source principal du front
@@ -96,7 +96,7 @@ main.tsx # Point d'entrée de l'application
 public/ # Fichiers statiques (images, icônes)
 ```
 
-## Architecture
+## Architecture detail
 
 - Frontend: Please refer to `.ai/frontend-architecture.md` for detailed frontend architecture guidelines.
 - Backend: Please refer to `.ai/backend-architecture.md` for detailed backend architecture guidelines.
