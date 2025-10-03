@@ -1,13 +1,19 @@
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { ListModuleSchema, type ListModulesQuery } from "../domain/module";
 import type { GetModulesResult, ModuleRepo } from "../domain/module-repo";
+import { catchError } from "src/lib/catch-error";
+import type { Logger } from "src/logger/domain/logger";
 
 export class ModuleRepoSupabase implements ModuleRepo {
-  constructor(private supabase: OppSysSupabaseClient) {}
+  constructor(
+    private supabase: OppSysSupabaseClient,
+    private logger: Logger
+  ) {}
 
   async getAll(query: ListModulesQuery): Promise<GetModulesResult> {
-    try {
-      let query = this.supabase.from("modules").select(
+    this.logger.debug("ListModulesQuery", query);
+    return await catchError(async () => {
+      const select = this.supabase.from("modules").select(
         `
           id,
           name,
@@ -22,27 +28,16 @@ export class ModuleRepoSupabase implements ModuleRepo {
         `,
         { count: "exact" }
       );
-      const { data: modules, error } = await query;
+      const { data: modules, error } = await select;
 
       if (error) {
-        return {
-          success: false,
-          error: error,
-          kind: "UNKNOWN_ERROR",
-        };
+        throw error;
       }
 
       return {
         success: true,
         data: ListModuleSchema.parse(modules || []),
-      };
-    } catch (error) {
-      console.error("[]", error);
-      return {
-        success: false,
-        error: error as Error,
-        kind: "UNKNOWN_ERROR",
-      };
-    }
+      } as const;
+    });
   }
 }

@@ -45,8 +45,8 @@ The backend follows a hexagonal architecture pattern, which separates the core b
 The main components of the architecture are:
 
 - **domain**: This layer contains all entities and contracts of the application. Stored on the folder `src/[features]/domain`.
-- **app**: This layer contains the use cases and business logic of the application. It interacts with the domain layer and orchestrates the flow of data. Stored on the folder `src/[features]/application`.
-- **infra**: This layer contains the implementation of external services and frameworks. It interacts with the application layer through interfaces defined in the domain layer. Stored on the folder `src/[features]/infrastructure`.
+- **app**: This layer contains the use cases and business logic of the application. It interacts with the domain layer and orchestrates the flow of data. Stored on the folder `src/[features]/app`.
+- **infra**: This layer contains the implementation of external services and frameworks. It interacts with the application layer through interfaces defined in the domain layer. Stored on the folder `src/[features]/infra`.
 - **presentation**: This layer contains the API endpoints and request/response handling. It uses the **Hono** to define routes and middleware. Stored on the folder `src/[features]/presentation`.
 - **entrypoint**: This is the file `src/index.ts`.
 
@@ -105,15 +105,15 @@ export interface MailerRepo {
 
 ### Application Layer
 
-The application layer contains the use case for getting module.
+The application layer contains the use case for retrieving user.
 
 ```ts
-// src/modules/application/get-modules-usecase.ts
+// src/user/application/get-user-usecase.ts
 import { buildUseCase } from "src/lib/use-case-builder";
-import { ListModulesQuerySchema } from "../domain/module";
+import { ListUserQuerySchema } from "../domain/module";
 
-export const getModulesUseCase = buildUseCase()
-  .input(ListModulesQuerySchema)
+export const getUserUseCase = buildUseCase()
+  .input(ListUserQuerySchema)
   .handle(async (ctx, query) => {
     const modules = await ctx.moduleRepo.getAll(query);
 
@@ -123,12 +123,12 @@ export const getModulesUseCase = buildUseCase()
 
 ### Infrastructure Layer
 
-The infrastructure layer contains the implementation of the `UserRepoPort` interfaces.
+The infrastructure layer contains the implementation of the `UserRepo` interfaces.
 
 ```ts
 // src/user/infrastructure/user-repo-supabase.ts
 import {
-  UserRepoPort,
+  UserRepo,
   CreateUserResult,
   GetUserByEmailResult,
 } from "src/user/domain/user-repo";
@@ -187,4 +187,5 @@ We throw a generic error to the client, and log the actual error on the server. 
 - "@supabase/supabase-js": "^2.58.0",
 - firebase-functions: "^6.0.1",
 - zod: ^4.1.11
-- "hono": "^4.9.9"
+- hono: "^4.9.9"
+- @hono/zod-validato": "^0.7.3",

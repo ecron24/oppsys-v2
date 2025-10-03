@@ -31,12 +31,12 @@ export class UseCaseBuilder<
     input: Input
   ) => Promise<BuilderResult<Output, Kind>>;
 
-  input<T extends ZodType<any>>(schema: T) {
+  input<T extends ZodType<Input>>(schema: T) {
     this.inputSchema = schema;
     return this as unknown as UseCaseBuilder<z.infer<T>, Output, Kind>;
   }
 
-  output<T extends ZodType<any>>(schema: T) {
+  output<T extends ZodType<Output>>(schema: T) {
     this.outputSchema = schema;
     return this as unknown as UseCaseBuilder<Input, z.infer<T>, Kind>;
   }
@@ -54,6 +54,7 @@ export class UseCaseBuilder<
         }
     >
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.handler = cb as any;
 
     return async (
@@ -61,12 +62,6 @@ export class UseCaseBuilder<
       rawInput: Input
     ): Promise<BuilderResult<O, Kind | NewKind | DefaultErrorKind>> => {
       try {
-        if (!this.inputSchema)
-          return {
-            success: false,
-            error: new Error("Input schema not defined"),
-            kind: "SCHEMA_ERROR",
-          };
         if (!this.handler)
           return {
             success: false,
@@ -74,7 +69,9 @@ export class UseCaseBuilder<
             kind: "SCHEMA_ERROR",
           };
 
-        const input = this.inputSchema.parse(rawInput) as Input;
+        const input = this.inputSchema
+          ? this.inputSchema.parse(rawInput)
+          : (rawInput as Input);
         const output = await this.handler(ctx, input);
 
         if (output.success == false) {
