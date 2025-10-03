@@ -117,6 +117,16 @@ export const getUserUseCase = buildUseCase()
   .handle(async (ctx, query) => {
     const modules = await ctx.moduleRepo.getAll(query);
 
+    if (!modules.success) {
+      ctx.logger.error("[get] failed", result.error, { query });
+      return {
+        success: false,
+        kind: "INTERNAL_SERVER_ERROR",
+        error: new Error("INTERNAL_SERVER_ERROR", 500),
+      } as const;
+    }
+    return { success: true, data: { storeId: result.data } } as const;
+
     return modules;
   });
 ```
@@ -126,15 +136,44 @@ export const getUserUseCase = buildUseCase()
 The infrastructure layer contains the implementation of the `UserRepo` interfaces.
 
 ```ts
-// src/user/infrastructure/user-repo-supabase.ts
+// src/user/infra/user-repo-supabase.ts
 import {
   UserRepo,
   CreateUserResult,
   GetUserByEmailResult,
 } from "src/user/domain/user-repo";
+import type { Logger } from "src/logger/domain/logger";
+import type { OppSysSupabaseClient } from "@oppsys/supabase";
 
 export class UserRepoSupabase implements UserRepo {
-  // Implementation goes here
+  constructor(
+    private supabase: OppSysSupabaseClient,
+    private logger: Logger
+    // ... others if needed
+  ) {}
+
+  async getAll(query: ListModulesQuery): Promise<GetModulesResult> {
+    return await catchError(async () => {
+      const select = this.supabase.from("users").select(
+        `
+          id,
+          name
+        `
+      );
+      const { data, error } = await select;
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: ListUserSchema.parse(data || []),
+      } as const;
+    });
+  }
+
+  // Other implementation goes here, ...
 }
 ```
 
@@ -178,6 +217,27 @@ export const apiRouter = honoRouter(() => {
   return router;
 });
 export type ApiRouter = typeof apiRouter;
+```
+
+```ts
+// src/get-context.ts
+// Some code...
+import { AuthRepoSupabase } from "./auth/infra/auth-repo-supabase";
+import { supabase } from "./lib/supabase";
+import { LoggerWinston } from "./logger/infra/logger-winston";
+import { ModuleRepoSupabase } from "./modules/infra/module-repo-supabase";
+
+export function getContext() {
+  const logger = new LoggerWinston();
+  return {
+    logger,
+    moduleRepo: new ModuleRepoSupabase(supabase, logger),
+    authRepo: new AuthRepoSupabase(supabase, logger),
+    userRepo: new UserRepoSupabase(supabase, logger),
+    // add others ...
+  };
+}
+export type Context = ReturnType<typeof getContext>;
 ```
 
 We throw a generic error to the client, and log the actual error on the server. This is to avoid leaking sensitive information to the client.
