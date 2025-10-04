@@ -103,6 +103,12 @@ export interface MailerRepo {
 }
 ```
 
+#### Database type reference
+
+- It is located at @packages/supabase/database.types.ts
+- Always use `camelCase` in the schema
+- Common schema is located at @apps/api/src/common/common-schema.ts
+
 ### Application Layer
 
 The application layer contains the use case for retrieving user.
@@ -153,7 +159,7 @@ export class UserRepoSupabase implements UserRepo {
   ) {}
 
   async getAll(query: ListModulesQuery): Promise<GetModulesResult> {
-    return await catchError(async () => {
+    return await tryCatch(async () => {
       const select = this.supabase.from("users").select(
         `
           id,

@@ -1,6 +1,6 @@
 import type { ResultError } from "@oppsys/types";
 
-export async function catchError<
+export async function tryCatch<
   TData,
   TError = Error,
   TKind extends string = "UNKNOWN_ERROR",

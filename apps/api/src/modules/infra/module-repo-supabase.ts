@@ -1,7 +1,7 @@
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { ListModuleSchema, type ListModulesQuery } from "../domain/module";
 import type { GetModulesResult, ModuleRepo } from "../domain/module-repo";
-import { catchError } from "src/lib/catch-error";
+import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
 
 export class ModuleRepoSupabase implements ModuleRepo {
@@ -12,7 +12,7 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
   async getAll(query: ListModulesQuery): Promise<GetModulesResult> {
     this.logger.debug("ListModulesQuery", query);
-    return await catchError(async () => {
+    return await tryCatch(async () => {
       const select = this.supabase.from("modules").select(
         `
           id,

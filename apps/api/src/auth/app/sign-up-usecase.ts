@@ -10,6 +10,34 @@ export const SignUpSchema = z.object({
 export const signUpUseCase = buildUseCase()
   .input(SignUpSchema)
   .handle(async (ctx, { email, password, fullName }) => {
-    const result = await ctx.authRepo.signUp(email, password, fullName);
-    return result;
+    const signUpResult = await ctx.authRepo.signUp(email, password, fullName);
+    if (!signUpResult.success) return signUpResult;
+
+    const freePlanResult = await ctx.planRepo.getByName("free");
+    if (!freePlanResult.success) return freePlanResult;
+
+    const freePlan = freePlanResult.data;
+
+    const profileResult = await ctx.profileRepo.create({
+      id: signUpResult.data.user.id,
+      email,
+      fullName: fullName || null,
+      role: "client",
+      planId: freePlan.id,
+      creditBalance: freePlan.monthlyCredits,
+      language: "fr",
+      timezone: "Europe/Paris",
+    });
+    if (!profileResult.success) {
+      // TODO: delete user
+      return profileResult;
+    }
+
+    return {
+      success: true,
+      data: {
+        user: signUpResult.data.user,
+        session: signUpResult.data.session,
+      },
+    } as const;
   });

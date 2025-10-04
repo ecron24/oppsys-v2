@@ -1,8 +1,16 @@
 import type { Result } from "@oppsys/types";
-import type { User } from "./user";
+import type { Session, User } from "./user";
 
-export type SignUpResult = Result<User, Error, "SIGNUP_FAILED">;
-export type SignInResult = Result<User, Error, "SIGNIN_FAILED">;
+export type SignUpResult = Result<
+  { user: User; session: Session | null },
+  Error,
+  "SIGNUP_FAILED"
+>;
+export type SignInResult = Result<
+  { user: User; session: Session | null },
+  Error,
+  "SIGNIN_FAILED"
+>;
 export type SendMagicLinkResult = Result<void, Error, "MAGIC_LINK_FAILED">;
 export type SignOutResult = Result<void, Error, "SIGNOUT_FAILED">;
 
