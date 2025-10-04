@@ -14,7 +14,7 @@ const logger = createLogger();
 const app = new Hono();
 
 app.use(async (c, next) => {
-  const path = c.req.url;
+  const path = c.req.path;
   // Si le chemin correspond à /api/modules/.../execute, on met 5 minutes (300000 ms)
   if (path.includes("/api/modules/") && path.includes("/execute")) {
     return timeout(300_000)(c, next);
@@ -81,7 +81,7 @@ app.get("/", async (c) => {
 app.route("/", apiRouter);
 
 app.notFound((c) => {
-  return c.json({ error: "Custom 404 Message" }, 404);
+  return c.json({ error: "Not found" }, 404);
 });
 
 serve(

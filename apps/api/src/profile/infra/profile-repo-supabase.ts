@@ -8,6 +8,7 @@ import { tryCatch } from "src/lib/try-catch";
 import {
   ProfileWithPlanSchema,
   type Profile,
+  type ProfileWithPlan,
 } from "src/profile/domain/profile";
 
 export class ProfileRepoSupabase implements ProfileRepo {
@@ -56,7 +57,8 @@ export class ProfileRepoSupabase implements ProfileRepo {
           kind: "PROFILE_NOT_FOUND",
         } as const;
       }
-      const parsed = ProfileWithPlanSchema.parse({
+
+      const profile = {
         id: data.id,
         confirmedAt: data.confirmed_at ?? null,
         createdAt: data.created_at ?? null,
@@ -82,11 +84,15 @@ export class ProfileRepoSupabase implements ProfileRepo {
         updatedAt: data.updated_at ?? null,
         plans: {
           name: data.plans?.name ?? null,
-          monthlyCredit: data.plans?.monthly_credits ?? null,
+          monthlyCredits: data.plans?.monthly_credits ?? null,
           priceCents: data.plans?.price_cents ?? null,
         },
-      });
-      return { success: true, data: parsed } as const;
+      } as ProfileWithPlan;
+
+      return {
+        success: true,
+        data: ProfileWithPlanSchema.parse(profile),
+      } as const;
     });
   }
 }

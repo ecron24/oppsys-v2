@@ -4,4 +4,4 @@ export interface Logger {
   warn(message: string, metadata?: MetaLogger): void;
   debug(message: string, metadata?: MetaLogger): void;
 }
-export type MetaLogger = Record<string, unknown> | string | number;
+export type MetaLogger = Record<string, unknown>;

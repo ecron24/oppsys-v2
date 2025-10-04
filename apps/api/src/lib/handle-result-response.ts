@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import type { Result } from "@oppsys/types";
 import z, { ZodError } from "zod";
+import { AuthError } from "@oppsys/supabase";
 
 export function handleResultResponse<TData, TStatusCode extends 200>(
   c: Context,
@@ -18,6 +19,12 @@ export function handleResultResponse<TData, TStatusCode extends 200>(
     return c.json(
       { error: "Validation error", details: z.prettifyError(result.error) },
       400
+    );
+  }
+  if (result.error instanceof AuthError) {
+    return c.json(
+      { error: "Authentication error", details: result.error.message },
+      401
     );
   }
   if (kind.includes("validation_error")) {

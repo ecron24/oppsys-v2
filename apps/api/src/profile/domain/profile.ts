@@ -36,6 +36,10 @@ export const ProfileSchema = z.object({
 export type Profile = z.infer<typeof ProfileSchema>;
 
 export const ProfileWithPlanSchema = ProfileSchema.extend({
-  plans: PlanSchema.pick({ name: true, monthlyCredit: true, priceCents: true }),
+  plans: PlanSchema.pick({
+    name: true,
+    monthlyCredits: true,
+    priceCents: true,
+  }),
 });
 export type ProfileWithPlan = z.infer<typeof ProfileWithPlanSchema>;
