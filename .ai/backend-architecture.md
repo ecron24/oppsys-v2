@@ -202,7 +202,7 @@ export const moduleRouter = honoRouter((ctx) => {
     zValidatorWrapper("query", ListModulesQuerySchema),
     async (c) => {
       const result = await getModulesUseCase(ctx, c.req.valid("query"));
-      return handleResultResponse(c, result);
+      return handleResultResponse(c, result, , { oppSysContext: ctx });
     }
   );
 
@@ -243,7 +243,7 @@ export function getContext() {
     // add others ...
   };
 }
-export type Context = ReturnType<typeof getContext>;
+export type OppSysContext = ReturnType<typeof getContext>;
 ```
 
 We throw a generic error to the client, and log the actual error on the server. This is to avoid leaking sensitive information to the client.

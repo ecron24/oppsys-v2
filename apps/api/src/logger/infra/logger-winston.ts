@@ -9,7 +9,16 @@ export class LoggerWinston implements Logger {
   }
 
   error(message: string, error: Error, metadata?: MetaLogger): void {
-    this.logger.error(message, { err: error }, metadata);
+    this.logger.error(
+      message,
+      {
+        name: error.name,
+        message: error.message,
+        cause: error.cause,
+        stack: error.stack,
+      },
+      metadata
+    );
   }
 
   warn(message: string, metadata?: MetaLogger): void {

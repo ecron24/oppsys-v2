@@ -15,4 +15,4 @@ export function getContext() {
     authRepo: new AuthRepoSupabase(supabase, logger),
   };
 }
-export type Context = ReturnType<typeof getContext>;
+export type OppSysContext = ReturnType<typeof getContext>;

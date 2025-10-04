@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import { type Context } from "src/get-context";
+import { type OppSysContext } from "src/get-context";
 
 type Config = {
   skipUrls?: string[];
@@ -7,7 +7,10 @@ type Config = {
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-export const authenticateToken = (ctx: Context, { skipUrls = [] }: Config) => {
+export const authenticateToken = (
+  ctx: OppSysContext,
+  { skipUrls = [] }: Config
+) => {
   const skipRegex = skipUrls.map((raw) => {
     // should start with '/'
     const pattern = raw.startsWith("/") ? raw : "/" + raw;

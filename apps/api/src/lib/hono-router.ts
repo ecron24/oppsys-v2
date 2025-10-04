@@ -1,7 +1,9 @@
 import type { Hono } from "hono";
-import { getContext, type Context } from "src/get-context";
+import { getContext, type OppSysContext } from "src/get-context";
 
-export function honoRouter<H extends Hono>(callback: (ctx: Context) => H): H {
+export function honoRouter<H extends Hono>(
+  callback: (ctx: OppSysContext) => H
+): H {
   const context = getContext();
   return callback(context);
 }

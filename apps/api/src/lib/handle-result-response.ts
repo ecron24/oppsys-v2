@@ -2,48 +2,63 @@ import type { Context } from "hono";
 import type { Result } from "@oppsys/types";
 import z, { ZodError } from "zod";
 import { AuthError } from "@oppsys/supabase";
+import type { OppSysContext } from "src/get-context";
 
 export function handleResultResponse<TData, TStatusCode extends 200>(
-  c: Context,
+  honoCtx: Context,
   result: Result<TData>,
-  statusCodeSuccess: TStatusCode = 200 as TStatusCode
+  { oppSysContext, statusCodeSuccess = 200 as TStatusCode }: Opts<TStatusCode>
 ) {
   if (result.success) {
-    return c.json({ data: result.data }, statusCodeSuccess);
+    return honoCtx.json({ data: result.data }, statusCodeSuccess);
   }
   const kind = result.kind.toLowerCase();
   if (kind.includes("not_found")) {
-    return c.json({ error: "Not found", details: result.error.message }, 404);
+    return honoCtx.json(
+      { error: "Not found", details: result.error.message },
+      404
+    );
   }
   if (result.error instanceof ZodError) {
-    return c.json(
+    oppSysContext.logger.error("Validation error:", result.error);
+    return honoCtx.json(
       { error: "Validation error", details: z.prettifyError(result.error) },
       400
     );
   }
   if (result.error instanceof AuthError) {
-    return c.json(
+    return honoCtx.json(
       { error: "Authentication error", details: result.error.message },
       401
     );
   }
   if (kind.includes("validation_error")) {
-    return c.json(
+    oppSysContext.logger.error("Validation error:", result.error);
+    return honoCtx.json(
       { error: "Validation error", details: result.error.message },
       400
     );
   }
   if (kind.includes("unauthorized")) {
-    return c.json(
+    return honoCtx.json(
       { error: "Unauthorized", details: result.error.message },
       401
     );
   }
   if (kind.includes("forbidden")) {
-    return c.json({ error: "Forbidden", details: result.error.message }, 403);
+    return honoCtx.json(
+      { error: "Forbidden", details: result.error.message },
+      403
+    );
   }
-  return c.json(
+  oppSysContext.logger.error("Unknown error:", result.error);
+  return honoCtx.json(
     { error: "Internal Server Error", details: result.error.message },
     500
   );
 }
+
+type Opts<TStatusCode extends 200> = {
+  oppSysContext: OppSysContext;
+  statusCodeSuccess?: TStatusCode;
+};

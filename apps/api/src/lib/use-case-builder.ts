@@ -1,5 +1,5 @@
 import type { Result } from "@oppsys/types";
-import type { Context } from "src/get-context";
+import type { OppSysContext } from "src/get-context";
 import { z } from "zod";
 import type { ZodType } from "zod";
 import { ZodError } from "zod";
@@ -27,7 +27,7 @@ export class UseCaseBuilder<
   private inputSchema?: ZodType<Input>;
   private outputSchema?: ZodType<Output>;
   private handler?: (
-    ctx: Context,
+    ctx: OppSysContext,
     input: Input
   ) => Promise<BuilderResult<Output, Kind>>;
 
@@ -43,7 +43,7 @@ export class UseCaseBuilder<
 
   handle<NewKind extends string = DefaultErrorKind, O = Output>(
     cb: (
-      ctx: Context,
+      ctx: OppSysContext,
       input: Input
     ) => Promise<
       | BuilderResult<O, Kind | NewKind | DefaultErrorKind>
@@ -58,7 +58,7 @@ export class UseCaseBuilder<
     this.handler = cb as any;
 
     return async (
-      ctx: Context,
+      ctx: OppSysContext,
       rawInput: Input
     ): Promise<BuilderResult<O, Kind | NewKind | DefaultErrorKind>> => {
       try {

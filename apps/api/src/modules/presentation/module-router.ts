@@ -11,7 +11,7 @@ export const moduleRouter = honoRouter((ctx) => {
     zValidatorWrapper("query", ListModulesQuerySchema),
     async (c) => {
       const result = await getModulesUseCase(ctx, c.req.valid("query"));
-      return handleResultResponse(c, result);
+      return handleResultResponse(c, result, { oppSysContext: ctx });
     }
   );
 
