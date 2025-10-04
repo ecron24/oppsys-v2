@@ -1,6 +1,7 @@
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type {
   AuthRepo,
+  GetUserByTokenResult,
   SendMagicLinkResult,
   SignInResult,
   SignOutResult,
@@ -109,6 +110,25 @@ export class AuthRepoSupabase implements AuthRepo {
         return { success: false, error, kind: "SIGNOUT_FAILED" } as const;
       }
       return { success: true, data: undefined } as const;
+    });
+  }
+
+  async getUserByToken(token: string): Promise<GetUserByTokenResult> {
+    return await tryCatch(async () => {
+      const { data, error } = await this.supabase.auth.getUser(token);
+      if (error) {
+        this.logger.error("getUserByToken error:", error, { token });
+        return { success: false, error, kind: "INVALID_TOKEN" } as const;
+      }
+      const user = data?.user;
+      if (!user || !user.id) {
+        return {
+          success: false,
+          error: new Error("User not found from token"),
+          kind: "INVALID_TOKEN",
+        } as const;
+      }
+      return { success: true, data: { id: user.id } } as const;
     });
   }
 }

@@ -13,6 +13,11 @@ export type SignInResult = Result<
 >;
 export type SendMagicLinkResult = Result<void, Error, "MAGIC_LINK_FAILED">;
 export type SignOutResult = Result<void, Error, "SIGNOUT_FAILED">;
+export type GetUserByTokenResult = Result<
+  { id: string },
+  Error,
+  "INVALID_TOKEN" | "UNKNOWN_ERROR"
+>;
 
 export interface AuthRepo {
   signUp(
@@ -20,10 +25,14 @@ export interface AuthRepo {
     password: string,
     fullName?: string
   ): Promise<SignUpResult>;
+
   signIn(email: string, password: string): Promise<SignInResult>;
+
   sendMagicLink(
     email: string,
     redirectTo?: string
   ): Promise<SendMagicLinkResult>;
   signOut(): Promise<SignOutResult>;
+
+  getUserByToken(token: string): Promise<GetUserByTokenResult>;
 }
