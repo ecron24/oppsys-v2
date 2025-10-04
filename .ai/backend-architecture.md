@@ -248,6 +248,10 @@ export type Context = ReturnType<typeof getContext>;
 
 We throw a generic error to the client, and log the actual error on the server. This is to avoid leaking sensitive information to the client.
 
+### Utility lib
+
+Utility lib is located at @apps/api/src/lib
+
 ## Technologies
 
 - "@supabase/supabase-js": "^2.58.0",
