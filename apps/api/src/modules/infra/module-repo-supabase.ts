@@ -1,43 +1,205 @@
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
-import { ListModuleSchema, type ListModulesQuery } from "../domain/module";
-import type { GetModulesResult, ModuleRepo } from "../domain/module-repo";
+import {
+  ModuleSchema,
+  ModuleUsageSchema,
+  type ListModulesQuery,
+  type ModuleUsage,
+  type ModuleUsageHistoryQuery,
+} from "../domain/module";
+import type {
+  CreateModuleUsageResult,
+  GetModuleByIdOrSlugResult,
+  GetModulesResult,
+  GetModuleUsageHistoryResult,
+  ModuleRepo,
+  UpdateModuleUsageResult,
+} from "../domain/module-repo";
 import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
+import { toCamelCase } from "src/lib/to-camel-case";
+import z from "zod";
 
 export class ModuleRepoSupabase implements ModuleRepo {
   constructor(
     private supabase: OppSysSupabaseClient,
     private logger: Logger
-  ) {}
+  ) {
+    void this.logger;
+  }
 
-  async getAll(query: ListModulesQuery): Promise<GetModulesResult> {
-    this.logger.debug("ListModulesQuery", query);
+  async list(query: ListModulesQuery): Promise<GetModulesResult> {
     return await tryCatch(async () => {
-      const select = this.supabase.from("modules").select(
-        `
-          id,
-          name,
-          slug,
-          type,
-          credit_cost,
-          description,
-          is_active,
-          created_at,
-          config,
-          category
-        `,
-        { count: "exact" }
-      );
-      const { data: modules, error } = await select;
+      const offset = (query.page - 1) * query.limit;
 
-      if (error) {
-        throw error;
+      let q = this.supabase.from("modules").select(`*`, { count: "exact" });
+
+      if (!query.includeInactive) {
+        q = q.eq("is_active", true);
+      }
+      if (query.type) {
+        q = q.eq("type", query.type);
+      }
+      if (query.category) {
+        q = q.eq("category", query.category);
+      }
+      if (query.search) {
+        q = q.or(
+          `name.ilike.%${query.search}%,description.ilike.%${query.search}%,slug.ilike.%${query.search}%`
+        );
+      }
+
+      q = q.order(query.sort, { ascending: query.order === "asc" });
+      q = q.range(offset, offset + query.limit - 1);
+
+      const { data, error, count } = await q;
+
+      if (error) throw error;
+
+      const modules = data.map(toCamelCase);
+
+      return {
+        success: true,
+        data: { data: z.array(ModuleSchema).parse(modules), total: count || 0 },
+      } as const;
+    });
+  }
+
+  async findByIdOrSlug(idOrSlug: string): Promise<GetModuleByIdOrSlugResult> {
+    return await tryCatch(async () => {
+      const isUUID =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          idOrSlug
+        );
+
+      let q = this.supabase.from("modules").select("*").eq("is_active", true);
+      if (isUUID) {
+        q = q.eq("id", idOrSlug);
+      } else {
+        q = q.eq("slug", idOrSlug);
+      }
+
+      const { data, error } = await q.single();
+
+      if (error || !data) {
+        return {
+          success: false,
+          error: new Error("Module not found"),
+          kind: "MODULE_NOT_FOUND",
+        } as const;
       }
 
       return {
         success: true,
-        data: ListModuleSchema.parse(modules || []),
+        data: ModuleSchema.parse(toCamelCase(data)),
       } as const;
+    });
+  }
+
+  async listUsageHistory(
+    userId: string,
+    query: ModuleUsageHistoryQuery
+  ): Promise<GetModuleUsageHistoryResult> {
+    return await tryCatch(async () => {
+      const offset = (query.page - 1) * query.limit;
+
+      let selectFields = `
+        id,
+        module_id,
+        module_slug,
+        credits_used,
+        status,
+        used_at,
+        error_message,
+        metadata,
+        modules (
+          name,
+          type,
+          description,
+          category
+        )
+      `;
+
+      if (query.includeOutput) {
+        selectFields += ", output";
+      }
+
+      let q = this.supabase
+        .from("module_usage")
+        .select(selectFields, { count: "exact" })
+        .eq("user_id", userId);
+
+      if (query.moduleId) q = q.eq("module_id", query.moduleId);
+      if (query.moduleSlug) q = q.eq("module_slug", query.moduleSlug);
+      if (query.status) q = q.eq("status", query.status);
+      if (query.startDate) q = q.gte("used_at", query.startDate);
+      if (query.endDate) q = q.lte("used_at", query.endDate);
+
+      q = q.order(query.sort, { ascending: query.order === "asc" });
+      q = q.range(offset, offset + query.limit - 1);
+
+      const { data, error, count } = await q;
+
+      if (error) throw error;
+
+      const history = data.map(toCamelCase);
+
+      return {
+        success: true as const,
+        data: {
+          data: z.array(ModuleUsageSchema).parse(history),
+          total: count || 0,
+        },
+      };
+    });
+  }
+
+  async createUsage(
+    usage: Omit<ModuleUsage, "id" | "usedAt">
+  ): Promise<CreateModuleUsageResult> {
+    return await tryCatch(async () => {
+      const { data, error } = await this.supabase
+        .from("module_usage")
+        .insert({
+          user_id: usage.userId,
+          module_id: usage.moduleId,
+          module_slug: usage.moduleSlug,
+          credits_used: usage.creditsUsed,
+          input: usage.input,
+          status: usage.status || "pending",
+          output: null,
+          used_at: new Date().toISOString(),
+          metadata: usage.metadata,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        data: ModuleUsageSchema.parse(toCamelCase(data)),
+      } as const;
+    });
+  }
+
+  async updateUsage(
+    id: string,
+    usageUpdate: Partial<Omit<ModuleUsage, "id">>
+  ): Promise<UpdateModuleUsageResult> {
+    return await tryCatch(async () => {
+      const { error } = await this.supabase
+        .from("module_usage")
+        .update({
+          output: usageUpdate.output,
+          status: usageUpdate.status,
+          error_message: usageUpdate.errorMessage,
+          execution_time: usageUpdate.executionTime,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      return { success: true as const, data: undefined };
     });
   }
 }

@@ -1,3 +1,33 @@
+// Résultat typé pour l'appel n8n
+export type N8nResult = {
+  message?: string;
+  output?: string;
+  response?: string;
+  data?: {
+    output?: string;
+    message?: string;
+    response?: string;
+    [key: string]: unknown;
+  };
+  options?: unknown;
+  nextStep?: unknown;
+  next_step?: unknown;
+  type?: string;
+  context?: Record<string, undefined>;
+  is_complete?: boolean;
+  isComplete?: boolean;
+  content?: unknown;
+  text?: unknown;
+  result?: unknown;
+  generated_content?: unknown;
+  title?: unknown;
+  name?: unknown;
+  subject?: unknown;
+  content_type?: unknown;
+  url?: unknown;
+  link?: unknown;
+  metadata?: Record<string, unknown>;
+};
 export interface N8nModule {
   id: string;
   name: string;

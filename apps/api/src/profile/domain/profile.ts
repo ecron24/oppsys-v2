@@ -40,6 +40,8 @@ export const ProfileWithPlanSchema = ProfileSchema.extend({
     name: true,
     monthlyCredits: true,
     priceCents: true,
-  }),
+  })
+    .optional()
+    .nullable(),
 });
 export type ProfileWithPlan = z.infer<typeof ProfileWithPlanSchema>;

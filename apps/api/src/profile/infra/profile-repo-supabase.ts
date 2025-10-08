@@ -2,6 +2,9 @@ import type {
   ProfileRepo,
   CreateProfileResult,
   GetProfileResult,
+  AddCreditsResult,
+  CheckCreditsResult,
+  DeductCreditsResult,
 } from "src/profile/domain/profile-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
@@ -10,6 +13,7 @@ import {
   type Profile,
   type ProfileWithPlan,
 } from "src/profile/domain/profile";
+import { toCamelCase } from "src/lib/to-camel-case";
 
 export class ProfileRepoSupabase implements ProfileRepo {
   constructor(private supabase: OppSysSupabaseClient) {}
@@ -29,7 +33,7 @@ export class ProfileRepoSupabase implements ProfileRepo {
       if (error) {
         throw error;
       }
-      return { success: true, data: undefined } as const;
+      return { success: true as const, data: undefined };
     });
   }
 
@@ -52,47 +56,80 @@ export class ProfileRepoSupabase implements ProfileRepo {
       if (error) throw error;
       if (!data) {
         return {
-          success: false,
+          success: false as const,
           error: new Error("Profile not found"),
-          kind: "PROFILE_NOT_FOUND",
-        } as const;
+          kind: "PROFILE_NOT_FOUND" as const,
+        };
       }
 
-      const profile = {
-        id: data.id,
-        confirmedAt: data.confirmed_at ?? null,
-        createdAt: data.created_at ?? null,
-        creditBalance: data.credit_balance ?? null,
-        currentPeriodEnd: data.current_period_end ?? null,
-        email: data.email ?? null,
-        emailConfirmedAt: data.email_confirmed_at ?? null,
-        fullName: data.full_name ?? null,
-        language: data.language ?? null,
-        lastCreditRefresh: data.last_credit_refresh ?? null,
-        lastSignInAt: data.last_sign_in_at ?? null,
-        phone: data.phone ?? null,
-        phoneConfirmedAt: data.phone_confirmed_at ?? null,
-        planId: data.plan_id ?? null,
-        renewalDate: data.renewal_date ?? null,
-        role: data.role ?? null,
-        socialSessions: data.social_sessions ?? null,
-        stripeCustomerId: data.stripe_customer_id ?? null,
-        stripeSubscriptionId: data.stripe_subscription_id ?? null,
-        stripeSubscriptionStatus: data.stripe_subscription_status ?? null,
-        timezone: data.timezone ?? null,
-        twofaEnabled: data.twofa_enabled ?? null,
-        updatedAt: data.updated_at ?? null,
-        plans: {
-          name: data.plans?.name ?? null,
-          monthlyCredits: data.plans?.monthly_credits ?? null,
-          priceCents: data.plans?.price_cents ?? null,
-        },
-      } as ProfileWithPlan;
+      const profile = toCamelCase(data) as ProfileWithPlan;
 
       return {
-        success: true,
+        success: true as const,
         data: ProfileWithPlanSchema.parse(profile),
-      } as const;
+      };
+    });
+  }
+
+  async checkCredits(
+    // TODO: make me as object
+    userId: string,
+    requiredCredits: number
+  ): Promise<CheckCreditsResult> {
+    return await tryCatch(async () => {
+      const profileResult = await this.getByIdWithPlan(userId);
+      if (!profileResult.success) {
+        return profileResult;
+      }
+      const profile = profileResult.data;
+
+      const currentBalance = profile.creditBalance || 0;
+      const hasEnoughCredits = currentBalance >= requiredCredits;
+
+      return {
+        success: true as const,
+        data: {
+          hasEnoughCredits,
+          currentBalance,
+          shortfall: hasEnoughCredits
+            ? undefined
+            : requiredCredits - currentBalance,
+          planName: profile.plans?.name || "Unknown",
+        },
+      };
+    });
+  }
+
+  async deductCredits(
+    userId: string,
+    amount: number
+  ): Promise<DeductCreditsResult> {
+    return await tryCatch(async () => {
+      const { error } = await this.supabase.rpc("deduct_credits", {
+        user_id: userId,
+        amount,
+      });
+
+      if (error) {
+        // TODO: check for insufficient credits error from RPC
+        throw error;
+      }
+
+      return { success: true, data: undefined } as const;
+    });
+  }
+
+  async addCredits(userId: string, amount: number): Promise<AddCreditsResult> {
+    return await tryCatch(async () => {
+      const { error } = await this.supabase.rpc("add_credits", {
+        p_user_id: userId,
+        p_amount: amount,
+        p_origin: "api",
+      });
+
+      if (error) throw error;
+
+      return { success: true as const, data: undefined };
     });
   }
 }

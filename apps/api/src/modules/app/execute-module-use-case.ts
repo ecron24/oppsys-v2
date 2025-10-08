@@ -1,0 +1,252 @@
+import { buildUseCase } from "src/lib/use-case-builder";
+import {
+  ExecuteModuleBodySchema,
+  ModuleParamsSchema,
+  type ModuleUsage,
+} from "../domain/module";
+import { z } from "zod";
+import { UserInContextSchema } from "src/lib/get-user-in-context";
+
+const ExecuteModuleInputSchema = z.object({
+  params: ModuleParamsSchema,
+  body: ExecuteModuleBodySchema,
+  user: UserInContextSchema,
+  metadata: z
+    .object({
+      userAgent: z.string().optional(),
+      ipAddress: z.string().optional(),
+    })
+    .optional(),
+});
+
+// This is a simplified version. A real implementation would have more robust error handling and logic.
+export const executeModuleUseCase = buildUseCase()
+  .input(ExecuteModuleInputSchema)
+  .handle(async (ctx, { body, params, user, metadata }) => {
+    // 1. Get module
+    const moduleResult = await ctx.moduleRepo.findByIdOrSlug(params.id);
+    if (!moduleResult.success) return moduleResult;
+
+    const module = moduleResult.data;
+
+    // 2. Check credits
+    const creditCheckResult = await ctx.profileRepo.checkCredits(
+      user.id,
+      module.creditCost
+    );
+    if (!creditCheckResult.success) return creditCheckResult;
+    if (!creditCheckResult.data.hasEnoughCredits) {
+      // TODO: createNotification
+      // Add custom error INSUFFICIENT_CREDITS to put all related data in the error
+      return {
+        success: false,
+        error: new Error("Insufficient credits"),
+        kind: "INSUFFICIENT_CREDITS",
+      } as const;
+    }
+
+    // 3. Deduct credits
+    if (module.creditCost > 0) {
+      const deductResult = await ctx.profileRepo.deductCredits(
+        user.id,
+        module.creditCost
+      );
+      if (!deductResult.success) {
+        // TODO: create notification
+        return deductResult;
+      }
+    }
+
+    // 4. Create usage record
+    const usageData: Omit<ModuleUsage, "id" | "usedAt"> = {
+      userId: user.id,
+      moduleId: module.id,
+      moduleSlug: module.slug,
+      creditsUsed: module.creditCost,
+      input: body.input,
+      status: "pending" as const,
+      errorMessage: null,
+      executionTime: null,
+      metadata: {
+        user_email: user.email,
+        module_name: module.name,
+        request_timestamp: new Date().toISOString(),
+        timeout_ms: body.timeout,
+        user_agent: metadata?.userAgent || "unknown",
+        ip_address: metadata?.ipAddress || "unknown",
+        credits_already_deducted: module.creditCost > 0,
+      },
+    };
+    const createUsageResult = await ctx.moduleRepo.createUsage(usageData);
+    if (!createUsageResult.success) {
+      ctx.logger.error(
+        "Error creating usage record AFTER credit deduction:",
+        new Error("Error creating usage"),
+        {
+          error_message: createUsageResult.error.message,
+          user_id: user.id,
+          module_slug: module.slug,
+          credits_already_deducted: module.creditCost,
+        }
+      );
+      // Rollback credit deduction
+      if (module.creditCost > 0) {
+        await ctx.profileRepo.addCredits(user.id, module.creditCost);
+        ctx.logger.warn(
+          `Crédits reversés: ${module.creditCost} pour ${user.id} pour le module ${module.slug} après échec de la création de l'usage.`
+        );
+      }
+      return createUsageResult;
+    }
+
+    if (!module.name || !module.slug || !user.email) {
+      return {
+        success: false,
+        error: new Error("Module name/slug is missing"),
+        kind: "MODULE_INVALID",
+      } as const;
+    }
+
+    const n8nModule = {
+      id: module.id,
+      name: module.name,
+      slug: module.slug,
+      endpoint: module.endpoint,
+      n8n_trigger_type: "CHAT" as const,
+    };
+
+    // 5. Execute module
+    const executionResult = await ctx.n8n.executeWorkflow({
+      module: n8nModule,
+      input: body.input,
+      userId: user.id,
+      userEmail: user.email,
+    });
+
+    const usageRecord = createUsageResult.data;
+    // 6. Update usage record
+    const startTime = Date.parse(
+      usageRecord.usedAt ?? new Date().toISOString()
+    );
+    const executionTime = Date.now() - startTime;
+
+    if (!executionResult.success) {
+      ctx.logger.error(
+        `Exécution échouée pour ${module.name}:`,
+        new Error("Failed run n8n"),
+        {
+          error: executionResult.error.message,
+          user: user.id,
+          execution_time: executionTime,
+        }
+      );
+
+      // TODO: create notification
+      await ctx.moduleRepo.updateUsage(usageRecord.id, {
+        status: "failed",
+        errorMessage: executionResult.error.message,
+        executionTime,
+        output: {
+          error: "Échec d'exécution du module",
+          details: executionResult.error.message,
+          execution_time: executionTime,
+        },
+        metadata: {
+          ...usageData.metadata,
+          execution_time_ms: executionTime,
+          completed_at: new Date().toISOString(),
+          success: false,
+        },
+      });
+      // Not refunding here as per original logic, but could be considered.
+      return executionResult;
+    }
+
+    await ctx.moduleRepo.updateUsage(usageRecord.id, {
+      status: "success",
+      output: executionResult.data,
+      executionTime,
+      metadata: {
+        ...usageData.metadata,
+        execution_time_ms: executionTime,
+        completed_at: new Date().toISOString(),
+        success: true,
+      },
+    });
+
+    // TODO : create notification of success
+
+    // 7. Save content
+    // shouldSaveContent(executionResult.data)
+    const output = executionResult.data;
+    if (body.saveOutput) {
+      const content = (output?.content ||
+        output?.text ||
+        output?.result ||
+        output?.generated_content ||
+        (typeof output?.data === "string"
+          ? output.data
+          : JSON.stringify(output?.data || output))) as string;
+
+      const title = (output?.title ||
+        output?.name ||
+        output?.subject ||
+        `Contenu généré par ${module.name}`) as string;
+
+      // Détection intelligente du type
+      const type = (output?.type ||
+        output?.content_type ||
+        (module.name.toLowerCase().includes("article")
+          ? "article"
+          : module.name.toLowerCase().includes("social")
+            ? "social-post"
+            : module.name.toLowerCase().includes("video")
+              ? "video"
+              : module.name.toLowerCase().includes("document")
+                ? "document"
+                : "content")) as string;
+
+      // Métadonnées enrichies
+      const metadata = {
+        module_name: module.name,
+        module_slug: module.slug,
+        created_at: new Date().toISOString(),
+        output_keys: Object.keys(output || {}),
+        content_length: content?.length || 0,
+        word_count: content ? content.split(/\s+/).length : 0,
+        has_url: !!(output?.url || output?.link),
+        generation_source: "api",
+        ...output?.metadata,
+        original_output: output,
+      };
+      const url = (output?.url || output?.link) as string | undefined;
+      await ctx.generatedContentRepo.save({
+        userId: user.id,
+        moduleId: module.id,
+        moduleSlug: module.slug,
+        title: title?.substring(0, 200),
+        type,
+        content: content?.substring(0, 50000), // Limite à 50k caractères
+        status: "draft",
+        metadata,
+        url,
+      });
+    }
+
+    const updatedUserResult = await ctx.profileRepo.getByIdWithPlan(user.id);
+    if (!updatedUserResult.success) return updatedUserResult;
+    const responseData = {
+      usage_id: createUsageResult.data.id,
+      output: output,
+      credits_used: module.creditCost,
+      remaining_credits:
+        updatedUserResult.data?.creditBalance ||
+        creditCheckResult.data.currentBalance - module.creditCost,
+      module_name: module.name,
+      module_slug: module.slug,
+      execution_time_ms: executionTime,
+      total_time_ms: executionTime,
+    };
+
+    return { success: true, data: responseData } as const;
+  });

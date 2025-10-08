@@ -3,30 +3,30 @@ import {
   getUserProfileForService,
   type OppSysSupabaseClient,
 } from "@oppsys/supabase";
-import type { N8nModule } from "./n8n-type";
+import type { N8nInput, N8nModule, N8nResult } from "./n8n-type";
 import { determineTriggerType } from "./trigger-type";
+import { extractMessageFromN8n } from "./utilis";
 
 const logger = createLogger();
+
+type ExecuteParams = {
+  module: N8nModule;
+  input: N8nInput;
+  userId: string;
+  userEmail: string;
+};
 
 export function createN8nInstance({
   supabase,
   N8N_WEBHOOK_AUTH_PASS,
   N8N_WEBHOOK_AUTH_USER,
 }: N8nInstanceParams) {
-  async function executeN8nWorkflow(
-    module: N8nModule,
-    input: any,
-    userId: string,
-    userEmail: string
-  ): Promise<any> {
-    // 🔍 DEBUG VARIABLES ENV
-    console.log("🔍 ENV DEBUG:", {
-      user_env: N8N_WEBHOOK_AUTH_USER,
-      pass_env: N8N_WEBHOOK_AUTH_PASS,
-      module_endpoint: module.endpoint,
-      module_slug: module.slug,
-    });
-
+  async function executeWorkflow({
+    module,
+    input,
+    userId,
+    userEmail,
+  }: ExecuteParams) {
     if (!module.endpoint) {
       throw new Error(
         `Webhook URL (endpoint) manquant pour le module ${module.name}`
@@ -405,7 +405,7 @@ export function createN8nInstance({
         );
       }
 
-      const result = await response.json();
+      const result: N8nResult = (await response.json()) || {};
 
       logger.info(`N8N Success for ${module.name}`, {
         user: userEmail,
@@ -413,8 +413,9 @@ export function createN8nInstance({
         execution_time: Date.now(),
         has_result: !!result,
       });
+      const outputMessage = extractMessageFromN8n(result);
 
-      return { success: true, data: result } as const;
+      return { success: true, data: { ...result, outputMessage } } as const;
     } catch (error: unknown) {
       if (error instanceof Error && error.name === "AbortError") {
         logger.warn(
@@ -426,7 +427,7 @@ export function createN8nInstance({
           error: new Error(
             "Le workflow prend plus de temps que prévu - Vérifiez votre contenu généré dans quelques minutes"
           ),
-        };
+        } as const;
       }
 
       const errorMessage =
@@ -443,11 +444,11 @@ export function createN8nInstance({
         error: new Error(
           `Échec d'exécution du module ${module.name}: ${errorMessage}`
         ),
-      };
+      } as const;
     }
   }
 
-  return { executeN8nWorkflow };
+  return { executeWorkflow };
 }
 type N8nInstanceParams = {
   supabase: OppSysSupabaseClient;

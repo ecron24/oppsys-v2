@@ -4,7 +4,7 @@ import { ListModulesQuerySchema } from "../domain/module";
 export const getModulesUseCase = buildUseCase()
   .input(ListModulesQuerySchema)
   .handle(async (ctx, query) => {
-    const modules = await ctx.moduleRepo.getAll(query);
+    const modules = await ctx.moduleRepo.list(query);
 
     return modules;
   });

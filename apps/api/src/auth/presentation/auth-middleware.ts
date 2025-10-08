@@ -1,5 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { type OppSysContext } from "src/get-context";
+import type { UserInContext } from "src/lib/get-user-in-context";
 
 type Config = {
   skipUrls?: string[];
@@ -9,7 +10,7 @@ const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const authenticateToken = (
   ctx: OppSysContext,
-  { skipUrls = [] }: Config
+  { skipUrls = [] }: Config = {}
 ) => {
   const skipRegex = skipUrls.map((raw) => {
     // should start with '/'
@@ -72,11 +73,14 @@ export const authenticateToken = (
       const user = {
         ...profile,
         plan_name: profile.plans?.name || "Free",
-      } as Record<string, unknown>;
-      const { plan, ...userClean } = user;
+      };
+      const userInContext: UserInContext = {
+        id: user.id,
+        email: user.email,
+      };
 
       // Attach to Hono context state
-      c.set("user", userClean);
+      c.set("user", userInContext);
       c.set("userId", userId);
 
       return await next();
