@@ -2,6 +2,7 @@ import { buildUseCase } from "src/lib/use-case-builder";
 import { ChatWithModuleBodySchema, ModuleParamsSchema } from "../domain/module";
 import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
+import { InsufficientCreditError } from "../domain/exception";
 
 const ChatWithModuleInputSchema = z.object({
   params: ModuleParamsSchema,
@@ -32,7 +33,11 @@ export const chatWithModuleUseCase = buildUseCase()
       if (!creditCheckResult.data.hasEnoughCredits) {
         return {
           success: false,
-          error: new Error("Insufficient credits"),
+          error: new InsufficientCreditError({
+            required: module.creditCost,
+            available: creditCheckResult.data.currentBalance,
+            shortfall: creditCheckResult.data.shortfall,
+          }),
           kind: "INSUFFICIENT_CREDITS",
         } as const;
       }

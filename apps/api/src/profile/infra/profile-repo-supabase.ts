@@ -111,7 +111,6 @@ export class ProfileRepoSupabase implements ProfileRepo {
       });
 
       if (error) {
-        // TODO: check for insufficient credits error from RPC
         throw error;
       }
 

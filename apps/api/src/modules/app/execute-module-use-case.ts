@@ -6,6 +6,8 @@ import {
 } from "../domain/module";
 import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
+import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
+import { InsufficientCreditError } from "../domain/exception";
 
 const ExecuteModuleInputSchema = z.object({
   params: ModuleParamsSchema,
@@ -36,11 +38,26 @@ export const executeModuleUseCase = buildUseCase()
     );
     if (!creditCheckResult.success) return creditCheckResult;
     if (!creditCheckResult.data.hasEnoughCredits) {
-      // TODO: createNotification
-      // Add custom error INSUFFICIENT_CREDITS to put all related data in the error
+      await createNotificationUseCase(ctx, {
+        userId: user.id,
+        type: "warning",
+        title: "Crédits insuffisants",
+        message: `Tentative d'utilisation de ${module.name} échouée. Vous avez besoin de ${module.creditCost} crédits mais n'en avez que ${creditCheckResult.data.currentBalance}.`,
+        data: {
+          module_id: module.id,
+          module_name: module.name,
+          required_credits: module.category,
+          available_credits: creditCheckResult.data.currentBalance,
+        },
+      });
+
       return {
         success: false,
-        error: new Error("Insufficient credits"),
+        error: new InsufficientCreditError({
+          required: module.creditCost,
+          available: creditCheckResult.data.currentBalance,
+          shortfall: creditCheckResult.data.shortfall,
+        }),
         kind: "INSUFFICIENT_CREDITS",
       } as const;
     }
@@ -52,7 +69,13 @@ export const executeModuleUseCase = buildUseCase()
         module.creditCost
       );
       if (!deductResult.success) {
-        // TODO: create notification
+        await createNotificationUseCase(ctx, {
+          userId: user.id,
+          type: "warning",
+          title: "Échec déduction crédits",
+          message: `Impossible de débiter ${module.creditCost} crédits pour ${module.name}`,
+          data: { module_id: module.id, error: deductResult.error.message },
+        });
         return deductResult;
       }
     }
@@ -141,7 +164,19 @@ export const executeModuleUseCase = buildUseCase()
         }
       );
 
-      // TODO: create notification
+      await createNotificationUseCase(ctx, {
+        userId: user.id,
+        type: "error",
+        title: "Échec d'exécution du module",
+        message: `${module.name} n'a pas pu être exécuté: ${executionResult.error.message}`,
+        data: {
+          module_id: module.id,
+          error_message: executionResult.error.message,
+          usage_id: createUsageResult.data.id,
+          execution_time: executionTime,
+        },
+      });
+
       await ctx.moduleRepo.updateUsage(usageRecord.id, {
         status: "failed",
         errorMessage: executionResult.error.message,
@@ -174,7 +209,17 @@ export const executeModuleUseCase = buildUseCase()
       },
     });
 
-    // TODO : create notification of success
+    await createNotificationUseCase(ctx, {
+      userId: user.id,
+      type: "success",
+      title: "Module exécuté avec succès",
+      message: `${module.name} a été exécuté en ${Math.round(executionTime / 1000)}s. ${module.creditCost} crédits utilisés.`,
+      data: {
+        module_id: module.id,
+        usage_id: createUsageResult.data.id,
+        execution_time: executionTime,
+      },
+    });
 
     // 7. Save content
     // shouldSaveContent(executionResult.data)

@@ -3,6 +3,7 @@ import type { Result } from "@oppsys/types";
 import z, { ZodError } from "zod";
 import { AuthError } from "@oppsys/supabase";
 import type { OppSysContext } from "src/get-context";
+import { InsufficientCreditError } from "src/modules/domain/exception";
 
 export function handleResultResponse<TData, TStatusCode extends 200>(
   honoCtx: Context,
@@ -12,6 +13,13 @@ export function handleResultResponse<TData, TStatusCode extends 200>(
   if (result.success) {
     return honoCtx.json({ data: result.data }, statusCodeSuccess);
   }
+  if (result.error instanceof InsufficientCreditError) {
+    return honoCtx.json(
+      { error: "Insufficient credit", details: result.error.message },
+      402
+    );
+  }
+
   const kind = result.kind.toLowerCase();
   if (kind.includes("not_found")) {
     return honoCtx.json(
