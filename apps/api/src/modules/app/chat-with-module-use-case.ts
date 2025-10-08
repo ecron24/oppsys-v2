@@ -1,8 +1,17 @@
 import { buildUseCase } from "src/lib/use-case-builder";
-import { ChatWithModuleBodySchema, ModuleParamsSchema } from "../domain/module";
+import { ModuleParamsSchema } from "../domain/module";
 import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { InsufficientCreditError } from "../domain/exception";
+import { IsoDatetime } from "src/common/common-schema";
+
+export const ChatWithModuleBodySchema = z.object({
+  sessionId: z.string(),
+  message: z.string(),
+  context: z.record(z.string(), z.any()).default({}),
+  timestamp: IsoDatetime.optional(),
+});
+export type ChatWithModuleBody = z.infer<typeof ChatWithModuleBodySchema>;
 
 const ChatWithModuleInputSchema = z.object({
   params: ModuleParamsSchema,

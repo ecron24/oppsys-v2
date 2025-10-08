@@ -1,9 +1,9 @@
-import { IsoDatetime } from "src/common/common-schema";
+import { IsoDatetime, UuidSchema } from "src/common/common-schema";
 import { z } from "zod";
 
 export const NotificationSchema = z.object({
-  id: z.uuid(),
-  userId: z.uuid(),
+  id: UuidSchema,
+  userId: UuidSchema,
   type: z.enum(["info", "warning", "error", "success"]),
   title: z.string(),
   message: z.string(),

@@ -1,10 +1,7 @@
 import type { Result } from "@oppsys/types";
-import type {
-  ListModulesQuery,
-  Module,
-  ModuleUsage,
-  ModuleUsageHistoryQuery,
-} from "./module";
+import type { Module, ModuleUsage } from "./module";
+import type { ModuleUsageHistoryQuery } from "../app/get-module-usage-history-use-case";
+import type { ListModulesQuery } from "../app/get-modules-use-case";
 
 export type GetModulesResult = Result<
   { data: Module[]; total: number },

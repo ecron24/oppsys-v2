@@ -1,11 +1,11 @@
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
-import type { GeneratedContent } from "../../modules/domain/module";
 import type {
   GeneratedContentRepo,
   SaveGeneratedContentResult,
 } from "../domain/generated-content-repo";
 import { tryCatch } from "src/lib/try-catch";
 import { toCamelCase } from "src/lib/to-camel-case";
+import type { GeneratedContent } from "../domain/module";
 
 export class GeneratedContentRepoSupabase implements GeneratedContentRepo {
   constructor(private supabase: OppSysSupabaseClient) {}

@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { nullableSchema } from "src/common/common-schema";
+import { nullableSchema, UuidSchema } from "src/common/common-schema";
 import z from "zod";
 
 export function getUserInContext(c: Context) {
@@ -8,7 +8,7 @@ export function getUserInContext(c: Context) {
 }
 
 export const UserInContextSchema = z.object({
-  id: z.uuid(),
+  id: UuidSchema,
   email: nullableSchema(z.email()),
 });
 

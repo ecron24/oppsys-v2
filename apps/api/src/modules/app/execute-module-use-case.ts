@@ -1,13 +1,17 @@
 import { buildUseCase } from "src/lib/use-case-builder";
-import {
-  ExecuteModuleBodySchema,
-  ModuleParamsSchema,
-  type ModuleUsage,
-} from "../domain/module";
+import { ModuleParamsSchema, type ModuleUsage } from "../domain/module";
 import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
 import { InsufficientCreditError } from "../domain/exception";
+
+export const ExecuteModuleBodySchema = z.object({
+  input: z.record(z.string(), z.any()),
+  saveOutput: z.boolean().default(true),
+  timeout: z.number().int().min(5000).max(300000).default(30000),
+  priority: z.enum(["low", "normal", "high"]).default("normal"),
+});
+export type ExecuteModuleBody = z.infer<typeof ExecuteModuleBodySchema>;
 
 const ExecuteModuleInputSchema = z.object({
   params: ModuleParamsSchema,

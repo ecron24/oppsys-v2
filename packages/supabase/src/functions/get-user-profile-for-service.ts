@@ -6,10 +6,10 @@ const inputSchema = z.object({
 });
 
 const userProfileSchema = z.object({
-  id: z.uuid(),
+  id: z.string().min(1), // TODO: assure I'm z.uuid()
   full_name: z.string(),
   role: z.string(),
-  plan_id: z.uuid(),
+  plan_id: z.string().min(1), // TODO: assure I'm z.uuid()
   credit_balance: z.number(),
   renewal_date: z.iso.datetime({ offset: true }),
   social_sessions: z.record(z.string(), z.any()),

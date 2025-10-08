@@ -2,9 +2,7 @@ import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import {
   ModuleSchema,
   ModuleUsageSchema,
-  type ListModulesQuery,
   type ModuleUsage,
-  type ModuleUsageHistoryQuery,
 } from "../domain/module";
 import type {
   CreateModuleUsageResult,
@@ -18,6 +16,8 @@ import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
 import { toCamelCase } from "src/lib/to-camel-case";
 import z from "zod";
+import type { ListModulesQuery } from "../app/get-modules-use-case";
+import type { ModuleUsageHistoryQuery } from "../app/get-module-usage-history-use-case";
 
 export class ModuleRepoSupabase implements ModuleRepo {
   constructor(

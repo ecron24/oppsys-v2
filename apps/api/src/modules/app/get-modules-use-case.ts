@@ -1,5 +1,21 @@
+import { paginationSchema } from "src/common/common-schema";
 import { buildUseCase } from "src/lib/use-case-builder";
-import { ListModulesQuerySchema } from "../domain/module";
+import z from "zod";
+
+export const ListModulesQuerySchema = paginationSchema.extend({
+  type: z.enum(["n8n", "ai"]).optional(),
+  category: z.string().max(50).optional(),
+  search: z.string().max(100).optional(),
+  sort: z
+    .enum(["name", "credit_cost", "created_at", "usage_count"])
+    .default("name"),
+  order: z.enum(["asc", "desc"]).default("asc"),
+  includeInactive: z
+    .enum(["true", "false"])
+    .transform((val) => val === "true")
+    .optional(),
+});
+export type ListModulesQuery = z.infer<typeof ListModulesQuerySchema>;
 
 export const getModulesUseCase = buildUseCase()
   .input(ListModulesQuerySchema)
