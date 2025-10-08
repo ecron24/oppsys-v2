@@ -48,6 +48,8 @@ The main components of the architecture are:
 - **app**: This layer contains the use cases and business logic of the application. It interacts with the domain layer and orchestrates the flow of data. Stored on the folder `src/[features]/app`.
 - **infra**: This layer contains the implementation of external services and frameworks. It interacts with the application layer through interfaces defined in the domain layer. Stored on the folder `src/[features]/infra`.
 - **presentation**: This layer contains the API endpoints and request/response handling. It uses the **Hono** to define routes and middleware. Stored on the folder `src/[features]/presentation`.
+- **OppsYsContext**: This is the file `src/get-context.ts`.
+- **api-router-entrypoint**: This is the file `src/api-router.ts`.
 - **entrypoint**: This is the file `src/index.ts`.
 
 We are going to use the feature example to serve as a guide for the architecture. This example follows our folder structure, it like a real world example.
