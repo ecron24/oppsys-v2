@@ -1,6 +1,6 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { NotificationSchema } from "../domain/notification";
-import z from "zod";
+import { IsoDatetime } from "src/common/common-schema";
 
 export const CreateNotificationSchema = NotificationSchema.omit({
   createdAt: true,
@@ -8,7 +8,7 @@ export const CreateNotificationSchema = NotificationSchema.omit({
   readAt: true,
   expiresAt: true,
 }).extend({
-  expiresAt: z.iso.datetime().optional(),
+  expiresAt: IsoDatetime.optional(),
 });
 
 export const createNotificationUseCase = buildUseCase()

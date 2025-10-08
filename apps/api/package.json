@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
+    "@hono/standard-validator": "^0.1.5",
+    "@hono/swagger-ui": "^0.5.2",
     "@hono/zod-validator": "^0.7.3",
     "@oppsys/logger": "workspace:*",
     "@oppsys/n8n": "workspace:*",

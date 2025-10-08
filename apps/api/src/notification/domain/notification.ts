@@ -1,3 +1,4 @@
+import { IsoDatetime } from "src/common/common-schema";
 import { z } from "zod";
 
 export const NotificationSchema = z.object({
@@ -7,8 +8,8 @@ export const NotificationSchema = z.object({
   title: z.string(),
   message: z.string(),
   data: z.record(z.string(), z.any()).optional(),
-  expiresAt: z.iso.datetime(),
-  createdAt: z.iso.datetime(),
-  readAt: z.iso.datetime().nullable().optional(),
+  expiresAt: IsoDatetime,
+  createdAt: IsoDatetime,
+  readAt: IsoDatetime.nullable().optional(),
 });
 export type Notification = z.infer<typeof NotificationSchema>;

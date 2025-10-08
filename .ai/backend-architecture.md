@@ -199,7 +199,13 @@ import { zValidatorWrapper } from "src/lib/validator-wrapper";
 export const moduleRouter = honoRouter((ctx) => {
   const router = new Hono().get(
     "/",
+    describeRoute({
+      description: "", // add short description for the route
+    }),
     zValidatorWrapper("query", ListModulesQuerySchema),
+    validator("query", ListModulesQuerySchema), // always put both and validator in the seconds
+    // zValidatorWrapper("json", ...), // in case of body json
+    // validator("json", ..),
     async (c) => {
       const result = await getModulesUseCase(ctx, c.req.valid("query"));
       return handleResultResponse(c, result, , { oppSysContext: ctx });

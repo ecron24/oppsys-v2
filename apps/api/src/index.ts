@@ -9,6 +9,8 @@ import { cors } from "hono/cors";
 import { env } from "./env";
 import { rateLimiter } from "hono-rate-limiter";
 import { bodyLimit } from "hono/body-limit";
+import { openAPIRouteHandler } from "hono-openapi";
+import { swaggerUI } from "@hono/swagger-ui";
 
 const logger = createLogger();
 const app = new Hono();
@@ -79,6 +81,22 @@ app.get("/", async (c) => {
 
 // api routes
 app.route("/", apiRouter);
+
+app.get(
+  "/openapi",
+  openAPIRouteHandler(app, {
+    documentation: {
+      info: {
+        title: "OppsYs API",
+        version: "1.0.0",
+        description: "Greeting API",
+      },
+      servers: [{ url: "http://localhost:3000", description: "Local Server" }],
+    },
+  })
+);
+
+app.get("/ui", swaggerUI({ url: "/openapi" }));
 
 app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);

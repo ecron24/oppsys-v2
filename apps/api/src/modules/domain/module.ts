@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  IsoDatetime,
   nullableSchema,
   NumberNullableSchema,
   paginationSchema,
@@ -7,7 +8,7 @@ import {
 } from "src/common/common-schema";
 
 export const ModuleSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
   name: nullableSchema(z.string()),
   slug: nullableSchema(z.string()),
   description: nullableSchema(z.string()),
@@ -18,8 +19,8 @@ export const ModuleSchema = z.object({
   config: nullableSchema(z.any()),
   isActive: z.boolean(),
   category: nullableSchema(z.string()),
-  createdAt: nullableSchema(z.iso.datetime()),
-  updatedAt: nullableSchema(z.iso.datetime()),
+  createdAt: nullableSchema(IsoDatetime),
+  updatedAt: nullableSchema(IsoDatetime),
 });
 export type Module = z.infer<typeof ModuleSchema>;
 
@@ -34,7 +35,7 @@ export const ModuleUsageSchema = z.object({
   status: nullableSchema(z.enum(["pending", "success", "failed"])).default(
     "pending"
   ),
-  usedAt: nullableSchema(z.iso.datetime()),
+  usedAt: nullableSchema(IsoDatetime),
   errorMessage: StringNullableSchema,
   executionTime: NumberNullableSchema,
   metadata: nullableSchema(z.record(z.string(), z.any())),
@@ -52,7 +53,7 @@ export const GeneratedContentSchema = z.object({
   status: StringNullableSchema,
   url: nullableSchema(z.url()),
   metadata: nullableSchema(z.any()),
-  createdAt: nullableSchema(z.iso.datetime()),
+  createdAt: nullableSchema(z.iso.datetime({ offset: true })),
 });
 export type GeneratedContent = z.infer<typeof GeneratedContentSchema>;
 
@@ -64,7 +65,10 @@ export const ListModulesQuerySchema = paginationSchema.extend({
     .enum(["name", "credit_cost", "created_at", "usage_count"])
     .default("name"),
   order: z.enum(["asc", "desc"]).default("asc"),
-  includeInactive: z.boolean().default(false),
+  includeInactive: z
+    .enum(["true", "false"])
+    .transform((val) => val === "true")
+    .optional(),
 });
 export type ListModulesQuery = z.infer<typeof ListModulesQuerySchema>;
 
@@ -80,7 +84,7 @@ export const ChatWithModuleBodySchema = z.object({
   sessionId: z.string(),
   message: z.string(),
   context: z.record(z.string(), z.any()).default({}),
-  timestamp: z.iso.datetime().optional(),
+  timestamp: IsoDatetime.optional(),
 });
 export type ChatWithModuleBody = z.infer<typeof ChatWithModuleBodySchema>;
 
@@ -93,8 +97,8 @@ export const ModuleUsageHistoryQuerySchema = paginationSchema.extend({
   moduleId: z.uuid().optional(),
   moduleSlug: z.string().optional(),
   status: z.enum(["success", "failed", "pending"]).optional(),
-  startDate: z.iso.datetime().optional(),
-  endDate: z.iso.datetime().optional(),
+  startDate: IsoDatetime.optional(),
+  endDate: IsoDatetime.optional(),
   includeOutput: z.boolean().default(false),
   sort: z.enum(["used_at", "credits_used", "status"]).default("used_at"),
   order: z.enum(["asc", "desc"]).default("desc"),

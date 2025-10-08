@@ -12,7 +12,11 @@ export const zValidatorWrapper = <
   zv(target, schema, (result, c) => {
     if (!result.success) {
       return c.json(
-        { error: "Validation error", details: z.prettifyError(result.error) },
+        {
+          success: false,
+          error: "Validation error",
+          details: z.prettifyError(result.error),
+        },
         400
       );
     }
