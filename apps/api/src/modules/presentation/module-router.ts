@@ -14,13 +14,10 @@ import { getModuleByIdUseCase } from "../app/get-module-by-id-use-case";
 import { getModuleUsageHistoryUseCase } from "../app/get-module-usage-history-use-case";
 import { executeModuleUseCase } from "../app/execute-module-use-case";
 import { chatWithModuleUseCase } from "../app/chat-with-module-use-case";
-import { authenticateToken } from "src/auth/presentation/auth-middleware";
 import { getUserInContext } from "src/lib/get-user-in-context";
 
 export const moduleRouter = honoRouter((ctx) => {
   const router = new Hono();
-
-  router.use("*", authenticateToken(ctx));
 
   router.get(
     "/",

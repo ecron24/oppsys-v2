@@ -19,6 +19,7 @@
     "@oppsys/types": "workspace:*",
     "dotenv": "^17.2.3",
     "hono": "catalog:",
+    "hono-openapi": "^1.1.0",
     "hono-rate-limiter": "^0.4.2",
     "winston": "^3.18.2",
     "zod": "catalog:"

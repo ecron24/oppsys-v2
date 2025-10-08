@@ -5,13 +5,19 @@ import { authRouter } from "./auth/presentation/auth-router";
 import { authenticateToken } from "./auth/presentation/auth-middleware";
 
 export const apiRouter = honoRouter((ctx) => {
-  const router = new Hono()
-    .use(authenticateToken(ctx, { skipUrls: ["api/health", "api/auth/*"] }))
+  const publicApiRouter = new Hono()
     .get("/api/health", (c) =>
       c.json({ status: "OK", timestamp: new Date().toISOString() }, 200)
     )
-    .route("/api/auth", authRouter)
+    .route("/api/auth", authRouter);
+
+  const authenticatedApiRouter = new Hono()
+    .use("*", authenticateToken(ctx))
     .route("/api/modules", moduleRouter);
+
+  const router = new Hono()
+    .route("/", publicApiRouter)
+    .route("/", authenticatedApiRouter);
 
   return router;
 });
