@@ -1,5 +1,5 @@
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
-import type { GeneratedContent } from "../domain/module";
+import type { GeneratedContent } from "../../modules/domain/module";
 import type {
   GeneratedContentRepo,
   SaveGeneratedContentResult,
