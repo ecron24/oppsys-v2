@@ -75,6 +75,9 @@ user/ # Modules métier
   app/ # Cas d'utilisation liés à l'application et logique metier
   domain/ # Entités et repositories du domaine
   infra/ # Implémentations des repositories (ex: Supabase)
+api-router.ts # entry for all api
+get-context.ts # projet context
+env.ts # expose environemnt variable
 ```
 
 ### Folder for frontend (client)
