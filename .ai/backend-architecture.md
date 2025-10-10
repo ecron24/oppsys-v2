@@ -205,7 +205,7 @@ export const moduleRouter = honoRouter((ctx) => {
       description: "", // add short description for the route
     }),
     zValidatorWrapper("query", ListModulesQuerySchema),
-    validator("query", ListModulesQuerySchema), // always put both and validator in the seconds
+    validator("query", ListModulesQuerySchema), // always put zValidatorWrapper and validator in the seconds
     // zValidatorWrapper("json", ...), // in case of body json
     // validator("json", ..),
     async (c) => {
@@ -273,10 +273,14 @@ We throw a generic error to the client, and log the actual error on the server. 
 
 Utility lib is located at @apps/api/src/lib
 
+### Database type
+
+Database type references is at @packages/supabase/src/database.types.ts
+
 ## Technologies
 
 - "@supabase/supabase-js": "^2.58.0",
 - firebase-functions: "^6.0.1",
 - zod: ^4.1.11
 - hono: "^4.9.9"
-- @hono/zod-validato": "^0.7.3",
+- @hono/zod-validator": "^0.7.3",
