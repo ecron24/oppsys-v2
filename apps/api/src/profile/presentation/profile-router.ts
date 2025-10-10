@@ -9,18 +9,24 @@ import { GetGeneratedContentQuerySchema } from "src/generated-content/domain/mod
 import { getPlanHistoryUseCase } from "src/plan/app/get-plan-history-use-case";
 import { UpdateProfileSchema } from "../domain/profile";
 import { getUserInContext } from "src/lib/get-user-in-context";
+import { describeRoute, validator } from "hono-openapi";
 
 export const profileRouter = honoRouter((ctx) => {
   const router = new Hono()
-    .get("/me", async (c) => {
-      const user = getUserInContext(c);
-      const result = await getProfileUseCase(ctx, { userId: user.id });
-
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .get(
+      "/me",
+      describeRoute({ description: "Get current user profile" }),
+      async (c) => {
+        const user = getUserInContext(c);
+        const result = await getProfileUseCase(ctx, { userId: user.id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
     .put(
       "/profile",
+      describeRoute({ description: "Update user profile" }),
       zValidatorWrapper("json", UpdateProfileSchema),
+      validator("json", UpdateProfileSchema),
       async (c) => {
         const user = getUserInContext(c);
         const body = c.req.valid("json");
@@ -31,14 +37,20 @@ export const profileRouter = honoRouter((ctx) => {
         return handleResultResponse(c, result, { oppSysContext: ctx });
       }
     )
-    .get("/plan-history", async (c) => {
-      const user = getUserInContext(c);
-      const result = await getPlanHistoryUseCase(ctx, { userId: user.id });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .get(
+      "/plan-history",
+      describeRoute({ description: "Get user plan history" }),
+      async (c) => {
+        const user = getUserInContext(c);
+        const result = await getPlanHistoryUseCase(ctx, { userId: user.id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
     .get(
       "/generated-content",
+      describeRoute({ description: "Get generated content history" }),
       zValidatorWrapper("query", GetGeneratedContentQuerySchema),
+      validator("query", GetGeneratedContentQuerySchema),
       async (c) => {
         const user = getUserInContext(c);
         const query = c.req.valid("query");

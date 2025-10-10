@@ -28,7 +28,7 @@ export const moduleRouter = honoRouter((ctx) => {
     .get(
       "/",
       describeRoute({
-        description: "",
+        description: "List all available modules",
       }),
       zValidatorWrapper("query", ListModulesQuerySchema),
       validator("query", ListModulesQuerySchema),
@@ -42,7 +42,7 @@ export const moduleRouter = honoRouter((ctx) => {
     .get(
       "/usage/history",
       describeRoute({
-        description: "",
+        description: "Get usage history for modules",
       }),
       zValidatorWrapper("query", ModuleUsageHistoryQuerySchema),
       validator("query", ModuleUsageHistoryQuerySchema),
@@ -62,7 +62,7 @@ export const moduleRouter = honoRouter((ctx) => {
     .get(
       "/:id",
       describeRoute({
-        description: "",
+        description: "Get a module by its ID",
       }),
       zValidatorWrapper("param", ModuleParamsSchema),
       validator("param", ModuleParamsSchema),
@@ -76,7 +76,7 @@ export const moduleRouter = honoRouter((ctx) => {
     .post(
       "/:id/execute",
       describeRoute({
-        description: "",
+        description: "Execute a module by its ID",
       }),
       zValidatorWrapper("param", ModuleParamsSchema),
       validator("param", ModuleParamsSchema),
@@ -102,7 +102,7 @@ export const moduleRouter = honoRouter((ctx) => {
     .post(
       "/:id/chat",
       describeRoute({
-        description: "",
+        description: "Chat with a module by its ID",
       }),
       zValidatorWrapper("param", ModuleParamsSchema),
       validator("param", ModuleParamsSchema),
