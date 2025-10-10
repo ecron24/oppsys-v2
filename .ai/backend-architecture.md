@@ -120,9 +120,15 @@ The application layer contains the use case for retrieving user.
 import { buildUseCase } from "src/lib/use-case-builder";
 import { ListUserQuerySchema } from "../domain/module";
 
+export const GetUserUseCaseInput = z.object({
+  query: ListUserQuerySchema,
+  // user: UserInContext : // NOTE: Use it only when you want get user connected in the context
+});
+
 export const getUserUseCase = buildUseCase()
   .input(ListUserQuerySchema)
-  .handle(async (ctx, query) => {
+  .handle(async (ctx, input) => {
+    const { query } = input;
     const modules = await ctx.moduleRepo.getAll(query);
 
     if (!modules.success) {
@@ -190,26 +196,26 @@ export class UserRepoSupabase implements UserRepo {
 The presentation layer contains the API endpoint for user registration. We are going to use **Hono** to define the route and middleware.
 
 ```ts
-// src/user/presentation/module-router.ts
+// src/user/presentation/user-router.ts
 import { Hono } from "hono";
 import { honoRouter } from "src/lib/hono-router";
-import { ListModulesQuerySchema } from "../domain/module";
-import { getModulesUseCase } from "../app/get-modules-use-case";
+import { ListUserQuerySchema } from "../domain/module";
+import { getUserUseCase } from "../app/get-user-use-case";
 import { handleResultResponse } from "src/lib/handle-result-response";
 import { zValidatorWrapper } from "src/lib/validator-wrapper";
 
-export const moduleRouter = honoRouter((ctx) => {
+export const userRouter = honoRouter((ctx) => {
   const router = new Hono().get(
     "/",
     describeRoute({
       description: "", // add short description for the route
     }),
-    zValidatorWrapper("query", ListModulesQuerySchema),
-    validator("query", ListModulesQuerySchema), // always put zValidatorWrapper and validator in the seconds
-    // zValidatorWrapper("json", ...), // in case of body json
-    // validator("json", ..),
+    zValidatorWrapper("query", ListUserQuerySchema),
+    validator("query", ListUserQuerySchema), // always put zValidatorWrapper and validator in the seconds
+    zValidatorWrapper("json", ...), // in case of body json
+    validator("json", ..), // in case of body json
     async (c) => {
-      const result = await getModulesUseCase(ctx, c.req.valid("query"));
+      const result = await getUserUseCase(ctx, {query: c.req.valid("query")});
       return handleResultResponse(c, result, , { oppSysContext: ctx });
     }
   );
@@ -223,7 +229,7 @@ export const moduleRouter = honoRouter((ctx) => {
 // Some code...
 import { Hono } from "hono";
 import { honoRouter } from "./lib/hono-router";
-import { moduleRouter } from "./modules/presentation/module-router";
+import { userRouter } from "./modules/presentation/module-router";
 import { authenticateToken } from "./auth/presentation/auth-middleware";
 
 export const apiRouter = honoRouter(() => {
@@ -234,8 +240,15 @@ export const apiRouter = honoRouter(() => {
     .route("/api/auth", authRouter);
 
   const authenticatedApiRouter = new Hono()
-    .use("*", authenticateToken(ctx))
-    .route("/api/modules", moduleRouter);
+    .use(
+      "*",
+      authenticateToken(ctx, {
+        skipUrls: [
+          /* ... */
+        ],
+      })
+    )
+    .route("/api/modules", userRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)
@@ -252,13 +265,12 @@ export type ApiRouter = typeof apiRouter;
 import { AuthRepoSupabase } from "./auth/infra/auth-repo-supabase";
 import { supabase } from "./lib/supabase";
 import { LoggerWinston } from "./logger/infra/logger-winston";
-import { ModuleRepoSupabase } from "./modules/infra/module-repo-supabase";
+import { UserRepoSupabase } from "./user/infra/user-repo-supabase";
 
 export function getContext() {
   const logger = new LoggerWinston();
   return {
     logger,
-    moduleRepo: new ModuleRepoSupabase(supabase, logger),
     authRepo: new AuthRepoSupabase(supabase, logger),
     userRepo: new UserRepoSupabase(supabase, logger),
     // add others ...
