@@ -3,6 +3,7 @@ import { honoRouter } from "./lib/hono-router";
 import { moduleRouter } from "./modules/presentation/module-router";
 import { authRouter } from "./auth/presentation/auth-router";
 import { authenticateToken } from "./auth/presentation/auth-middleware";
+import { chatRouter } from "./chat/presentation/chat-router";
 import { profileRouter } from "./profile/presentation/profile-router";
 
 export const apiRouter = honoRouter((ctx) => {
@@ -15,7 +16,8 @@ export const apiRouter = honoRouter((ctx) => {
   const authenticatedApiRouter = new Hono()
     .use("*", authenticateToken(ctx, { skipUrls: ["/openapi", "/ui", "*"] }))
     .route("/api/modules", moduleRouter)
-    .route("/api/users", profileRouter);
+    .route("/api/users", profileRouter)
+    .route("/api/chat", chatRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)

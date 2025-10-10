@@ -6,10 +6,13 @@ import { GeneratedContentRepoSupabase } from "./generated-content/infra/generate
 import { ModuleRepoSupabase } from "./modules/infra/module-repo-supabase";
 import { NotificationRepoSupabase } from "./notification/infra/notification-repo-supabase";
 import { PlanRepoSupabase } from "./plan/infra/plan-repo-supabase";
+import { ChatSessionRepoSupabase } from "./chat/infra/chat-session-repo-supabase";
 import { ProfileRepoSupabase } from "./profile/infra/profile-repo-supabase";
 
 export function getContext() {
   const logger = new LoggerWinston();
+  const chatSessionRepo = new ChatSessionRepoSupabase(supabase, logger);
+
   return {
     planRepo: new PlanRepoSupabase(supabase),
     profileRepo: new ProfileRepoSupabase(supabase),
@@ -19,6 +22,7 @@ export function getContext() {
     generatedContentRepo: new GeneratedContentRepoSupabase(supabase),
     notificationRepo: new NotificationRepoSupabase(supabase),
     n8n: n8nInstance,
+    chatSessionRepo,
   };
 }
 export type OppSysContext = ReturnType<typeof getContext>;
