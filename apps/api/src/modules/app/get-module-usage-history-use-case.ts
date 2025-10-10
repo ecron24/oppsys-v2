@@ -13,13 +13,17 @@ export const ModuleUsageHistoryQuerySchema = paginationSchema.extend({
   status: z.enum(["success", "failed", "pending"]).optional(),
   startDate: IsoDatetime.optional(),
   endDate: IsoDatetime.optional(),
-  includeOutput: z.boolean().default(false),
+  includeOutput: z
+    .enum(["true", "false"])
+    .transform((val) => val === "true")
+    .optional(),
   sort: z.enum(["used_at", "credits_used", "status"]).default("used_at"),
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 export type ModuleUsageHistoryQuery = z.infer<
   typeof ModuleUsageHistoryQuerySchema
 >;
+
 const GetModuleUsageHistoryInputSchema = z.object({
   query: ModuleUsageHistoryQuerySchema,
   user: UserInContextSchema,

@@ -48,6 +48,8 @@ export const moduleRouter = honoRouter((ctx) => {
       validator("query", ModuleUsageHistoryQuerySchema),
       async (c) => {
         const user = getUserInContext(c);
+        console.log("user", user);
+
         const query = c.req.valid("query");
         const result = await getModuleUsageHistoryUseCase(ctx, {
           query,

@@ -11,6 +11,7 @@ import { rateLimiter } from "hono-rate-limiter";
 import { bodyLimit } from "hono/body-limit";
 import { openAPIRouteHandler } from "hono-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
+import { HTTPException } from "hono/http-exception";
 
 const logger = createLogger();
 const app = new Hono();
@@ -100,6 +101,14 @@ app.get("/ui", swaggerUI({ url: "/openapi" }));
 
 app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);
+});
+
+app.onError((error, c) => {
+  if (error instanceof HTTPException) {
+    console.error(error.cause);
+    return c.json({ error: error.message }, error.status);
+  }
+  return c.json({ error: "Internal Server error" }, 500);
 });
 
 serve(

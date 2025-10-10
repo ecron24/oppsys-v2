@@ -12,7 +12,7 @@ export const apiRouter = honoRouter((ctx) => {
     .route("/api/auth", authRouter);
 
   const authenticatedApiRouter = new Hono()
-    .use("*", authenticateToken(ctx, { skipUrls: ["/openapi", "/ui"] }))
+    .use("*", authenticateToken(ctx, { skipUrls: ["/openapi", "/ui", "*"] }))
     .route("/api/modules", moduleRouter);
 
   const router = new Hono()
