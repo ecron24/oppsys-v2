@@ -5,9 +5,13 @@ import type {
   CreateNotificationResult,
 } from "../domain/notification-repo";
 import { tryCatch } from "src/lib/try-catch";
+import type { Logger } from "src/logger/domain/logger";
 
 export class NotificationRepoSupabase implements NotificationRepo {
-  constructor(private supabase: OppSysSupabaseClient) {}
+  constructor(
+    private supabase: OppSysSupabaseClient,
+    private logger: Logger
+  ) {}
 
   async create(
     notification: Omit<Notification, "id" | "createdAt" | "readAt">
@@ -22,7 +26,10 @@ export class NotificationRepoSupabase implements NotificationRepo {
         expires_at: notification.expiresAt,
       });
 
-      if (error) throw error;
+      if (error) {
+        this.logger.error("[create] :", error, { notification });
+        throw error;
+      }
 
       return { success: true as const, data: undefined };
     });

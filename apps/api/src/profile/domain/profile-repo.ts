@@ -5,7 +5,7 @@ import type { Profile, ProfileWithPlan, UpdateProfile } from "./profile";
 export type UpdateProfileResult = Result<
   ProfileWithPlan,
   Error,
-  "UPDATE_PROFILE_FAILED"
+  "UPDATE_PROFILE_FAILED" | "PROFILE_NOT_FOUND"
 >;
 
 export type CreateProfileResult = Result<void, Error, "PROFILE_CREATE_FAILED">;

@@ -161,6 +161,14 @@ export class ProfileRepoSupabase implements ProfileRepo {
         throw error;
       }
 
+      if (!data) {
+        return {
+          success: false,
+          kind: "PROFILE_NOT_FOUND",
+          error: new Error("unknown error"),
+        } as const;
+      }
+
       return {
         success: true,
         data: ProfileWithPlanSchema.parse(toCamelCase(data)),

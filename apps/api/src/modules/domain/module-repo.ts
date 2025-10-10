@@ -23,7 +23,11 @@ export type CreateModuleUsageResult = Result<
   Error,
   "UNKNOWN_ERROR"
 >;
-export type UpdateModuleUsageResult = Result<void, Error, "UNKNOWN_ERROR">;
+export type UpdateModuleUsageResult = Result<
+  void,
+  Error,
+  "UNKNOWN_ERROR" | "MODULE_NOT_FOUND"
+>;
 
 export interface ModuleRepo {
   list(query: ListModulesQuery): Promise<GetModulesResult>;

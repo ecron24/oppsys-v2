@@ -14,13 +14,13 @@ export function getContext() {
   const chatSessionRepo = new ChatSessionRepoSupabase(supabase, logger);
 
   return {
-    planRepo: new PlanRepoSupabase(supabase),
+    planRepo: new PlanRepoSupabase(supabase, logger),
     profileRepo: new ProfileRepoSupabase(supabase),
     logger,
     moduleRepo: new ModuleRepoSupabase(supabase, logger),
     authRepo: new AuthRepoSupabase(supabase, logger),
     generatedContentRepo: new GeneratedContentRepoSupabase(supabase),
-    notificationRepo: new NotificationRepoSupabase(supabase),
+    notificationRepo: new NotificationRepoSupabase(supabase, logger),
     n8n: n8nInstance,
     chatSessionRepo,
   };

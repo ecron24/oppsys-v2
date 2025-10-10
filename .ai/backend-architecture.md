@@ -177,7 +177,11 @@ export class UserRepoSupabase implements UserRepo {
       const { data, error } = await select;
 
       if (error) {
-        throw error;
+        return {
+          success: false,
+          kind: "UNKNOWN_ERROR",
+          error: new Error("unknown error"),
+        } as const;
       }
 
       return {

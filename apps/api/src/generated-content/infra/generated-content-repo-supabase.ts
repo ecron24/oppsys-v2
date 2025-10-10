@@ -76,7 +76,11 @@ export class GeneratedContentRepoSupabase implements GeneratedContentRepo {
       );
 
       if (error) {
-        throw error;
+        return {
+          success: false,
+          kind: "GENERATED_CONTENT_NOT_FOUND",
+          error: new Error(`GENERATED_CONTENT_NOT_FOUND`),
+        } as const;
       }
 
       return {

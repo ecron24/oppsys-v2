@@ -83,15 +83,30 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
     sessionData: Record<string, unknown>;
   }): Promise<UpdateChatSessionResult> {
     return await tryCatch(async () => {
-      const { error: updateError } = await this.supabase
+      const { error: updateError, data } = await this.supabase
         .from("chat_sessions")
         .update({
           session_data: params.sessionData as Json,
           last_activity: new Date().toISOString(),
         })
-        .eq("id", params.sessionId);
+        .eq("id", params.sessionId)
+        .select();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        this.logger.error(
+          "[updateChatSession] Error updating chat session",
+          updateError
+        );
+        throw updateError;
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          kind: "SESSION_NOT_FOUND",
+          error: new Error(`Session not found : sessionId=${params.sessionId}`),
+        } as const;
+      }
 
       return {
         success: true,
@@ -141,6 +156,7 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
         .from("chat_sessions")
         .delete()
         .lt("expires_at", new Date().toISOString());
+
       if (error) throw error;
 
       this.logger.info(`[chat] Expired sessions cleaned`);

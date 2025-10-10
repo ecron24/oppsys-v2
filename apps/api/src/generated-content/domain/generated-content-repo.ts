@@ -8,7 +8,7 @@ import type {
 export type GetGeneratedContentHistoryResult = Result<
   PaginatedGeneratedContent,
   Error,
-  "UNKNOWN_ERROR"
+  "UNKNOWN_ERROR" | "GENERATED_CONTENT_NOT_FOUND"
 >;
 
 export type SaveGeneratedContentResult = Result<

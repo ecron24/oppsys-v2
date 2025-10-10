@@ -53,7 +53,10 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
       const { data, error, count } = await q;
 
-      if (error) throw error;
+      if (error) {
+        this.logger.error("[list] :", error, { query });
+        throw error;
+      }
 
       const modules = data.map(toCamelCase);
 
@@ -139,7 +142,10 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
       const { data, error, count } = await q;
 
-      if (error) throw error;
+      if (error) {
+        this.logger.error("[listUsageHistory] :", error, { query });
+        throw error;
+      }
 
       const history = data.map(toCamelCase);
 
@@ -173,7 +179,10 @@ export class ModuleRepoSupabase implements ModuleRepo {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        this.logger.error("[createUsage] :", error, { usage });
+        throw error;
+      }
 
       return {
         success: true,
@@ -187,7 +196,7 @@ export class ModuleRepoSupabase implements ModuleRepo {
     usageUpdate: Partial<Omit<ModuleUsage, "id">>
   ): Promise<UpdateModuleUsageResult> {
     return await tryCatch(async () => {
-      const { error } = await this.supabase
+      const { error, data } = await this.supabase
         .from("module_usage")
         .update({
           output: usageUpdate.output,
@@ -195,9 +204,21 @@ export class ModuleRepoSupabase implements ModuleRepo {
           error_message: usageUpdate.errorMessage,
           execution_time: usageUpdate.executionTime,
         })
-        .eq("id", id);
+        .eq("id", id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        this.logger.error("[updateUsage]", error);
+        throw error;
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          kind: "MODULE_NOT_FOUND",
+          error: new Error("unknown error"),
+        } as const;
+      }
 
       return { success: true as const, data: undefined };
     });
