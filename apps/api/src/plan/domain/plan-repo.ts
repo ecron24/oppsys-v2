@@ -1,5 +1,11 @@
 import type { Result } from "@oppsys/types";
-import type { Plan } from "./plan";
+import type { Plan, PlanHistory } from "./plan";
+
+export type GetPlanHistoryResult = Result<
+  PlanHistory[],
+  Error,
+  "UNKNOWN_ERROR"
+>;
 
 export type GetPlanByNameResult = Result<
   Plan,
@@ -9,4 +15,5 @@ export type GetPlanByNameResult = Result<
 
 export interface PlanRepo {
   getByName(name: string): Promise<GetPlanByNameResult>;
+  getHistoryByUserId(userId: string): Promise<GetPlanHistoryResult>;
 }

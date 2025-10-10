@@ -45,3 +45,6 @@ export const ProfileWithPlanSchema = ProfileSchema.extend({
     .nullable(),
 });
 export type ProfileWithPlan = z.infer<typeof ProfileWithPlanSchema>;
+
+export const UpdateProfileSchema = ProfileSchema.omit({ id: true });
+export type UpdateProfile = z.infer<typeof UpdateProfileSchema>;

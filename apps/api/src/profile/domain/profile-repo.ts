@@ -1,6 +1,12 @@
 import type { Result } from "@oppsys/types";
 import type { CreditCheckResult } from "src/modules/domain/module";
-import type { Profile, ProfileWithPlan } from "./profile";
+import type { Profile, ProfileWithPlan, UpdateProfile } from "./profile";
+
+export type UpdateProfileResult = Result<
+  ProfileWithPlan,
+  Error,
+  "UPDATE_PROFILE_FAILED"
+>;
 
 export type CreateProfileResult = Result<void, Error, "PROFILE_CREATE_FAILED">;
 export type GetProfileResult = Result<
@@ -29,4 +35,5 @@ export interface ProfileRepo {
   ): Promise<CheckCreditsResult>;
   deductCredits(userId: string, amount: number): Promise<DeductCreditsResult>;
   addCredits(userId: string, amount: number): Promise<AddCreditsResult>;
+  update(id: string, profile: UpdateProfile): Promise<UpdateProfileResult>;
 }

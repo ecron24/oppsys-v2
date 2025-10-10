@@ -5,6 +5,7 @@ import type {
   AddCreditsResult,
   CheckCreditsResult,
   DeductCreditsResult,
+  UpdateProfileResult,
 } from "src/profile/domain/profile-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
@@ -12,8 +13,10 @@ import {
   ProfileWithPlanSchema,
   type Profile,
   type ProfileWithPlan,
+  type UpdateProfile,
 } from "src/profile/domain/profile";
 import { toCamelCase } from "src/lib/to-camel-case";
+import { toSnakeCase } from "src/lib/to-snake-case";
 
 export class ProfileRepoSupabase implements ProfileRepo {
   constructor(private supabase: OppSysSupabaseClient) {}
@@ -129,6 +132,39 @@ export class ProfileRepoSupabase implements ProfileRepo {
       if (error) throw error;
 
       return { success: true as const, data: undefined };
+    });
+  }
+
+  async update(
+    id: string,
+    profile: UpdateProfile
+  ): Promise<UpdateProfileResult> {
+    return await tryCatch(async () => {
+      const newProfile = toSnakeCase(profile);
+      const { data, error } = await this.supabase
+        .from("profiles")
+        .update(newProfile)
+        .eq("id", id)
+        .select(
+          `
+            *,
+          plans (
+            name,
+            monthly_credits,
+            price_cents
+          )
+        `
+        )
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: ProfileWithPlanSchema.parse(toCamelCase(data)),
+      };
     });
   }
 }

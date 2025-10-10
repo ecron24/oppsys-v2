@@ -21,3 +21,22 @@ export const PlanSchema = z.object({
 });
 
 export type Plan = z.infer<typeof PlanSchema>;
+
+export const PlanHistorySchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  planId: z.string(),
+  startDate: z.string(),
+  endDate: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  plans: PlanSchema.pick({
+    name: true,
+    monthlyCredits: true,
+    priceCents: true,
+  })
+    .optional()
+    .nullable(),
+});
+export type PlanHistory = z.infer<typeof PlanHistorySchema>;

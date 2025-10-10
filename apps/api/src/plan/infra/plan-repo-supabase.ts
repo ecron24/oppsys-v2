@@ -1,7 +1,13 @@
-import type { PlanRepo, GetPlanByNameResult } from "src/plan/domain/plan-repo";
+import type {
+  PlanRepo,
+  GetPlanByNameResult,
+  GetPlanHistoryResult,
+} from "src/plan/domain/plan-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
-import { PlanSchema, type Plan } from "src/plan/domain/plan";
+import { PlanHistorySchema, PlanSchema, type Plan } from "src/plan/domain/plan";
+import { toCamelCase } from "src/lib/to-camel-case";
+import z from "zod";
 
 export class PlanRepoSupabase implements PlanRepo {
   constructor(private supabase: OppSysSupabaseClient) {}
@@ -37,6 +43,34 @@ export class PlanRepoSupabase implements PlanRepo {
         stripeProductId: data.stripe_product_id,
       };
       return { success: true, data: PlanSchema.parse(plan) } as const;
+    });
+  }
+
+  async getHistoryByUserId(userId: string): Promise<GetPlanHistoryResult> {
+    return await tryCatch(async () => {
+      const { data, error } = await this.supabase
+        .from("plan_history")
+        .select(
+          `
+            *,
+            plans (
+              name,
+              monthly_credits,
+              price_cents
+            )
+          `
+        )
+        .eq("user_id", userId)
+        .order("start_date", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: z.array(PlanHistorySchema).parse(data.map(toCamelCase)),
+      };
     });
   }
 }
