@@ -269,16 +269,18 @@ export const executeModuleUseCase = buildUseCase()
         original_output: output,
       };
       const url = (output?.url || output?.link) as string | undefined;
-      await ctx.generatedContentRepo.save({
+      await ctx.contentRepo.create({
         userId: user.id,
-        moduleId: module.id,
-        moduleSlug: module.slug,
-        title: title?.substring(0, 200),
-        type,
-        content: content?.substring(0, 50000), // Limite à 50k caractères
-        status: "draft",
-        metadata,
-        url,
+        contentData: {
+          moduleId: module.id,
+          moduleSlug: module.slug,
+          title: title?.substring(0, 200),
+          type,
+          content: content?.substring(0, 50000), // Limite à 50k caractères
+          status: "draft",
+          metadata,
+          url,
+        },
       });
     }
 

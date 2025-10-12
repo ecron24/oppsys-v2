@@ -8,6 +8,7 @@ You are an expert in software architecture. Transform the provided raw code into
 
 - Separate domain logic, application services, infrastructure, and presentation layers.
 - Use clear boundaries and dependency inversion.
+- The method in repository doesn't content more logic, split it if it contain more logic and put in the usecase instead
 - Always check if aldready existed before creating, if existed, you can modify if needed.
 
 ## Here is the raw code

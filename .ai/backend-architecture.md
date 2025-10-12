@@ -122,7 +122,7 @@ import { ListUserQuerySchema } from "../domain/module";
 
 export const GetUserUseCaseInput = z.object({
   query: ListUserQuerySchema,
-  // user: UserInContext : // NOTE: Use it only when you want get user connected in the context
+  // user: UserInContextSchema : // NOTE: Use it only when you want get user connected in the context
 });
 
 export const getUserUseCase = buildUseCase()
@@ -177,6 +177,7 @@ export class UserRepoSupabase implements UserRepo {
       const { data, error } = await select;
 
       if (error) {
+        this..logger.error("[getAll]: get all user", error, {query})
         return {
           success: false,
           kind: "UNKNOWN_ERROR",

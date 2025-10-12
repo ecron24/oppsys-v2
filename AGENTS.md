@@ -15,6 +15,7 @@
 - Each app has its own linting configuration.
 - Prefer `type` over `interface` in TypeScript unless it's really an interface to be implemented by classes.
 - Don't add any comments unless absolutely necessary. Code should be self-explanatory.
+- Prefer object in parameters of function if parameters number is greater that 1
 
 ### Imports
 
