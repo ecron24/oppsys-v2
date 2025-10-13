@@ -6,6 +6,7 @@ import { authenticateToken } from "./auth/presentation/auth-middleware";
 import { chatRouter } from "./chat/presentation/chat-router";
 import { profileRouter } from "./profile/presentation/profile-router";
 import { contentRouter } from "./content/presentation/content-router";
+import { dashboardRouter } from "./dashboard/presentation/dashboard-router";
 
 export const apiRouter = honoRouter((ctx) => {
   const publicApiRouter = new Hono()
@@ -19,7 +20,8 @@ export const apiRouter = honoRouter((ctx) => {
     .route("/api/modules", moduleRouter)
     .route("/api/users", profileRouter)
     .route("/api/content", contentRouter)
-    .route("/api/chat", chatRouter);
+    .route("/api/chat", chatRouter)
+    .route("/api/dashboard", dashboardRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)

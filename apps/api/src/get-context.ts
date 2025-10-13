@@ -8,6 +8,7 @@ import { PlanRepoSupabase } from "./plan/infra/plan-repo-supabase";
 import { ChatSessionRepoSupabase } from "./chat/infra/chat-session-repo-supabase";
 import { ProfileRepoSupabase } from "./profile/infra/profile-repo-supabase";
 import { ContentRepoSupabase } from "./content/infra/content-repo-supabase";
+import { DashboardRepoSupabase } from "./dashboard/infra/dashboard-repo-supabase";
 
 export function getContext() {
   const logger = new LoggerWinston();
@@ -23,6 +24,7 @@ export function getContext() {
     n8n: n8nInstance,
     chatSessionRepo,
     contentRepo: new ContentRepoSupabase(supabase, logger),
+    dashboardRepo: new DashboardRepoSupabase(supabase, logger),
   };
 }
 export type OppSysContext = ReturnType<typeof getContext>;
