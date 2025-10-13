@@ -31,12 +31,13 @@ import {
   getAllContentUseCase,
   GetAllContentUseCaseQuery,
 } from "../app/get-all-content-use-case";
-import { validator } from "hono-openapi";
+import { describeRoute, validator } from "hono-openapi";
 
 export const contentRouter = honoRouter((ctx) => {
   const router = new Hono()
     .get(
       "/generated",
+      describeRoute({ description: "Get all generated content" }),
       zValidatorWrapper("query", GetAllContentUseCaseQuery),
       validator("query", GetAllContentUseCaseQuery),
       async (c) => {
@@ -48,6 +49,7 @@ export const contentRouter = honoRouter((ctx) => {
     )
     .post(
       "/generated",
+      describeRoute({ description: "Create new generated content" }),
       zValidatorWrapper("json", CreateContentUseCaseBody),
       validator("json", CreateContentUseCaseBody),
       async (c) => {
@@ -57,14 +59,19 @@ export const contentRouter = honoRouter((ctx) => {
         return handleResultResponse(c, result, { oppSysContext: ctx });
       }
     )
-    .get("/generated/:id", async (c) => {
-      const id = c.req.param("id");
-      const user = getUserInContext(c);
-      const result = await getContentUseCase(ctx, { id, userId: user.id });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .get(
+      "/generated/:id",
+      describeRoute({ description: "Get generated content by ID" }),
+      async (c) => {
+        const id = c.req.param("id");
+        const user = getUserInContext(c);
+        const result = await getContentUseCase(ctx, { id, userId: user.id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
     .put(
       "/generated/:id",
+      describeRoute({ description: "Update generated content by ID" }),
       zValidatorWrapper("json", UpdateContentBody),
       validator("json", UpdateContentBody),
       async (c) => {
@@ -79,14 +86,19 @@ export const contentRouter = honoRouter((ctx) => {
         return handleResultResponse(c, result, { oppSysContext: ctx });
       }
     )
-    .delete("/generated/:id", async (c) => {
-      const id = c.req.param("id");
-      const user = getUserInContext(c);
-      const result = await deleteContentUseCase(ctx, { id, userId: user.id });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .delete(
+      "/generated/:id",
+      describeRoute({ description: "Delete generated content by ID" }),
+      async (c) => {
+        const id = c.req.param("id");
+        const user = getUserInContext(c);
+        const result = await deleteContentUseCase(ctx, { id, userId: user.id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
     .get(
       "/stats",
+      describeRoute({ description: "Get content statistics" }),
       zValidatorWrapper("query", GetContentStatsUseCaseQuery),
       validator("query", GetContentStatsUseCaseQuery),
       async (c) => {
@@ -98,6 +110,7 @@ export const contentRouter = honoRouter((ctx) => {
     )
     .post(
       "/search",
+      describeRoute({ description: "Search content" }),
       zValidatorWrapper("json", SearchContentUseCaseBody),
       validator("json", SearchContentUseCaseBody),
       async (c) => {
@@ -107,22 +120,33 @@ export const contentRouter = honoRouter((ctx) => {
         return handleResultResponse(c, result, { oppSysContext: ctx });
       }
     )
-    .post("/generated/:id/submit-for-approval", async (c) => {
-      const id = c.req.param("id");
-      const user = getUserInContext(c);
-      const result = await submitForApprovalUseCase(ctx, {
-        id,
-        userId: user.id,
-      });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
-    .get("/generated/:id/approval-history", async (c) => {
-      const id = c.req.param("id");
-      const result = await getApprovalHistoryUseCase(ctx, { contentId: id });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .post(
+      "/generated/:id/submit-for-approval",
+      describeRoute({ description: "Submit generated content for approval" }),
+      async (c) => {
+        const id = c.req.param("id");
+        const user = getUserInContext(c);
+        const result = await submitForApprovalUseCase(ctx, {
+          id,
+          userId: user.id,
+        });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
+    .get(
+      "/generated/:id/approval-history",
+      describeRoute({
+        description: "Get approval history for generated content",
+      }),
+      async (c) => {
+        const id = c.req.param("id");
+        const result = await getApprovalHistoryUseCase(ctx, { contentId: id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
     .patch(
       "/generated/:id/favorite",
+      describeRoute({ description: "Toggle favorite for generated content" }),
       zValidatorWrapper("json", ToggleFavoriteBody),
       validator("json", ToggleFavoriteBody),
       async (c) => {
