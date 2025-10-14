@@ -4,22 +4,18 @@ import type {
   GetDashboardContentStatsResult,
   GetDashboardCreditsAnalyticsResult,
   GetDashboardModulesStatsResult,
-  GetDashboardOverviewResult,
 } from "../domain/dashboard-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type { Logger } from "src/logger/domain/logger";
 import {
-  generateDailyUsageChart,
   generateDailyCreditChart,
   getDaysInPeriod,
 } from "../app/dashboard-utils";
 import { tryCatch } from "src/lib/try-catch";
-import { toCamelCase } from "src/lib/to-camel-case";
 import type {
   Activity,
   ContentStats,
   CreditsAnalytics,
-  DashboardOverview,
   ModuleStat,
 } from "../domain/dashboard";
 
@@ -29,145 +25,6 @@ export class DashboardRepoSupabase implements DashboardRepo {
     private logger: Logger
   ) {
     void this.logger;
-  }
-
-  async getOverview(
-    userId: string,
-    period: string
-  ): Promise<GetDashboardOverviewResult> {
-    return await tryCatch(async () => {
-      // 1. Fetch profile with plan
-      const { data: profile, error: profileError } = await this.supabase
-        .from("profiles")
-        .select(
-          `credit_balance, plan_id, created_at, plans!inner(name, monthly_credits)`
-        )
-        .eq("id", userId)
-        .single();
-      if (profileError) throw profileError;
-
-      // 2. Calculate period
-      const startDate = new Date();
-      switch (period) {
-        case "day":
-          startDate.setDate(startDate.getDate() - 1);
-          break;
-        case "week":
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case "month":
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case "year":
-          startDate.setFullYear(startDate.getFullYear() - 1);
-          break;
-      }
-
-      // 3. Fetch period usage
-      const { data: periodUsage } = await this.supabase
-        .from("module_usage")
-        .select(`credits_used, status, used_at, modules(name, type)`) // add module info
-        .eq("user_id", userId)
-        .gte("used_at", startDate.toISOString());
-
-      // 4. Fetch all usage
-      const { data: allUsage } = await this.supabase
-        .from("module_usage")
-        .select("credits_used, status")
-        .eq("user_id", userId);
-
-      // 5. Fetch generated content
-      const { data: content } = await this.supabase
-        .from("generated_content")
-        .select("type, created_at")
-        .eq("user_id", userId);
-
-      // 6. Compute stats
-      const usage = periodUsage?.map(toCamelCase) || [];
-      const globalUsage = allUsage || [];
-      const generatedContent = content || [];
-
-      const periodStats = {
-        totalUsage: usage.length,
-        totalCredits_used: usage.reduce(
-          (sum, u) => sum + (u.creditsUsed || 0),
-          0
-        ),
-        successfulUsage: usage.filter((u) => u.status === "success").length,
-        failedUsage: usage.filter((u) => u.status === "failed").length,
-        usageByType: usage.reduce(
-          (acc, u) => {
-            const type = u.modules?.type || "unknown";
-            if (!acc[type]) acc[type] = { count: 0, credits: 0 };
-            acc[type].count++;
-            acc[type].credits += u.creditsUsed || 0;
-            return acc;
-          },
-          {} as Record<string, { count: number; credits: number }>
-        ),
-      };
-
-      const globalStats = {
-        totalUsage: globalUsage.length,
-        successfulUsage: globalUsage.filter((u) => u.status === "success")
-          .length,
-        failedUsage: globalUsage.filter((u) => u.status === "failed").length,
-        totalCreditsUsed: globalUsage.reduce(
-          (sum, u) => sum + (u.credits_used || 0),
-          0
-        ),
-      };
-
-      const contentStats = {
-        totalGenerated: generatedContent.length,
-        articles: generatedContent.filter((c) => c.type === "article").length,
-        videos: generatedContent.filter((c) => c.type === "video").length,
-        images: generatedContent.filter((c) => c.type === "image").length,
-      };
-
-      // 7. Plan data
-      const planData = profile?.plans;
-      const planName = planData?.name || "Free";
-      const monthlyCredits = planData?.monthly_credits || 0;
-
-      // 8. Charts
-      const dailyUsage = generateDailyUsageChart(usage, period);
-      const dataMapped = {
-        profile: {
-          planName: planName,
-          creditBalance: profile?.credit_balance || 0,
-          monthlyCredits: monthlyCredits,
-          renewalDate: null,
-          id: "111",
-        },
-        globalUsage: globalStats,
-        periodUsage: {
-          ...periodStats,
-          success_rate:
-            periodStats.totalUsage > 0
-              ? Math.round(
-                  (periodStats.successfulUsage / periodStats.totalUsage) * 100
-                )
-              : 0,
-        },
-        content: contentStats,
-        charts: {
-          daily_usage: dailyUsage,
-          credits_remaining_percentage:
-            monthlyCredits > 0
-              ? Math.round(
-                  ((profile?.credit_balance || 0) / monthlyCredits) * 100
-                )
-              : 0,
-        },
-        period,
-      } as DashboardOverview;
-
-      return {
-        success: true,
-        data: dataMapped,
-      } as const;
-    });
   }
 
   async getActivity(

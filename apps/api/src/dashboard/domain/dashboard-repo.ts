@@ -34,11 +34,6 @@ export type GetDashboardContentStatsResult = Result<
 >;
 
 export interface DashboardRepo {
-  getOverview(
-    userId: string,
-    period: string
-  ): Promise<GetDashboardOverviewResult>;
-
   getActivity(
     userId: string,
     limit: number
