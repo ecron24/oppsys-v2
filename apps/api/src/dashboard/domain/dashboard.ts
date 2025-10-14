@@ -1,4 +1,3 @@
-import { ProfileWithPlanSchema } from "src/profile/domain/profile";
 import { z } from "zod";
 
 // --- Usage Types ---
@@ -44,17 +43,6 @@ export const CreditSchema = z.object({
   origin: z.string().optional(),
 });
 export type Credit = z.infer<typeof CreditSchema>;
-
-// --- Dashboard Overview Output ---
-export const DashboardOverviewSchema = z.object({
-  profile: ProfileWithPlanSchema,
-  globalUsage: z.any(), // TODO: To be refined
-  periodUsage: z.any(), // TODO: To be refined
-  content: z.any(), // TODO: To be refined
-  charts: z.any(), // TODO: To be refined
-  period: z.string(),
-});
-export type DashboardOverview = z.infer<typeof DashboardOverviewSchema>;
 
 // --- Activity Output ---
 export const ActivitySchema = z.object({

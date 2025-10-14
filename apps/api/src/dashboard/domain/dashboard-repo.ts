@@ -1,5 +1,4 @@
 import type {
-  DashboardOverview,
   Activity,
   ModuleStat,
   CreditsAnalytics,
@@ -7,11 +6,6 @@ import type {
 } from "./dashboard";
 import type { Result } from "@oppsys/types";
 
-export type GetDashboardOverviewResult = Result<
-  DashboardOverview,
-  Error,
-  "UNKNOWN_ERROR"
->;
 export type GetDashboardActivityResult = Result<
   Activity[],
   Error,
@@ -34,11 +28,6 @@ export type GetDashboardContentStatsResult = Result<
 >;
 
 export interface DashboardRepo {
-  getActivity(
-    userId: string,
-    limit: number
-  ): Promise<GetDashboardActivityResult>;
-
   getModulesStats(
     userId: string,
     period: string

@@ -1,6 +1,5 @@
 import type {
   DashboardRepo,
-  GetDashboardActivityResult,
   GetDashboardContentStatsResult,
   GetDashboardCreditsAnalyticsResult,
   GetDashboardModulesStatsResult,
@@ -13,7 +12,6 @@ import {
 } from "../app/dashboard-utils";
 import { tryCatch } from "src/lib/try-catch";
 import type {
-  Activity,
   ContentStats,
   CreditsAnalytics,
   ModuleStat,
@@ -25,60 +23,6 @@ export class DashboardRepoSupabase implements DashboardRepo {
     private logger: Logger
   ) {
     void this.logger;
-  }
-
-  async getActivity(
-    userId: string,
-    limit: number
-  ): Promise<GetDashboardActivityResult> {
-    return await tryCatch(async () => {
-      // 1. Recent usage
-      const { data: usageData } = await this.supabase
-        .from("module_usage")
-        .select(`id, used_at, credits_used, status, modules(name, type)`)
-        .eq("user_id", userId)
-        .order("used_at", { ascending: false })
-        .limit(Number(limit));
-      // 2. Recent content
-      const { data: contentData } = await this.supabase
-        .from("generated_content")
-        .select(
-          `id, title, type, created_at, modules!generated_content_user_id_fkey(name, type)`
-        )
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(Number(limit));
-      // 3. Combine
-      const recentUsage = usageData || [];
-      const recentContent = contentData || [];
-      const activities: Activity[] = [
-        ...recentUsage.map((usage) => ({
-          id: usage.id || `usage-${Date.now()}-${Math.random()}`,
-          type: "usage" as const,
-          date: usage.used_at || "",
-          moduleName: usage.modules?.name || "Module inconnu",
-          moduleType: usage.modules?.type || "unknown",
-          status: usage.status || "",
-          creditsUsed: usage.credits_used || 0,
-        })),
-        ...recentContent.map((content) => ({
-          id: content.id || `content-${Date.now()}-${Math.random()}`,
-          type: "content" as const,
-          date: content.created_at || "",
-          title: content.title || "Contenu sans titre",
-          contentType: content.type || "unknown",
-          // FIXME: check
-          moduleName: content.modules[0]?.name || "Module inconnu",
-          moduleType: content.modules[0]?.type || "unknown",
-        })),
-      ]
-        .sort(
-          (a, b) =>
-            new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime()
-        )
-        .slice(0, Number(limit));
-      return { success: true, data: activities } as const;
-    });
   }
 
   async getModulesStats(
