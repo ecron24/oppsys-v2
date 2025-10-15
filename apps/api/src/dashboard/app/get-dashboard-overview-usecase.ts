@@ -1,6 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
+import { toCamelCase } from "src/lib/to-camel-case";
 
 export const GetDashboardOverviewInput = z.object({
   userId: z.string(),
@@ -15,16 +16,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
     // 1. Fetch profile + plan
     const profileRes = await ctx.profileRepo.getByIdWithPlan(userId);
     if (!profileRes.success) {
-      ctx.logger.error(
-        "[getDashboardOverview] fetchProfileWithPlan failed",
-        profileRes.error,
-        { userId }
-      );
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("INTERNAL_ERROR"),
-      } as const;
+      return profileRes;
     }
 
     const profile = profileRes.data;
@@ -55,11 +47,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
       includeOutput: false,
     });
     if (!periodUsageRes.success) {
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("INTERNAL_ERROR"),
-      } as const;
+      return periodUsageRes;
     }
 
     // 4. Fetch all usage
@@ -70,11 +58,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
       sort: "used_at",
     });
     if (!allUsageRes.success) {
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("INTERNAL_ERROR"),
-      } as const;
+      return allUsageRes;
     }
 
     // 5. Fetch generated content
@@ -83,50 +67,30 @@ export const getDashboardOverviewUseCase = buildUseCase()
       query: { limit: 1000, page: 1 },
     });
     if (!contentRes.success) {
-      ctx.logger.error(
-        "[getDashboardOverview] fetchGeneratedContent failed",
-        contentRes.error,
-        { userId }
-      );
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("INTERNAL_ERROR"),
-      } as const;
+      return contentRes;
     }
 
-    // 6. Compute stats (reuse same logic as infra did)
-    const toCamelCase = (v: unknown) => v as Record<string, unknown>;
-    const asRec = (v: unknown) => v as Record<string, unknown>;
-
     const usage = periodUsageRes.data.data.map(toCamelCase);
-    const globalUsage = (allUsageRes.data.data || []) as Record<
-      string,
-      unknown
-    >[];
-    const generatedContent = (contentRes.data.data || []) as Record<
-      string,
-      unknown
-    >[];
+    const globalUsage = allUsageRes.data.data;
+    const generatedContent = contentRes.data.data;
 
     const periodStats = {
       totalUsage: usage.length,
-      totalCredits_used: usage.reduce((sum, u) => {
-        const ru = asRec(u);
-        const credits = ru["creditsUsed"] ?? ru["credits_used"] ?? 0;
+      totalCreditsUsed: usage.reduce((sum, u) => {
+        const credits = u.creditsUsed ?? 0;
         return sum + Number(credits || 0);
       }, 0),
-      successfulUsage: usage.filter((u) => asRec(u)["status"] === "success")
-        .length,
-      failedUsage: usage.filter((u) => asRec(u)["status"] === "failed").length,
+      successfulUsage: usage.filter((u) => u.status === "success").length,
+      failedUsage: usage.filter((u) => u.status === "failed").length,
       usageByType: usage.reduce(
-        (acc: Record<string, { count: number; credits: number }>, u) => {
-          const ru = asRec(u);
-          const modules = ru["modules"] as Record<string, unknown> | undefined;
-          const type = (modules && (modules["type"] as string)) || "unknown";
-          if (!acc[type]) acc[type] = { count: 0, credits: 0 };
-          acc[type].count += 1;
-          acc[type].credits += Number(ru["creditsUsed"] ?? 0);
+        (acc, module) => {
+          module?.modules?.forEach((mod) => {
+            const type = mod.type || "unknown";
+            if (!acc[type]) acc[type] = { count: 0, credits: 0 };
+            acc[type].count += 1;
+            acc[type].credits += Number(module["creditsUsed"] ?? 0);
+          });
+
           return acc;
         },
         {} as Record<string, { count: number; credits: number }>
@@ -135,25 +99,19 @@ export const getDashboardOverviewUseCase = buildUseCase()
 
     const globalStats = {
       totalUsage: globalUsage.length,
-      successfulUsage: globalUsage.filter(
-        (u) => asRec(u)["status"] === "success"
-      ).length,
-      failedUsage: globalUsage.filter((u) => asRec(u)["status"] === "failed")
-        .length,
+      successfulUsage: globalUsage.filter((u) => u.status === "success").length,
+      failedUsage: globalUsage.filter((u) => u.status === "failed").length,
       totalCreditsUsed: globalUsage.reduce(
-        (sum, u) => sum + Number(asRec(u)["credits_used"] ?? 0),
+        (sum, u) => sum + Number(u.creditsUsed),
         0
       ),
     };
 
     const contentStats = {
       totalGenerated: generatedContent.length,
-      articles: generatedContent.filter((c) => asRec(c)["type"] === "article")
-        .length,
-      videos: generatedContent.filter((c) => asRec(c)["type"] === "video")
-        .length,
-      images: generatedContent.filter((c) => asRec(c)["type"] === "image")
-        .length,
+      articles: generatedContent.filter((c) => c.type === "article").length,
+      videos: generatedContent.filter((c) => c.type === "video").length,
+      images: generatedContent.filter((c) => c.type === "image").length,
     };
 
     const planData = profile?.plans;
@@ -169,12 +127,12 @@ export const getDashboardOverviewUseCase = buildUseCase()
         creditBalance: profile?.creditBalance || 0,
         monthlyCredits: monthlyCredits,
         renewalDate: null,
-        id: (profile as Record<string, unknown>)?.id || userId,
+        id: profile?.id || userId,
       },
       globalUsage: globalStats,
       periodUsage: {
         ...periodStats,
-        success_rate:
+        successRate:
           periodStats.totalUsage > 0
             ? Math.round(
                 (periodStats.successfulUsage / periodStats.totalUsage) * 100
@@ -183,8 +141,8 @@ export const getDashboardOverviewUseCase = buildUseCase()
       },
       content: contentStats,
       charts: {
-        daily_usage: dailyUsage,
-        credits_remaining_percentage:
+        dailyUsage: dailyUsage,
+        creditsRemainingPercentage:
           monthlyCredits > 0
             ? Math.round(((profile?.creditBalance || 0) / monthlyCredits) * 100)
             : 0,

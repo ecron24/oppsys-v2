@@ -2,7 +2,6 @@ import type {
   DashboardRepo,
   GetDashboardContentStatsResult,
   GetDashboardCreditsAnalyticsResult,
-  GetDashboardModulesStatsResult,
 } from "../domain/dashboard-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type { Logger } from "src/logger/domain/logger";
@@ -11,11 +10,7 @@ import {
   getDaysInPeriod,
 } from "../app/dashboard-utils";
 import { tryCatch } from "src/lib/try-catch";
-import type {
-  ContentStats,
-  CreditsAnalytics,
-  ModuleStat,
-} from "../domain/dashboard";
+import type { ContentStats, CreditsAnalytics } from "../domain/dashboard";
 
 export class DashboardRepoSupabase implements DashboardRepo {
   constructor(
@@ -23,102 +18,6 @@ export class DashboardRepoSupabase implements DashboardRepo {
     private logger: Logger
   ) {
     void this.logger;
-  }
-
-  async getModulesStats(
-    userId: string,
-    period: string
-  ): Promise<GetDashboardModulesStatsResult> {
-    return await tryCatch(async () => {
-      // 1. Calculate period
-      const startDate = new Date();
-      switch (period) {
-        case "day":
-          startDate.setDate(startDate.getDate() - 1);
-          break;
-        case "week":
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case "month":
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case "year":
-          startDate.setFullYear(startDate.getFullYear() - 1);
-          break;
-      }
-      // 2. Fetch module usage
-      const { data: moduleUsage } = await this.supabase
-        .from("module_usage")
-        .select(`id, credits_used, status, used_at, module_slug, module_id`)
-        .eq("user_id", userId)
-        .gte("used_at", startDate.toISOString())
-        .order("used_at", { ascending: false });
-      if (!moduleUsage || moduleUsage.length === 0) {
-        return { success: true, data: [] };
-      }
-      // 3. Fetch modules
-      const { data: modules } = await this.supabase
-        .from("modules")
-        .select(`id, slug, name, type, category, credit_cost`)
-        .eq("is_active", true);
-      // 4. Map modules
-      const moduleMap = new Map();
-      (modules || []).forEach((module) => {
-        if (module.slug) moduleMap.set(module.slug, module);
-        if (module.id) moduleMap.set(module.id, module);
-      });
-      // 5. Group stats
-      const statsByModule: Record<string, ModuleStat> = {};
-      moduleUsage.forEach((usage) => {
-        let moduleData = null;
-        if (usage.module_slug) moduleData = moduleMap.get(usage.module_slug);
-        if (!moduleData && usage.module_id)
-          moduleData = moduleMap.get(usage.module_id);
-        if (!moduleData) return;
-        const moduleKey = moduleData.slug || moduleData.id;
-        if (!statsByModule[moduleKey]) {
-          statsByModule[moduleKey] = {
-            moduleId: moduleData.id,
-            moduleSlug: moduleData.slug,
-            moduleName: moduleData.name || "Module inconnu",
-            moduleType: moduleData.type || "unknown",
-            category: moduleData.category || "general",
-            creditCost: moduleData.credit_cost || 0,
-            totalUsage: 0,
-            successfulUsage: 0,
-            failedUsage: 0,
-            totalCreditsUsed: 0,
-            lastUsed: usage.used_at || "",
-            successRate: 0,
-          };
-        }
-        statsByModule[moduleKey].totalUsage++;
-        statsByModule[moduleKey].totalCreditsUsed += usage.credits_used || 0;
-        if (usage.status === "success")
-          statsByModule[moduleKey].successfulUsage++;
-        else if (usage.status === "failed")
-          statsByModule[moduleKey].failedUsage++;
-        if (
-          new Date(usage.used_at ?? 0) >
-            new Date(statsByModule[moduleKey].lastUsed) &&
-          usage.used_at
-        ) {
-          statsByModule[moduleKey].lastUsed = usage.used_at;
-        }
-      });
-      // 6. To array and add success rate
-      const moduleStatsArray: ModuleStat[] = Object.values(statsByModule)
-        .map((stat) => ({
-          ...stat,
-          success_rate:
-            stat.totalUsage > 0
-              ? Math.round((stat.successfulUsage / stat.totalUsage) * 100)
-              : 0,
-        }))
-        .sort((a, b) => b.totalUsage - a.totalUsage);
-
-      return { success: true, data: moduleStatsArray } as const;
-    });
   }
 
   async getCreditsAnalytics(

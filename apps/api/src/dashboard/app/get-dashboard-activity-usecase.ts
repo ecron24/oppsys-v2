@@ -21,63 +21,39 @@ export const getDashboardActivityUseCase = buildUseCase()
       page: 1,
       sort: "used_at",
     });
-    if (!usageRes.success) {
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("INTERNAL_ERROR"),
-      } as const;
-    }
+    if (!usageRes.success) return usageRes;
 
     // 2. Fetch recent content
     const contentRes = await ctx.contentRepo.getAll({
       userId,
       query: { limit, page: 1 },
     });
-    if (!contentRes.success) {
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("INTERNAL_ERROR"),
-      } as const;
-    }
+    if (!contentRes.success) return contentRes;
 
-    const toRec = (v: unknown) => v as Record<string, unknown>;
-
-    const recentUsage = usageRes.data.data as Record<string, unknown>[];
-    const recentContent = contentRes.data.data as Record<string, unknown>[];
+    const recentUsage = usageRes.data.data;
+    const recentContent = contentRes.data.data;
 
     const activities = [
       ...recentUsage.map((usage) => {
-        const u = toRec(usage);
         return {
-          id: (u["id"] as string) || `usage-${Date.now()}-${Math.random()}`,
+          id: usage.id || `usage-${Date.now()}-${Math.random()}`,
           type: "usage" as const,
-          date: (u["used_at"] as string) || "",
-          moduleName:
-            ((u["modules"] as Record<string, unknown> | undefined)
-              ?.name as string) ||
-            (u["module_slug"] as string) ||
-            "Module inconnu",
-          moduleType:
-            ((u["modules"] as Record<string, unknown> | undefined)
-              ?.type as string) || "unknown",
-          status: (u["status"] as string) || "",
-          creditsUsed:
-            (u["credits_used"] as number) || (u["creditsUsed"] as number) || 0,
+          date: usage.usedAt || "",
+          moduleName: "Module inconnu",
+          moduleType: "unknown",
+          status: usage.status || "",
+          creditsUsed: usage.creditsUsed,
         };
       }),
       ...recentContent.map((content) => {
-        const c = toRec(content);
-        const modules = (c["modules"] as Array<Record<string, unknown>>) || [];
         return {
-          id: (c["id"] as string) || `content-${Date.now()}-${Math.random()}`,
+          id: content.id || `content-${Date.now()}-${Math.random()}`,
           type: "content" as const,
-          date: (c["created_at"] as string) || "",
-          title: (c["title"] as string) || "Contenu sans titre",
-          contentType: (c["type"] as string) || "unknown",
-          moduleName: (modules[0]?.["name"] as string) || "Module inconnu",
-          moduleType: (modules[0]?.["type"] as string) || "unknown",
+          date: content.createdAt,
+          title: content.title,
+          contentType: content.type,
+          moduleName: "Module inconnu",
+          moduleType: "unknown",
         };
       }),
     ]

@@ -39,6 +39,7 @@ export const ModuleUsageSchema = z.object({
   errorMessage: StringNullableSchema,
   executionTime: NumberNullableSchema,
   metadata: nullableSchema(z.record(z.string(), z.any())),
+  modules: ModuleSchema.array().optional(),
 });
 export type ModuleUsage = z.infer<typeof ModuleUsageSchema>;
 
