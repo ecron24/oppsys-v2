@@ -10,9 +10,10 @@ import { getDashboardCreditsAnalyticsUseCase } from "../app/get-dashboard-credit
 import { getDashboardContentStatsUseCase } from "../app/get-dashboard-content-stats-usecase";
 import { z } from "zod";
 import { getUserInContext } from "src/lib/get-user-in-context";
+import { PeriodSchema } from "../domain/dashboard";
 
 const dashboardQuerySchema = z.object({
-  period: z.enum(["day", "week", "month", "year"]).default("month"),
+  period: PeriodSchema.default("month"),
 });
 
 const activityQuerySchema = z.object({

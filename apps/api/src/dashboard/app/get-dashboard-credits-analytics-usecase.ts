@@ -3,13 +3,18 @@ import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
 import {
   CreditsAnalyticsSchema,
+  PeriodSchema,
   type CreditsAnalytics,
 } from "../domain/dashboard";
-import { generateDailyCreditChart, getDaysInPeriod } from "./dashboard-utils";
+import {
+  generateDailyCreditChart,
+  getDaysInPeriod,
+  periodToDate,
+} from "./dashboard-utils";
 
 export const GetDashboardCreditsAnalyticsInput = z.object({
   userId: z.string(),
-  period: z.string().default("month"),
+  period: PeriodSchema.default("month"),
 });
 
 export const getDashboardCreditsAnalyticsUseCase = buildUseCase()
@@ -20,21 +25,7 @@ export const getDashboardCreditsAnalyticsUseCase = buildUseCase()
     const profileResult = await ctx.profileRepo.getByIdWithPlan(input.userId);
     if (!profileResult.success) return profileResult;
     // 2. Calculate period
-    const startDate = new Date();
-    switch (input.period) {
-      case "day":
-        startDate.setDate(startDate.getDate() - 1);
-        break;
-      case "week":
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case "month":
-        startDate.setMonth(startDate.getMonth() - 1);
-        break;
-      case "year":
-        startDate.setFullYear(startDate.getFullYear() - 1);
-        break;
-    }
+    const startDate = periodToDate(input.period);
     // 3. Fetch credit history
     const creditsResult = await ctx.dashboardRepo.getCredits({
       userId: input.userId,

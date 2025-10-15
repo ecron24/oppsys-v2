@@ -2,10 +2,12 @@ import { buildUseCase } from "src/lib/use-case-builder";
 import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
 import { toCamelCase } from "src/lib/to-camel-case";
+import { PeriodSchema } from "../domain/dashboard";
+import { periodToDate } from "./dashboard-utils";
 
 export const GetDashboardOverviewInput = z.object({
   userId: z.string(),
-  period: z.string().default("month"),
+  period: PeriodSchema.default("month"),
 });
 
 export const getDashboardOverviewUseCase = buildUseCase()
@@ -22,20 +24,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
     const profile = profileRes.data;
 
     // 2. Calculate period start
-    const startDate = new Date();
-    switch (period) {
-      case "week":
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case "month":
-        startDate.setMonth(startDate.getMonth() - 1);
-        break;
-      case "year":
-        startDate.setFullYear(startDate.getFullYear() - 1);
-        break;
-      default:
-        startDate.setMonth(startDate.getMonth() - 1);
-    }
+    const startDate = periodToDate(period);
 
     // 3. Fetch period usage
     const periodUsageRes = await ctx.moduleRepo.listUsageHistory(userId, {

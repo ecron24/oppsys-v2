@@ -1,6 +1,10 @@
 import { IsoDatetime, nullableSchema } from "src/common/common-schema";
 import { z } from "zod";
 
+// --- Period
+export const PeriodSchema = z.enum(["day", "week", "month", "year"]);
+export type Period = z.infer<typeof PeriodSchema>;
+
 // --- Credits types ---
 export const CreditSchema = z.object({
   origin: z.string(),

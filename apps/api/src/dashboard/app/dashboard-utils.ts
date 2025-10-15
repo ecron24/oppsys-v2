@@ -1,6 +1,8 @@
 // Utility functions for dashboard stats, period calculation, and chart generation
 
-export function getDaysInPeriod(period: string): number {
+import type { Period } from "../domain/dashboard";
+
+export function getDaysInPeriod(period: Period): number {
   switch (period) {
     case "day":
       return 1;
@@ -15,9 +17,28 @@ export function getDaysInPeriod(period: string): number {
   }
 }
 
+export function periodToDate(period: Period): Date {
+  const startDate = new Date();
+  switch (period) {
+    case "day":
+      startDate.setDate(startDate.getDate() - 1);
+      break;
+    case "week":
+      startDate.setDate(startDate.getDate() - 7);
+      break;
+    case "month":
+      startDate.setMonth(startDate.getMonth() - 1);
+      break;
+    case "year":
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      break;
+  }
+  return startDate;
+}
+
 export function generateDailyUsageChart(
   usageData: { usedAt: string | null }[],
-  period: string
+  period: Period
 ) {
   const days = getDaysInPeriod(period);
   const chart = [];
@@ -35,7 +56,7 @@ export function generateDailyUsageChart(
 
 export function generateDailyCreditChart(
   creditData: { usedAt: string; creditsUsed: number }[],
-  period: string
+  period: Period
 ) {
   const days = getDaysInPeriod(period);
   const chart = [];
