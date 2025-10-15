@@ -22,12 +22,18 @@ export class DashboardRepoSupabase implements DashboardRepo {
     createdAt: string;
   }): Promise<GetCreditsResult> {
     return tryCatch(async () => {
-      const { data: creditHistory } = await this.supabase
+      const { data: creditHistory, error } = await this.supabase
         .from("credits")
         .select("amount, created_at, origin")
         .eq("user_id", params.userId)
         .gte("created_at", params.createdAt)
         .order("created_at", { ascending: true });
+
+      if (error) {
+        this.logger.error("[getCredits] :", error, { params });
+        throw error;
+      }
+
       const mapped = toCamelCase(creditHistory || []) as Credit[];
 
       return {
@@ -46,24 +52,12 @@ export class DashboardRepoSupabase implements DashboardRepo {
         .select("*")
         .eq("user_id", userId)
         .single();
-      if (error && error.code === "PGRST116") {
-        return {
-          success: true,
-          data: {
-            totalContent: 0,
-            favoritesCount: 0,
-            articlesCount: 0,
-            audioCount: 0,
-            videoCount: 0,
-            imagesCount: 0,
-            dataCount: 0,
-            recentCount: 0,
-            monthlyCount: 0,
-            lastContentDate: null,
-          },
-        } as const;
+
+      if (error) {
+        this.logger.error("[getContentStats] :", error, { userId });
+        throw error;
       }
-      if (error) throw error;
+
       const mapped: ContentStats = {
         totalContent: contentStats.total_content || 0,
         favoritesCount: contentStats.favorites_count || 0,

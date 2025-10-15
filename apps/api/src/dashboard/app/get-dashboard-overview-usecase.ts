@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
 import { toCamelCase } from "src/lib/to-camel-case";
 import { PeriodSchema } from "../domain/dashboard";
-import { periodToDate } from "./dashboard-utils";
+import { generateDailyUsageChart, periodToDate } from "./dashboard-utils";
 
 export const GetDashboardOverviewInput = z.object({
   userId: z.string(),
@@ -59,6 +59,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
       return contentRes;
     }
 
+    // 6. Calculer les statistiques
     const usage = periodUsageRes.data.data.map(toCamelCase);
     const globalUsage = allUsageRes.data.data;
     const generatedContent = contentRes.data.data;
@@ -67,7 +68,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
       totalUsage: usage.length,
       totalCreditsUsed: usage.reduce((sum, u) => {
         const credits = u.creditsUsed ?? 0;
-        return sum + Number(credits || 0);
+        return sum + credits;
       }, 0),
       successfulUsage: usage.filter((u) => u.status === "success").length,
       failedUsage: usage.filter((u) => u.status === "failed").length,
@@ -90,10 +91,7 @@ export const getDashboardOverviewUseCase = buildUseCase()
       totalUsage: globalUsage.length,
       successfulUsage: globalUsage.filter((u) => u.status === "success").length,
       failedUsage: globalUsage.filter((u) => u.status === "failed").length,
-      totalCreditsUsed: globalUsage.reduce(
-        (sum, u) => sum + Number(u.creditsUsed),
-        0
-      ),
+      totalCreditsUsed: globalUsage.reduce((sum, u) => sum + u.creditsUsed, 0),
     };
 
     const contentStats = {
@@ -103,20 +101,19 @@ export const getDashboardOverviewUseCase = buildUseCase()
       images: generatedContent.filter((c) => c.type === "image").length,
     };
 
+    // 7. Extraire les données du plan
     const planData = profile?.plans;
     const planName = planData?.name || "Free";
     const monthlyCredits = planData?.monthlyCredits || 0;
 
-    // simple placeholder for chart generation
-    const dailyUsage: Array<Record<string, unknown>> = [];
-
+    // 8. Générer les graphiques
+    const dailyUsage = generateDailyUsageChart(usage, input.period);
     const dataMapped = {
       profile: {
         planName: planName,
         creditBalance: profile?.creditBalance || 0,
         monthlyCredits: monthlyCredits,
         renewalDate: null,
-        id: profile?.id || userId,
       },
       globalUsage: globalStats,
       periodUsage: {

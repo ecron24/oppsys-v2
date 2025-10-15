@@ -1,5 +1,4 @@
-// Utility functions for dashboard stats, period calculation, and chart generation
-
+import type { ModuleUsage } from "src/modules/domain/module";
 import type { Period } from "../domain/dashboard";
 
 export function getDaysInPeriod(period: Period): number {
@@ -37,7 +36,7 @@ export function periodToDate(period: Period): Date {
 }
 
 export function generateDailyUsageChart(
-  usageData: { usedAt: string | null }[],
+  usageData: ModuleUsage[],
   period: Period
 ) {
   const days = getDaysInPeriod(period);

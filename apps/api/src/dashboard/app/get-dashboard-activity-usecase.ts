@@ -34,7 +34,7 @@ export const getDashboardActivityUseCase = buildUseCase()
     const activities = [
       ...recentUsage.map((usage) => {
         return {
-          id: usage.id || `usage-${Date.now()}-${Math.random()}`,
+          id: usage.id,
           type: "usage" as const,
           date: usage.usedAt || "",
           moduleName: "Module inconnu",
@@ -45,7 +45,7 @@ export const getDashboardActivityUseCase = buildUseCase()
       }),
       ...recentContent.map((content) => {
         return {
-          id: content.id || `content-${Date.now()}-${Math.random()}`,
+          id: content.id,
           type: "content" as const,
           date: content.createdAt,
           title: content.title,
@@ -56,7 +56,7 @@ export const getDashboardActivityUseCase = buildUseCase()
       }),
     ]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, Number(limit));
+      .slice(0, limit);
 
     return { success: true, data: activities } as const;
   });

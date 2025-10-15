@@ -94,5 +94,19 @@ export const getDashboardModulesStatsUseCase = buildUseCase()
       }))
       .sort((a, b) => b.totalUsage - a.totalUsage);
 
-    return { success: true, data: moduleStatsArray } as const;
+    return {
+      success: true,
+      data: {
+        data: moduleStatsArray,
+        period: period,
+        metadata: {
+          totalRecords: moduleUsageResult.data.data.length,
+          uniqueModules: moduleStatsArray.length,
+          dateRange: {
+            start: startDate.toISOString(),
+            end: new Date().toISOString(),
+          },
+        },
+      },
+    } as const;
   });
