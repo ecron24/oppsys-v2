@@ -1,42 +1,6 @@
 import { IsoDatetime, nullableSchema } from "src/common/common-schema";
 import { z } from "zod";
 
-// --- Usage Types ---
-export const UsageSchema = z.object({
-  id: z.string().optional(),
-  creditsUsed: z.number().optional(),
-  status: z.string(),
-  usedAt: z.string(),
-  module: z
-    .object({
-      name: z.string().optional(),
-      type: z.string().optional(),
-      slug: z.string().optional(),
-      id: z.string().optional(),
-      category: z.string().optional(),
-      creditCost: z.number().optional(),
-    })
-    .optional(),
-  moduleSlug: z.string().optional(),
-  moduleId: z.string().optional(),
-});
-export type Usage = z.infer<typeof UsageSchema>;
-
-// --- Content Types ---
-export const ContentSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().optional(),
-  type: z.string(),
-  createdAt: z.string(),
-  module: z
-    .object({
-      name: z.string().optional(),
-      type: z.string().optional(),
-    })
-    .optional(),
-});
-export type Content = z.infer<typeof ContentSchema>;
-
 // --- Credits types ---
 export const CreditSchema = z.object({
   origin: z.string(),
