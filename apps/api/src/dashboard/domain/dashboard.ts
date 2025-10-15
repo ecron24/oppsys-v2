@@ -1,3 +1,4 @@
+import { IsoDatetime, nullableSchema } from "src/common/common-schema";
 import { z } from "zod";
 
 // --- Usage Types ---
@@ -36,27 +37,13 @@ export const ContentSchema = z.object({
 });
 export type Content = z.infer<typeof ContentSchema>;
 
-// --- Credit Types ---
+// --- Credits types ---
 export const CreditSchema = z.object({
+  origin: z.string(),
   amount: z.number(),
-  createdAt: z.string(),
-  origin: z.string().optional(),
+  createdAt: nullableSchema(IsoDatetime),
 });
 export type Credit = z.infer<typeof CreditSchema>;
-
-// --- Activity Output ---
-export const ActivitySchema = z.object({
-  id: z.string(),
-  type: z.enum(["usage", "content"]),
-  date: z.string(),
-  moduleName: z.string().optional(),
-  moduleType: z.string().optional(),
-  status: z.string().optional(),
-  creditsUsed: z.number().optional(),
-  title: z.string().optional(),
-  contentType: z.string().optional(),
-});
-export type Activity = z.infer<typeof ActivitySchema>;
 
 // --- Module Stats Output ---
 export const ModuleStatSchema = z.object({

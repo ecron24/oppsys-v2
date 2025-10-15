@@ -1,16 +1,7 @@
-import type { Activity, CreditsAnalytics, ContentStats } from "./dashboard";
+import type { ContentStats, Credit } from "./dashboard";
 import type { Result } from "@oppsys/types";
 
-export type GetDashboardActivityResult = Result<
-  Activity[],
-  Error,
-  "UNKNOWN_ERROR"
->;
-export type GetDashboardCreditsAnalyticsResult = Result<
-  CreditsAnalytics,
-  Error,
-  "UNKNOWN_ERROR"
->;
+export type GetCreditsResult = Result<Credit[], Error, "UNKNOWN_ERROR">;
 export type GetDashboardContentStatsResult = Result<
   ContentStats,
   Error,
@@ -18,10 +9,10 @@ export type GetDashboardContentStatsResult = Result<
 >;
 
 export interface DashboardRepo {
-  getCreditsAnalytics(
-    userId: string,
-    period: string
-  ): Promise<GetDashboardCreditsAnalyticsResult>;
+  getCredits(params: {
+    userId: string;
+    createdAt: string;
+  }): Promise<GetCreditsResult>;
 
   getContentStats(userId: string): Promise<GetDashboardContentStatsResult>;
 }

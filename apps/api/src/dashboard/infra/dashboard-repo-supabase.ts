@@ -1,16 +1,13 @@
 import type {
   DashboardRepo,
+  GetCreditsResult,
   GetDashboardContentStatsResult,
-  GetDashboardCreditsAnalyticsResult,
 } from "../domain/dashboard-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type { Logger } from "src/logger/domain/logger";
-import {
-  generateDailyCreditChart,
-  getDaysInPeriod,
-} from "../app/dashboard-utils";
 import { tryCatch } from "src/lib/try-catch";
-import type { ContentStats, CreditsAnalytics } from "../domain/dashboard";
+import type { ContentStats, Credit } from "../domain/dashboard";
+import { toCamelCase } from "src/lib/to-camel-case";
 
 export class DashboardRepoSupabase implements DashboardRepo {
   constructor(
@@ -20,86 +17,22 @@ export class DashboardRepoSupabase implements DashboardRepo {
     void this.logger;
   }
 
-  async getCreditsAnalytics(
-    userId: string,
-    period: string
-  ): Promise<GetDashboardCreditsAnalyticsResult> {
-    return await tryCatch(async () => {
-      // 1. Fetch profile with plan
-      const { data: profile, error: profileError } = await this.supabase
-        .from("profiles")
-        .select(`credit_balance, plans!inner(name, monthly_credits)`)
-        .eq("id", userId)
-        .single();
-      if (profileError) throw profileError;
-      // 2. Calculate period
-      const startDate = new Date();
-      switch (period) {
-        case "day":
-          startDate.setDate(startDate.getDate() - 1);
-          break;
-        case "week":
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case "month":
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case "year":
-          startDate.setFullYear(startDate.getFullYear() - 1);
-          break;
-      }
-      // 3. Fetch credit history
+  getCredits(params: {
+    userId: string;
+    createdAt: string;
+  }): Promise<GetCreditsResult> {
+    return tryCatch(async () => {
       const { data: creditHistory } = await this.supabase
         .from("credits")
         .select("amount, created_at, origin")
-        .eq("user_id", userId)
-        .gte("created_at", startDate.toISOString())
+        .eq("user_id", params.userId)
+        .gte("created_at", params.createdAt)
         .order("created_at", { ascending: true });
-      const credits = creditHistory || [];
-      const totalCreditsUsed = credits
-        .filter((c) => c.amount < 0)
-        .reduce((sum, c) => sum + Math.abs(c.amount), 0);
-      const planData = profile?.plans;
-      const monthlyCredits = planData?.monthly_credits || 0;
-      const creditsRemaining = profile?.credit_balance || 0;
-      const daysInPeriod = getDaysInPeriod(period);
-      const dailyAverageUsage = totalCreditsUsed / daysInPeriod;
-      const daysUntilDepletion =
-        dailyAverageUsage > 0
-          ? Math.ceil(creditsRemaining / dailyAverageUsage)
-          : null;
-      const dailyCreditUsage = generateDailyCreditChart(
-        credits
-          .filter((c) => c.amount < 0)
-          .map((c) => ({
-            usedAt: c.created_at || "",
-            creditsUsed: Math.abs(c.amount),
-          })),
-        period
-      );
-      const data: CreditsAnalytics = {
-        currentBalance: creditsRemaining,
-        monthlyAllowance: monthlyCredits,
-        usedInPeriod: totalCreditsUsed,
-        usagePercentage:
-          monthlyCredits > 0
-            ? Math.round((totalCreditsUsed / monthlyCredits) * 100)
-            : 0,
-        remainingPercentage:
-          monthlyCredits > 0
-            ? Math.round((creditsRemaining / monthlyCredits) * 100)
-            : 0,
-        dailyAverageUsage: Math.round(dailyAverageUsage * 100) / 100,
-        estimatedDaysUntilDepletion: daysUntilDepletion,
-        renewalDate: null,
-        planName: planData?.name || "Free",
-        chartData: dailyCreditUsage,
-        period,
-      };
+      const mapped = toCamelCase(creditHistory || []) as Credit[];
 
       return {
         success: true,
-        data: data,
+        data: mapped,
       };
     });
   }

@@ -1,7 +1,6 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
-import { ActivitySchema } from "../domain/dashboard";
 
 export const GetDashboardActivityInput = z.object({
   userId: z.string(),
@@ -10,7 +9,6 @@ export const GetDashboardActivityInput = z.object({
 
 export const getDashboardActivityUseCase = buildUseCase()
   .input(GetDashboardActivityInput)
-  .output(ActivitySchema.array())
   .handle(async (ctx: OppSysContext, input) => {
     const { userId, limit } = input;
 
