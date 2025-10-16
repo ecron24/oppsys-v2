@@ -29,14 +29,14 @@ type User = {
   posts: string[];
 };
 
-const user: User = {
+const userSlector: User = {
   id: 1,
   email: "hery@example.com",
   name: "Hery",
   posts: ["post1"],
 };
 
-const result = selectFields(user, { id: true });
+const result = selectFields(userSlector, { id: true });
 
 // ✅ Type inféré automatiquement :
 /*

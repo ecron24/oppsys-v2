@@ -13,6 +13,8 @@ You are an expert in software architecture. Transform the provided raw code into
 
 ## Here is the raw code
 
+Here is the entrypoint
+
 $ARGUMENTS
 
 ## Here is the architecture reference
