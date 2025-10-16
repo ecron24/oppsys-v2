@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
 import { SocialTokenManager } from "./social-token-manager";
-import type { SocialTokenRecord, UserProfile } from "./social-type";
+import type { UserProfile } from "./social-type";
 import type { Result } from "@oppsys/types";
 import type { SocialProviderTokenData } from "./providers/social-provider";
 import type {
@@ -10,6 +10,7 @@ import type {
 import { ProviderFactory } from "./social-provider-factory";
 import type { Logger } from "src/logger/domain/logger";
 import { tryCatch } from "src/lib/try-catch";
+import type { SocialToken } from "src/social/domain/social-token";
 
 export class SocialAuthService {
   constructor(
@@ -150,7 +151,7 @@ export class SocialAuthService {
 
     const tokens = tokensResult.data;
     const statuses: Promise<ConnectionStatus>[] = tokens.map(
-      async (token: SocialTokenRecord) => {
+      async (token: SocialToken) => {
         const isValid = await this.testConnection(
           userId,
           token.platform as SocialPlatform
@@ -184,7 +185,7 @@ export class SocialAuthService {
 interface CompleteAuthResult {
   success: boolean;
   profile: UserProfile;
-  token: SocialTokenRecord;
+  token: SocialToken;
 }
 
 interface ConnectionStatus {

@@ -9,13 +9,15 @@ import { ChatSessionRepoSupabase } from "./chat/infra/chat-session-repo-supabase
 import { ProfileRepoSupabase } from "./profile/infra/profile-repo-supabase";
 import { ContentRepoSupabase } from "./content/infra/content-repo-supabase";
 import { DashboardRepoSupabase } from "./dashboard/infra/dashboard-repo-supabase";
+import { SocialTokenRepoSupabase } from "./social/infra/social-token-repo-supabase";
 import { SocialAuthService } from "./social/app/services/social-auth-service";
 import { SocialTokenManager } from "./social/app/services/social-token-manager";
 
 export function getContext() {
   const logger = new LoggerWinston();
   const chatSessionRepo = new ChatSessionRepoSupabase(supabase, logger);
-  const socialTokenManager = new SocialTokenManager(supabase, logger);
+  const socialTokenRepo = new SocialTokenRepoSupabase(supabase, logger);
+  const socialTokenManager = new SocialTokenManager(socialTokenRepo, logger);
 
   return {
     planRepo: new PlanRepoSupabase(supabase, logger),
@@ -30,6 +32,7 @@ export function getContext() {
     dashboardRepo: new DashboardRepoSupabase(supabase, logger),
     socialTokenManager,
     socialAuthService: new SocialAuthService(socialTokenManager, logger),
+    socialTokenRepo,
   };
 }
 export type OppSysContext = ReturnType<typeof getContext>;

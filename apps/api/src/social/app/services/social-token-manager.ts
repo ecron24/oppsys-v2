@@ -1,14 +1,14 @@
 import type { Result } from "@oppsys/types";
 import * as crypto from "crypto";
-import { toCamelCase } from "src/lib/to-camel-case";
 import { tryCatch } from "src/lib/try-catch";
 import type { SocialProviderTokenData } from "./providers/social-provider";
-import type { SocialTokenRecord, UserProfile } from "./social-type";
 import type { SocialPlatform } from "src/social/domain/social-connection";
 import { ProviderFactory } from "./social-provider-factory";
-import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type { Logger } from "src/logger/domain/logger";
 import { env } from "src/env";
+import type { SocialTokenRepo } from "src/social/domain/social-token-repo";
+import type { UserProfile } from "./social-type";
+import type { SocialToken } from "src/social/domain/social-token";
 
 const ENCRYPTION_KEY = env.OAUTH_TOKEN_ENCRYPTION_KEY!;
 const ALGORITHM = "aes-256-gcm";
@@ -16,14 +16,14 @@ const IV_LENGTH = 16;
 
 type SaveTokenParams = {
   userId: string;
-  platform: string;
+  platform: SocialPlatform;
   tokenData: SocialProviderTokenData;
   profileData: UserProfile;
 };
 
 export class SocialTokenManager {
   constructor(
-    private supabase: OppSysSupabaseClient,
+    private socialTokenRepo: SocialTokenRepo,
     private loggger: Logger
   ) {}
 
@@ -32,16 +32,16 @@ export class SocialTokenManager {
     profileData,
     tokenData,
     userId,
-  }: SaveTokenParams): Promise<Result<SocialTokenRecord, Error>> {
+  }: SaveTokenParams): Promise<Result<SocialToken, Error>> {
     return tryCatch(async () => {
-      const tokenRecord = {
-        user_id: userId,
-        platform: platform,
-        access_token: this.encryptToken(tokenData.accessToken),
-        refresh_token: tokenData.refreshToken
+      const tokenRecord: Omit<SocialToken, "id"> = {
+        userId,
+        platform,
+        accessToken: this.encryptToken(tokenData.accessToken),
+        refreshToken: tokenData.refreshToken
           ? this.encryptToken(tokenData.refreshToken)
           : null,
-        expires_at: tokenData.expiresAt
+        expiresAt: tokenData.expiresAt
           ? new Date(tokenData.expiresAt).toISOString()
           : null,
         scopes: tokenData.scope
@@ -50,53 +50,49 @@ export class SocialTokenManager {
               .split(" ")
               .filter((s) => s)
           : [],
-        platform_user_id: profileData.id,
-        platform_username: profileData.username,
-        is_valid: true,
-        last_used: new Date().toISOString(),
+        platformUserId: profileData.id,
+        platformUsername: profileData.username,
+        isValid: true,
+        lastUsed: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
-      const { data, error } = await this.supabase
-        .from("social_tokens")
-        .upsert(tokenRecord, { onConflict: "user_id,platform" })
-        .select()
-        .single();
+      const result = await this.socialTokenRepo.upsert(tokenRecord);
 
-      if (error) throw new Error(`Failed to save token: ${error.message}`);
+      if (!result.success) return result;
 
       return {
         success: true,
-        data: toCamelCase(data) as SocialTokenRecord,
+        data: result.data,
       };
     });
   }
 
   async getToken(
     userId: string,
-    platform: string
-  ): Promise<Result<SocialTokenRecord | null, Error>> {
+    platform: SocialPlatform
+  ): Promise<Result<SocialToken | null, Error>> {
     return tryCatch(async () => {
-      const { data, error } = await this.supabase
-        .from("social_tokens")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("platform", platform)
-        .single();
+      const result = await this.socialTokenRepo.findByUserIdAndPlatform(
+        userId,
+        platform
+      );
 
-      if (error) {
-        if (error.code === "PGRST116") return { success: true, data: null };
-        throw new Error(`Failed to get token: ${error.message}`);
+      if (!result.success) return result;
+      if (!result.data) {
+        return { success: true, data: null };
       }
 
-      const camelData = toCamelCase(data) as SocialTokenRecord;
+      const token = result.data;
 
       return {
         success: true,
         data: {
-          ...camelData,
-          accessToken: this.decryptToken(data.access_token),
-          refreshToken: data.refresh_token
-            ? this.decryptToken(data.refresh_token)
+          ...token,
+          accessToken: this.decryptToken(token.accessToken),
+          refreshToken: token.refreshToken
+            ? this.decryptToken(token.refreshToken)
             : null,
         },
       };
@@ -105,8 +101,8 @@ export class SocialTokenManager {
 
   async getValidToken(
     userId: string,
-    platform: string
-  ): Promise<Result<SocialTokenRecord, Error>> {
+    platform: SocialPlatform
+  ): Promise<Result<SocialToken, Error>> {
     return tryCatch(async () => {
       const tokenResult = await this.getToken(userId, platform);
       if (!tokenResult.success) throw tokenResult.error;
@@ -130,7 +126,7 @@ export class SocialTokenManager {
           );
           const refreshedTokenResult = await this.refreshToken(
             userId,
-            platform as SocialPlatform
+            platform
           );
           if (!refreshedTokenResult.success) throw refreshedTokenResult.error;
           return { success: true, data: refreshedTokenResult.data };
@@ -144,13 +140,10 @@ export class SocialTokenManager {
     });
   }
 
-  /**
-   * Rafraîchir un token
-   */
   async refreshToken(
     userId: string,
     platform: SocialPlatform
-  ): Promise<Result<SocialTokenRecord>> {
+  ): Promise<Result<SocialToken>> {
     const existingTokenResult = await this.getToken(userId, platform);
     if (!existingTokenResult.success) return existingTokenResult;
 
@@ -209,22 +202,22 @@ export class SocialTokenManager {
 
   async markTokenInvalid(
     userId: string,
-    platform: string
+    platform: SocialPlatform
   ): Promise<Result<void, Error>> {
     return tryCatch(async () => {
-      const { error } = await this.supabase
-        .from("social_tokens")
-        .update({ is_valid: false })
-        .eq("user_id", userId)
-        .eq("platform", platform);
-
-      if (error) {
+      const result = await this.socialTokenRepo.updateByUserIdAndPlateform(
+        { platform, userId },
+        { isValid: false }
+      );
+      if (!result.success) {
         this.loggger.error(
           `[markTokenInvalid]: Error marking token invalid for ${platform}:`,
-          error,
+          result.error,
           { platform, userId }
         );
-        throw new Error(`Failed to mark token as invalid: ${error.message}`);
+        throw new Error(
+          `Failed to mark token as invalid: ${result.error.message}`
+        );
       }
       this.loggger.debug(`⚠️ Token marked as invalid for ${platform}`);
       return { success: true, data: undefined };
@@ -233,21 +226,20 @@ export class SocialTokenManager {
 
   async updateLastUsed(
     userId: string,
-    platform: string
+    platform: SocialPlatform
   ): Promise<Result<void, Error>> {
     return tryCatch(async () => {
-      const { error } = await this.supabase
-        .from("social_tokens")
-        .update({ last_used: new Date().toISOString() })
-        .eq("user_id", userId)
-        .eq("platform", platform);
-      if (error) {
+      const result = await this.socialTokenRepo.updateByUserIdAndPlateform(
+        { platform, userId },
+        { lastUsed: new Date().toISOString() }
+      );
+      if (!result.success) {
         this.loggger.error(
           `[updateLastUsed]:️ Failed to update last_used for ${platform}:`,
-          error,
+          result.error,
           { platform, userId }
         );
-        throw new Error(`Failed to update last used: ${error.message}`);
+        throw new Error(`Failed to update last used: ${result.error.message}`);
       }
       return { success: true, data: undefined };
     });
@@ -255,22 +247,21 @@ export class SocialTokenManager {
 
   async deleteToken(
     userId: string,
-    platform: string
+    platform: SocialPlatform
   ): Promise<Result<void, Error>> {
     return tryCatch(async () => {
-      const { error } = await this.supabase
-        .from("social_tokens")
-        .delete()
-        .eq("user_id", userId)
-        .eq("platform", platform);
+      const result = await this.socialTokenRepo.deleteByUserIdAndPlatform(
+        userId,
+        platform
+      );
 
-      if (error) {
+      if (!result.success) {
         this.loggger.error(
           `[deleteToken]: Error deleting token for ${platform}:`,
-          error,
+          result.error,
           { userId, platform }
         );
-        throw new Error(`Failed to delete token: ${error.message}`);
+        throw new Error(`Failed to delete token: ${result.error.message}`);
       }
       return { success: true, data: undefined };
     });
@@ -278,28 +269,24 @@ export class SocialTokenManager {
 
   async getAllUserTokens(
     userId: string
-  ): Promise<Result<SocialTokenRecord[], Error>> {
+  ): Promise<Result<SocialToken[], Error>> {
     return tryCatch(async () => {
-      const { data, error } = await this.supabase
-        .from("social_tokens")
-        .select("*")
-        .eq("user_id", userId);
+      const result = await this.socialTokenRepo.findByUserId(userId);
 
-      if (error) {
+      if (!result.success) {
         this.loggger.error(
           "[getAllUserTokens]: Error fetching user connections:",
-          error,
+          result.error,
           { userId }
         );
-        throw new Error(`Failed to fetch connections: ${error.message}`);
+        throw new Error(`Failed to fetch connections: ${result.error.message}`);
       }
 
-      const tokens = data.map((token) => {
-        const camelToken = toCamelCase(token) as SocialTokenRecord;
+      const tokens = result.data.map((token) => {
         return {
-          ...camelToken,
+          ...token,
           accessToken: "[PROTECTED]",
-          refreshToken: token.refresh_token ? "[PROTECTED]" : null,
+          refreshToken: token.refreshToken ? "[PROTECTED]" : null,
         };
       });
 
