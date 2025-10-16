@@ -11,6 +11,7 @@ const envSchema = z.object({
     ),
   N8N_WEBHOOK_AUTH_USER: z.string().min(1),
   N8N_WEBHOOK_AUTH_PASS: z.string().min(1),
+  OAUTH_TOKEN_ENCRYPTION_KEY: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

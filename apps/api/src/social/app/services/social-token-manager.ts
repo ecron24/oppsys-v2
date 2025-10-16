@@ -8,13 +8,9 @@ import type { SocialPlatform } from "src/social/domain/social-connection";
 import { ProviderFactory } from "./social-provider-factory";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type { Logger } from "src/logger/domain/logger";
+import { env } from "src/env";
 
-const ENCRYPTION_KEY = process.env.OAUTH_TOKEN_ENCRYPTION_KEY!;
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 32) {
-  throw new Error(
-    "OAUTH_TOKEN_ENCRYPTION_KEY must be defined and be at least 32 characters long."
-  );
-}
+const ENCRYPTION_KEY = env.OAUTH_TOKEN_ENCRYPTION_KEY!;
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 
