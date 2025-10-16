@@ -22,7 +22,7 @@ export class PlanRepoSupabase implements PlanRepo {
         .from("plans")
         .select("*")
         .eq("name", name)
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error("[getByName] :", error);
@@ -32,7 +32,7 @@ export class PlanRepoSupabase implements PlanRepo {
       if (!data) {
         return {
           success: false,
-          error: new Error("Plan not found"),
+          error: new Error("Plan not found : name=" + name),
           kind: "PLAN_NOT_FOUND",
         } as const;
       }

@@ -5,7 +5,7 @@ export type GetCreditsResult = Result<Credit[], Error, "UNKNOWN_ERROR">;
 export type GetDashboardContentStatsResult = Result<
   ContentStats,
   Error,
-  "UNKNOWN_ERROR"
+  "UNKNOWN_ERROR" | "CONTENT_STATS_NOT_FOUND"
 >;
 
 export interface DashboardRepo {

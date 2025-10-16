@@ -31,7 +31,7 @@ export class SocialTokenRepoSupabase implements SocialTokenRepo {
         .eq("user_id", by.userId)
         .eq("platform", by.platform)
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error(
@@ -41,6 +41,15 @@ export class SocialTokenRepoSupabase implements SocialTokenRepo {
         );
         throw new Error(`Failed to mark token as invalid: ${error.message}`);
       }
+
+      if (!data) {
+        return {
+          success: false,
+          kind: "SOCIAL_TOKEN_NOT_FOUND",
+          error: new Error("Social token not found for user and platform"),
+        } as const;
+      }
+
       this.logger.debug(`⚠️ Token marked as invalid for `, { by });
 
       const mapped = toCamelCase(data) as SocialToken;
@@ -82,7 +91,7 @@ export class SocialTokenRepoSupabase implements SocialTokenRepo {
         .select("*")
         .eq("user_id", userId)
         .eq("platform", platform)
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error(
@@ -93,11 +102,7 @@ export class SocialTokenRepoSupabase implements SocialTokenRepo {
             platform,
           }
         );
-        return {
-          success: false,
-          kind: "UNKNOWN_ERROR",
-          error: new Error("Failed to find social token"),
-        } as const;
+        throw error;
       }
 
       if (!data) {

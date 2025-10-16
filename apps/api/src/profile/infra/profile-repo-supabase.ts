@@ -17,9 +17,13 @@ import {
 } from "src/profile/domain/profile";
 import { toCamelCase } from "src/lib/to-camel-case";
 import { toSnakeCase } from "src/lib/to-snake-case";
+import type { Logger } from "src/logger/domain/logger";
 
 export class ProfileRepoSupabase implements ProfileRepo {
-  constructor(private supabase: OppSysSupabaseClient) {}
+  constructor(
+    private supabase: OppSysSupabaseClient,
+    private logger: Logger
+  ) {}
 
   async create(profile: Profile): Promise<CreateProfileResult> {
     return await tryCatch(async () => {
@@ -33,9 +37,12 @@ export class ProfileRepoSupabase implements ProfileRepo {
         language: profile.language,
         timezone: profile.timezone,
       });
+
       if (error) {
+        this.logger.error("[create]: ", error, { profile });
         throw error;
       }
+
       return { success: true as const, data: undefined };
     });
   }
@@ -55,8 +62,13 @@ export class ProfileRepoSupabase implements ProfileRepo {
         `
         )
         .eq("id", id)
-        .single();
-      if (error) throw error;
+        .maybeSingle();
+
+      if (error) {
+        this.logger.error("[getByIdWithPlan]: ", error, { id });
+        throw error;
+      }
+
       if (!data) {
         return {
           success: false as const,
@@ -114,6 +126,7 @@ export class ProfileRepoSupabase implements ProfileRepo {
       });
 
       if (error) {
+        this.logger.error("[deductCredits]: ", error, { userId, amount });
         throw error;
       }
 
@@ -129,7 +142,10 @@ export class ProfileRepoSupabase implements ProfileRepo {
         p_origin: "api",
       });
 
-      if (error) throw error;
+      if (error) {
+        this.logger.error("[addCredits]: ", error, { userId, amount });
+        throw error;
+      }
 
       return { success: true as const, data: undefined };
     });
@@ -155,9 +171,10 @@ export class ProfileRepoSupabase implements ProfileRepo {
           )
         `
         )
-        .single();
+        .maybeSingle();
 
       if (error) {
+        this.logger.error("[update]: ", error, { profile, id });
         throw error;
       }
 
@@ -165,7 +182,7 @@ export class ProfileRepoSupabase implements ProfileRepo {
         return {
           success: false,
           kind: "PROFILE_NOT_FOUND",
-          error: new Error("unknown error"),
+          error: new Error("Profile not found : id=" + id),
         } as const;
       }
 

@@ -51,11 +51,19 @@ export class DashboardRepoSupabase implements DashboardRepo {
         .from("content_stats")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error("[getContentStats] :", error, { userId });
         throw error;
+      }
+
+      if (!contentStats) {
+        return {
+          success: false,
+          kind: "CONTENT_STATS_NOT_FOUND",
+          error: new Error("contentStats not found : userId=" + userId),
+        } as const;
       }
 
       const mapped: ContentStats = {

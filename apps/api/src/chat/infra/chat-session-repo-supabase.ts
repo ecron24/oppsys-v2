@@ -95,7 +95,8 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
       if (updateError) {
         this.logger.error(
           "[updateChatSession] Error updating chat session",
-          updateError
+          updateError,
+          { params }
         );
         throw updateError;
       }
@@ -132,9 +133,16 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
         .from("chat_sessions")
         .select("*")
         .eq("id", sessionId)
-        .single();
+        .maybeSingle();
 
-      if (error || !session) {
+      if (error) {
+        this.logger.error("[getChatSession] Error get chat session", error, {
+          sessionId,
+        });
+        throw error;
+      }
+
+      if (!session) {
         return {
           success: false,
           kind: "SESSION_NOT_FOUND",

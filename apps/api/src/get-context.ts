@@ -21,7 +21,7 @@ export function getContext() {
 
   return {
     planRepo: new PlanRepoSupabase(supabase, logger),
-    profileRepo: new ProfileRepoSupabase(supabase),
+    profileRepo: new ProfileRepoSupabase(supabase, logger),
     logger,
     moduleRepo: new ModuleRepoSupabase(supabase, logger),
     authRepo: new AuthRepoSupabase(supabase, logger),

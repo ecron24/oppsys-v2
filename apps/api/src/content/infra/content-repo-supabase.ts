@@ -267,7 +267,7 @@ export class ContentRepoSupabase implements ContentRepo {
         )
         .eq("id", params.id)
         .eq("user_id", params.userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error("[getById] failed", error, { params });
@@ -282,7 +282,7 @@ export class ContentRepoSupabase implements ContentRepo {
         return {
           success: false,
           kind: "NOT_FOUND",
-          error: new Error("not found"),
+          error: new Error("content not found : id=" + params.id),
         } as const;
       }
 
@@ -312,7 +312,7 @@ export class ContentRepoSupabase implements ContentRepo {
         .eq("id", params.id)
         .eq("user_id", params.userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error("[update] failed", error, { params });
@@ -327,7 +327,7 @@ export class ContentRepoSupabase implements ContentRepo {
         return {
           success: false,
           kind: "NOT_FOUND",
-          error: new Error("not found"),
+          error: new Error("Content not found : id=" + params.id),
         } as const;
       }
 
@@ -379,13 +379,24 @@ export class ContentRepoSupabase implements ContentRepo {
         .select("id, status")
         .eq("id", params.id)
         .eq("user_id", params.userId)
-        .single();
+        .maybeSingle();
 
-      if (contentError || !content) {
+      if (contentError) {
+        this.logger.error(
+          "[getChatSession] Error get chat session",
+          contentError,
+          {
+            params,
+          }
+        );
+        throw contentError;
+      }
+
+      if (!content) {
         return {
           success: false,
           kind: "NOT_FOUND",
-          error: new Error("not found"),
+          error: new Error("content not found : id=" + params.id),
         } as const;
       }
 
