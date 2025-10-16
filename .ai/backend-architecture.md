@@ -6,6 +6,7 @@ This document outlines the architecture and design principles of the backend of 
 > The application use path alias `src/*` to refer `src/*` folder.
 > All path mentioned here are relative to `apps/api` folder.
 > Omit try catch inside use case implementation.
+> Don't use type `any`
 
 ## How to handle errors
 
