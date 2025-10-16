@@ -8,6 +8,7 @@ import { profileRouter } from "./profile/presentation/profile-router";
 import { contentRouter } from "./content/presentation/content-router";
 import { dashboardRouter } from "./dashboard/presentation/dashboard-router";
 import { socialRouter } from "./social/presentation/social-router";
+import { scheduleRouter } from "./schedule/presentation/schedule-router";
 
 export const apiRouter = honoRouter((ctx) => {
   const publicApiRouter = new Hono()
@@ -23,7 +24,8 @@ export const apiRouter = honoRouter((ctx) => {
     .route("/api/content", contentRouter)
     .route("/api/chat", chatRouter)
     .route("/api/dashboard", dashboardRouter)
-    .route("/api/social", socialRouter);
+    .route("/api/social", socialRouter)
+    .route("/api/schedule", scheduleRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)

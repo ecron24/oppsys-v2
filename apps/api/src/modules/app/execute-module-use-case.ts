@@ -25,7 +25,6 @@ const ExecuteModuleInputSchema = z.object({
     .optional(),
 });
 
-// This is a simplified version. A real implementation would have more robust error handling and logic.
 export const executeModuleUseCase = buildUseCase()
   .input(ExecuteModuleInputSchema)
   .handle(async (ctx, { body, params, user, metadata }) => {

@@ -3,7 +3,10 @@ import type { Result } from "@oppsys/types";
 import z, { ZodError } from "zod";
 import { AuthError } from "@oppsys/supabase";
 import type { OppSysContext } from "src/get-context";
-import { InsufficientCreditError } from "src/modules/domain/exception";
+import {
+  InsufficientCreditError,
+  PremiumOnlyError,
+} from "src/modules/domain/exception";
 
 export function handleResultResponse<TData, TStatusCode extends 200>(
   honoCtx: Context,
@@ -53,7 +56,7 @@ export function handleResultResponse<TData, TStatusCode extends 200>(
       401
     );
   }
-  if (kind.includes("forbidden")) {
+  if (kind.includes("forbidden") || result.error instanceof PremiumOnlyError) {
     return honoCtx.json(
       { error: "Forbidden", details: result.error.message },
       403

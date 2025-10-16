@@ -12,6 +12,7 @@ import { DashboardRepoSupabase } from "./dashboard/infra/dashboard-repo-supabase
 import { SocialTokenRepoSupabase } from "./social/infra/social-token-repo-supabase";
 import { SocialAuthService } from "./social/app/services/social-auth-service";
 import { SocialTokenManager } from "./social/app/services/social-token-manager";
+import { ScheduledTaskRepoSupabase } from "./schedule/infra/scheduled-task-repo-supabase";
 
 export function getContext() {
   const logger = new LoggerWinston();
@@ -33,6 +34,7 @@ export function getContext() {
     socialTokenManager,
     socialAuthService: new SocialAuthService(socialTokenManager, logger),
     socialTokenRepo,
+    scheduledTaskRepo: new ScheduledTaskRepoSupabase(supabase, logger),
   };
 }
 export type OppSysContext = ReturnType<typeof getContext>;

@@ -17,3 +17,5 @@ export class InsufficientCreditError extends Error {
     this.name = "InsufficientCreditError";
   }
 }
+
+export class PremiumOnlyError extends Error {}
