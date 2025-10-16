@@ -27,12 +27,15 @@ import {
   RefreshTokenInputSchema,
 } from "../app/refresh-token-usecase";
 import { getUserInContext } from "src/lib/get-user-in-context";
+import { describeRoute, validator } from "hono-openapi";
 
 export const socialRouter = honoRouter((ctx) => {
   const router = new Hono()
     .post(
       "/init",
+      describeRoute({ description: "Initiate social authentication" }),
       zValidatorWrapper("json", InitiateAuthInputSchema.omit({ userId: true })),
+      validator("json", InitiateAuthInputSchema.omit({ userId: true })),
       async (c) => {
         const input = c.req.valid("json");
         const user = getUserInContext(c);
@@ -45,7 +48,9 @@ export const socialRouter = honoRouter((ctx) => {
     )
     .post(
       "/callback",
+      describeRoute({ description: "Complete social authentication callback" }),
       zValidatorWrapper("json", CompleteAuthInputSchema.omit({ userId: true })),
+      validator("json", CompleteAuthInputSchema.omit({ userId: true })),
       async (c) => {
         const input = c.req.valid("json");
         const user = getUserInContext(c);
@@ -58,10 +63,12 @@ export const socialRouter = honoRouter((ctx) => {
     )
     .get(
       "/connections",
+      describeRoute({ description: "Get connected social platforms for user" }),
       zValidatorWrapper(
         "query",
         GetConnectionsInputSchema.omit({ userId: true })
       ),
+      validator("query", GetConnectionsInputSchema.omit({ userId: true })),
       async (c) => {
         const input = c.req.valid("query");
         const user = getUserInContext(c);
@@ -74,10 +81,12 @@ export const socialRouter = honoRouter((ctx) => {
     )
     .get(
       "/connections/:platform/status",
+      describeRoute({ description: "Test connection status for a platform" }),
       zValidatorWrapper(
         "query",
         TestConnectionInputSchema.omit({ userId: true })
       ),
+      validator("query", TestConnectionInputSchema.omit({ userId: true })),
       async (c) => {
         const input = c.req.valid("query");
         const user = getUserInContext(c);
@@ -90,10 +99,12 @@ export const socialRouter = honoRouter((ctx) => {
     )
     .delete(
       "/connections/:platform",
+      describeRoute({ description: "Disconnect a social platform from user" }),
       zValidatorWrapper(
         "query",
         DisconnectPlatformInputSchema.omit({ userId: true })
       ),
+      validator("query", DisconnectPlatformInputSchema.omit({ userId: true })),
       async (c) => {
         const input = c.req.valid("query");
         const user = getUserInContext(c);
@@ -106,7 +117,9 @@ export const socialRouter = honoRouter((ctx) => {
     )
     .post(
       "/connections/:platform/refresh",
+      describeRoute({ description: "Refresh social platform access token" }),
       zValidatorWrapper("json", RefreshTokenInputSchema.omit({ userId: true })),
+      validator("json", RefreshTokenInputSchema.omit({ userId: true })),
       async (c) => {
         const input = c.req.valid("json");
         const user = getUserInContext(c);
