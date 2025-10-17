@@ -23,8 +23,6 @@ export const cleanupExpiredFilesUseCase = buildUseCase()
     // Get expired transcriptions
     const expiredTranscriptionsResult =
       await ctx.transcriptionRepo.listTranscriptions(user.id, {
-        limit: 1000,
-        offset: 10,
         expiresAt: new Date().toISOString(),
       });
     if (!expiredTranscriptionsResult.success)

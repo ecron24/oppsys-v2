@@ -3,8 +3,8 @@ import { buildUseCase } from "src/lib/use-case-builder";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 
 export const GetAllContentUseCaseQuery = z.object({
-  limit: z.string().transform(Number).default(50),
-  page: z.string().transform(Number).default(0),
+  limit: z.string().transform(Number).default(50).optional(),
+  page: z.string().transform(Number).default(0).optional(),
   type: z.string().optional(),
 });
 export type GetAllContentQuery = z.infer<typeof GetAllContentUseCaseQuery>;

@@ -90,8 +90,8 @@ export class TranscriptionRepoSupabase implements TranscriptionRepo {
   async listTranscriptions(
     userId: string,
     options: {
-      limit: number;
-      offset: number;
+      limit?: number;
+      offset?: number;
       status?: string;
       type?: string;
       createdAt?: string;
@@ -103,25 +103,17 @@ export class TranscriptionRepoSupabase implements TranscriptionRepo {
 
       let query = this.supabase
         .from("transcriptions")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+        .order("created_at", { ascending: false });
 
-      if (createdAt) {
-        query = query.gte("created_at", createdAt);
-      }
+      if (createdAt) query = query.gte("created_at", createdAt);
+      if (expiresAt) query = query.lt("expires_at", expiresAt);
+      if (status) query = query.eq("status", status);
+      if (type) query = query.eq("transcription_type", type);
 
-      if (expiresAt) {
-        query = query.lt("expires_at", expiresAt);
-      }
-
-      if (status) {
-        query = query.eq("status", status);
-      }
-
-      if (type) {
-        query = query.eq("transcription_type", type);
+      if (typeof limit === "number" && typeof offset === "number") {
+        query = query.range(offset, offset + limit - 1);
       }
 
       const { data, error, count } = await query;
@@ -144,8 +136,8 @@ export class TranscriptionRepoSupabase implements TranscriptionRepo {
         data: {
           transcriptions: TranscriptionSchema.array().parse(mapped),
           pagination: {
-            limit: limit,
-            offset: offset,
+            limit: limit ?? null,
+            offset: offset ?? null,
             total: count || 0,
           },
         },

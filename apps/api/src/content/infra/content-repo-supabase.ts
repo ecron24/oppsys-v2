@@ -192,7 +192,6 @@ export class ContentRepoSupabase implements ContentRepo {
     query: GetAllContentQuery;
   }): Promise<GetAllContentResult> {
     return await tryCatch(async () => {
-      const offset = (params.query.page - 1) * params.query.limit;
       let query = this.supabase
         .from("generated_content")
         .select(
@@ -208,9 +207,14 @@ export class ContentRepoSupabase implements ContentRepo {
           { count: "exact" }
         )
         .eq("user_id", params.userId)
-        .order("created_at", { ascending: false })
-        .limit(params.query.limit)
-        .range(offset, offset + params.query.limit - 1);
+        .order("created_at", { ascending: false });
+      if (
+        typeof params.query.limit === "number" &&
+        typeof params.query.page === "number"
+      ) {
+        const offset = (params.query.page - 1) * params.query.limit;
+        query = query.range(offset, offset + params.query.limit - 1);
+      }
 
       if (params.query.type && params.query.type !== "all")
         query = query.eq("type", params.query.type);
@@ -237,10 +241,10 @@ export class ContentRepoSupabase implements ContentRepo {
         data: {
           data: mapped,
           pagination: {
-            page: params.query.page,
-            limit: params.query.limit,
+            page: params.query.page || null,
+            limit: params.query.limit || null,
             total: count || 0,
-            pages: Math.ceil((count || 0) / params.query.limit),
+            pages: Math.ceil((count || 0) / (params.query?.limit || 0)),
           },
         },
       } as const;

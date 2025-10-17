@@ -29,8 +29,6 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
   async list(query: ListModulesQuery): Promise<GetModulesResult> {
     return await tryCatch(async () => {
-      const offset = (query.page - 1) * query.limit;
-
       let q = this.supabase.from("modules").select(`*`, { count: "exact" });
 
       if (!query.includeInactive) {
@@ -49,7 +47,11 @@ export class ModuleRepoSupabase implements ModuleRepo {
       }
 
       q = q.order(query.sort, { ascending: query.order === "asc" });
-      q = q.range(offset, offset + query.limit - 1);
+
+      if (typeof query.limit === "number" && typeof query.page === "number") {
+        const offset = (query.page - 1) * query.limit;
+        q = q.range(offset, offset + query.limit - 1);
+      }
 
       const { data, error, count } = await q;
 
@@ -108,8 +110,6 @@ export class ModuleRepoSupabase implements ModuleRepo {
     query: ModuleUsageHistoryQuery
   ): Promise<GetModuleUsageHistoryResult> {
     return await tryCatch(async () => {
-      const offset = (query.page - 1) * query.limit;
-
       let selectFields = `
         id,
         module_id,
@@ -143,7 +143,10 @@ export class ModuleRepoSupabase implements ModuleRepo {
       if (query.endDate) q = q.lte("used_at", query.endDate);
 
       q = q.order(query.sort, { ascending: query.order === "asc" });
-      q = q.range(offset, offset + query.limit - 1);
+      if (typeof query.limit === "number" && typeof query.page === "number") {
+        const offset = (query.page - 1) * query.limit;
+        q = q.range(offset, offset + query.limit - 1);
+      }
 
       const { data, error, count } = await q;
 

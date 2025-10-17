@@ -29,8 +29,6 @@ export const getDashboardOverviewUseCase = buildUseCase()
     // 3. Fetch period usage
     const periodUsageRes = await ctx.moduleRepo.listUsageHistory(userId, {
       startDate: startDate.toISOString(),
-      page: 1,
-      limit: 1000,
       sort: "used_at",
       order: "desc",
       includeOutput: false,
@@ -41,8 +39,6 @@ export const getDashboardOverviewUseCase = buildUseCase()
 
     // 4. Fetch all usage
     const allUsageRes = await ctx.moduleRepo.listUsageHistory(userId, {
-      limit: 1000,
-      page: 1,
       order: "asc",
       sort: "used_at",
     });

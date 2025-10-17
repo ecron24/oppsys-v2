@@ -2,7 +2,7 @@ import { paginationSchema } from "src/common/common-schema";
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
 
-export const ListModulesQuerySchema = paginationSchema.extend({
+export const ListModulesQuerySchema = paginationSchema.partial().extend({
   type: z.enum(["n8n", "ai"]).optional(),
   category: z.string().max(50).optional(),
   search: z.string().max(100).optional(),

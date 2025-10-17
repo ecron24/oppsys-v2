@@ -27,9 +27,6 @@ export const getTranscriptionStatsUseCase = buildUseCase()
     const transcriptionsResult = await ctx.transcriptionRepo.listTranscriptions(
       user.id,
       {
-        // FIXME: don't need pagination
-        limit: 1000,
-        offset: 10,
         createdAt: startDate.toISOString(),
       }
     );

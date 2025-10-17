@@ -30,8 +30,8 @@ export type Content = z.infer<typeof ContentSchema>;
 export const PaginatedContentSchema = z.object({
   data: z.array(ContentSchema),
   pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
+    page: z.number().nullable(),
+    limit: z.number().nullable(),
     total: z.number(),
     pages: z.number(),
   }),

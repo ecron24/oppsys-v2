@@ -7,7 +7,7 @@ import {
   UuidSchema,
 } from "src/common/common-schema";
 
-export const ModuleUsageHistoryQuerySchema = paginationSchema.extend({
+export const ModuleUsageHistoryQuerySchema = paginationSchema.partial().extend({
   moduleId: UuidSchema.optional(),
   moduleSlug: z.string().optional(),
   status: z.enum(["success", "failed", "pending"]).optional(),

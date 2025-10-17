@@ -17,8 +17,8 @@ export type ListTranscriptionsResult = Result<
   {
     transcriptions: Transcription[];
     pagination: {
-      limit: number;
-      offset: number;
+      limit: number | null;
+      offset: number | null;
       total: number;
     };
   },
@@ -49,8 +49,8 @@ export interface TranscriptionRepo {
   listTranscriptions(
     userId: string,
     options: {
-      limit: number;
-      offset: number;
+      limit?: number;
+      offset?: number;
       status?: string;
       type?: string;
       createdAt?: string;

@@ -23,17 +23,13 @@ export const getDashboardModulesStatsUseCase = buildUseCase()
     const startDate = periodToDate(period);
     // 2. Fetch module usage
     const moduleUsageResult = await ctx.moduleRepo.listUsageHistory(userId, {
-      limit: 1000,
       order: "desc",
-      page: 1,
       sort: "used_at",
       startDate: startDate.toISOString(),
     });
     if (!moduleUsageResult.success) return moduleUsageResult;
     // 3. Fetch modules
     const modulesResult = await ctx.moduleRepo.list({
-      limit: 1000,
-      page: 1,
       order: "asc",
       sort: "created_at",
     });
