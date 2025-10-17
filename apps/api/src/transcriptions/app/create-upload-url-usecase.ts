@@ -8,6 +8,7 @@ export const createUploadUrlUseCase = buildUseCase()
   .handle(async (ctx, input) => {
     const { fileName, fileType } = input;
 
+    // TODO: make me in @oppsys/supabase
     // Call the RPC function to create upload URL
     const { data, error } = await ctx.supabase.rpc(
       "create_transcription_upload_url",

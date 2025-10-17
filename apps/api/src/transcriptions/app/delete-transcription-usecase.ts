@@ -23,6 +23,7 @@ export const deleteTranscriptionUseCase = buildUseCase()
 
     // Delete file from storage if exists
     if (transcription.filePath) {
+      // TODO: make me in @oppsys/supabase
       const { error: deleteError } = await ctx.supabase.storage
         .from("transcription-files")
         .remove([transcription.filePath]);
