@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createFn } from "./fn-builder";
 
 const inputSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
 });
 
 const userProfileSchema = z.object({

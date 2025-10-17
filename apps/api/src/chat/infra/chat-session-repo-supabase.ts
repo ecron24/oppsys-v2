@@ -32,11 +32,18 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
         .limit(1)
         .maybeSingle();
 
-      if (error || !session) {
+      if (error) {
+        this.logger.error("[findActiveSession] ", error, {
+          params,
+        });
+        throw error;
+      }
+
+      if (!session) {
         return {
           success: false,
           kind: "SESSION_NOT_FOUND",
-          error: error || new Error("Session not found"),
+          error: new Error("Session not found"),
         } as const;
       }
 

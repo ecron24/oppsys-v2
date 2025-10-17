@@ -77,6 +77,7 @@ export const authenticateToken = (
       const userInContext: UserInContext = {
         id: user.id,
         email: user.email,
+        role: user.role ?? null,
       };
 
       // Attach to Hono context state
