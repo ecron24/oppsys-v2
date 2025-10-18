@@ -13,6 +13,7 @@ import { transcriptionRouter } from "./transcriptions/presentation/transcription
 import { documentsRouter } from "./documents/presentation/documents-router";
 import { formationRouter } from "./formations/presentation/formation-router";
 import { templateRouter } from "./templates/presentation/template-router";
+import { youtubeRouter } from "./youtube/presentation/youtube-router";
 
 export const apiRouter = honoRouter((ctx) => {
   const publicApiRouter = new Hono()
@@ -33,7 +34,8 @@ export const apiRouter = honoRouter((ctx) => {
     .route("/api/transcriptions", transcriptionRouter)
     .route("/api/documents", documentsRouter)
     .route("/api/formations", formationRouter)
-    .route("/api/templates", templateRouter);
+    .route("/api/templates", templateRouter)
+    .route("/api/youtube", youtubeRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)

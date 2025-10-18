@@ -20,13 +20,6 @@ export const executeTranscriptionUseCase = buildUseCase()
       );
     if (!transcriptionResult.success) return transcriptionResult;
     const module = input.module;
-    if (!module.name || !module.slug) {
-      return {
-        success: false,
-        kind: "UNKNOWN_ERROR",
-        error: new Error("module unsatisfied"),
-      };
-    }
     const moduleClean = {
       ...module,
       name: module.name,

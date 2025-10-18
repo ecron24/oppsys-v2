@@ -15,7 +15,7 @@ export const cleanupExpiredFilesUseCase = buildUseCase()
     if (user.role !== "admin") {
       return {
         success: false,
-        kind: "UNKNOWN_ERROR",
+        kind: "FORBIDDEN",
         error: new Error("Admin permissions required"),
       } as const;
     }

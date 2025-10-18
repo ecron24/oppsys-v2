@@ -125,10 +125,10 @@ export const executeModuleUseCase = buildUseCase()
       return createUsageResult;
     }
 
-    if (!module.name || !module.slug || !user.email) {
+    if (!user.email) {
       return {
         success: false,
-        error: new Error("Module name/slug is missing"),
+        error: new Error("User email is missing"),
         kind: "MODULE_INVALID",
       } as const;
     }

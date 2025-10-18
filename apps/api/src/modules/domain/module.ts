@@ -9,8 +9,8 @@ import {
 
 export const ModuleSchema = z.object({
   id: z.string(),
-  name: nullableSchema(z.string()),
-  slug: nullableSchema(z.string()),
+  name: z.string(),
+  slug: z.string(),
   description: nullableSchema(z.string()),
   type: z.enum(["n8n", "ai"]),
   creditCost: z.number(),

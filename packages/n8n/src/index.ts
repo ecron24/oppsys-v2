@@ -21,6 +21,7 @@ export function createN8nInstance({
   N8N_WEBHOOK_AUTH_PASS,
   N8N_WEBHOOK_AUTH_USER,
 }: N8nInstanceParams) {
+  // TODO: add to snake case
   async function executeWorkflow({
     module,
     input,

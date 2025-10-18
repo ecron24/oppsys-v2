@@ -16,6 +16,7 @@ import { ScheduledTaskRepoSupabase } from "./schedule/infra/scheduled-task-repo-
 import { TranscriptionRepoSupabase } from "./transcriptions/infra/transcription-repo-supabase";
 import { FormationRepoSupabase } from "./formations/infra/formation-repo-supabase";
 import { TemplateRepoSupabase } from "./templates/infra/template-repo-supabase";
+import { YouTubeRepoSupabase } from "./youtube/infra/youtube-repo-supabase";
 
 export function getContext() {
   const logger = new LoggerWinston();
@@ -42,6 +43,7 @@ export function getContext() {
     transcriptionRepo,
     formationRepo: new FormationRepoSupabase(supabase, logger),
     templateRepo: new TemplateRepoSupabase(supabase, logger),
+    youtubeRepo: new YouTubeRepoSupabase(supabase, logger),
     supabase,
   };
 }
