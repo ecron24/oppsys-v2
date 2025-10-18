@@ -1,6 +1,10 @@
 import { createMiddleware } from "hono/factory";
 import { type OppSysContext } from "src/get-context";
-import type { UserInContext } from "src/lib/get-user-in-context";
+import {
+  UserInContextSchema,
+  type UserInContext,
+} from "src/lib/get-user-in-context";
+import z from "zod";
 
 type Config = {
   skipUrls?: string[];
@@ -74,11 +78,23 @@ export const authenticateToken = (
         ...profile,
         plan_name: profile.plans?.name || "Free",
       };
-      const userInContext: UserInContext = {
+      const userValidation = UserInContextSchema.safeParse({
         id: user.id,
         email: user.email,
         role: user.role ?? null,
-      };
+      });
+      if (!userValidation.success) {
+        return c.json(
+          {
+            success: false,
+            error: "Invalid user",
+            details: z.prettifyError(userValidation.error),
+          },
+          400
+        );
+      }
+
+      const userInContext: UserInContext = userValidation.data;
 
       // Attach to Hono context state
       c.set("user", userInContext);

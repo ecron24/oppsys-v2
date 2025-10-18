@@ -10,7 +10,9 @@ You are an expert in software architecture. Transform the provided raw code into
 - Use clear boundaries and dependency inversion.
 - The method in repository doesn't content more logic, split it if it contain more logic and put in the usecase instead
 - Always check if aldready existed in current features and in others features before creating, if existed, reuse and you can modify if needed.
-- Avoid type `any`
+- Omit try catch inside use case implementation.
+- Always use `camelCase` in the schema
+- Don't use type `any`
 
 ## Here is the raw code
 

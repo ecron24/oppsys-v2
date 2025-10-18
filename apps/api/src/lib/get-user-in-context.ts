@@ -17,7 +17,7 @@ export function getUserInContext(c: Context) {
 export const UserInContextSchema = z.object({
   id: UuidSchema,
   email: nullableSchema(z.email()),
-  role: z.string().nullable(),
+  role: z.enum(["client", "admin", "staff"]).nullable(),
 });
 
 export type UserInContext = z.infer<typeof UserInContextSchema>;
