@@ -20,29 +20,9 @@ export const downloadTemplateUseCase = buildUseCase()
       templateId,
       userId
     );
-
-    if (!templateResult.success) {
-      ctx.logger.error(
-        "[downloadTemplate] template not found",
-        templateResult.error,
-        { templateId, userId }
-      );
-      return {
-        success: false,
-        kind: "TEMPLATE_NOT_FOUND",
-        error: new Error("Template not found"),
-      };
-    }
+    if (!templateResult.success) return templateResult;
 
     const template = templateResult.data;
-    if (!template) {
-      return {
-        success: false,
-        kind: "TEMPLATE_NOT_FOUND",
-        error: new Error("Template not found"),
-      };
-    }
-
     // Download file from storage
     const downloadResult = await ctx.supabase.storage
       .from("templates")
@@ -77,7 +57,7 @@ export const downloadTemplateUseCase = buildUseCase()
     return {
       success: true,
       data: {
-        fileData: downloadResult.data,
+        fileData: await downloadResult.data.arrayBuffer(),
         contentType,
         filename: template.name,
       },

@@ -68,7 +68,7 @@ export class TemplateRepoSupabase implements TemplateRepo {
         .select("*")
         .eq("id", id)
         .or(`is_public.eq.true,user_id.eq.${userId}`)
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error("[getTemplateById]: ", error, { id, userId });
@@ -76,7 +76,11 @@ export class TemplateRepoSupabase implements TemplateRepo {
       }
 
       if (!data) {
-        throw new Error("Template not found");
+        return {
+          success: false,
+          kind: "TEMPLATE_NOT_FOUND",
+          error: new Error("Template not found"),
+        } as const;
       }
 
       const template = RealEstateTemplateSchema.parse(
@@ -141,11 +145,19 @@ export class TemplateRepoSupabase implements TemplateRepo {
         .eq("id", id)
         .eq("user_id", userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         this.logger.error("[updateTemplate]: ", error, { id, input, userId });
         throw error;
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          kind: "TEMPLATE_NOT_FOUND",
+          error: new Error("Template not found"),
+        } as const;
       }
 
       const template = RealEstateTemplateSchema.parse(
@@ -155,7 +167,7 @@ export class TemplateRepoSupabase implements TemplateRepo {
         success: true,
         data: template,
       };
-    }, "TEMPLATE_NOT_FOUND");
+    });
   }
 
   async deleteTemplate(
@@ -178,6 +190,6 @@ export class TemplateRepoSupabase implements TemplateRepo {
         success: true,
         data: undefined,
       };
-    }, "TEMPLATE_NOT_FOUND");
+    });
   }
 }

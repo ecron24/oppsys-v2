@@ -13,7 +13,7 @@ export type GetTemplatesResult = Result<
 >;
 
 export type GetTemplateByIdResult = Result<
-  RealEstateTemplate | null,
+  RealEstateTemplate,
   Error,
   "UNKNOWN_ERROR" | "TEMPLATE_NOT_FOUND"
 >;
