@@ -6,6 +6,7 @@ import {
 import type { N8nInput, N8nModule, N8nResult } from "./n8n-type";
 import { determineTriggerType } from "./trigger-type";
 import { buildChatInput, extractMessageFromN8n } from "./utilis";
+import { toSnakeCase } from "./to-snake-case";
 
 const logger = createLogger();
 
@@ -21,7 +22,6 @@ export function createN8nInstance({
   N8N_WEBHOOK_AUTH_PASS,
   N8N_WEBHOOK_AUTH_USER,
 }: N8nInstanceParams) {
-  // TODO: add to snake case
   async function executeWorkflow({
     module,
     input,
@@ -44,7 +44,11 @@ export function createN8nInstance({
         `Impossible de récupérer le profil utilisateur ${userId} via RPC:`,
         profileResult.error
       );
-      throw new Error("Profil utilisateur introuvable");
+      return {
+        success: false,
+        kind: "PROFILE_NOT_FOUND",
+        error: new Error("Profil utilisateur introuvable"),
+      } as const;
     }
 
     const userProfile = profileResult.data;
@@ -74,7 +78,7 @@ export function createN8nInstance({
     let triggerType = determineTriggerType(module, input);
     authData.module_info.trigger_type = triggerType;
 
-    logger.info(`Type de trigger déterminé: ${triggerType}`, {
+    logger.debug(`Type de trigger déterminé: ${triggerType}`, {
       module_slug: module.slug,
       has_chat_input: !!(input.isChatMode && input.sessionId),
       module_trigger_type: module.n8n_trigger_type,
@@ -86,7 +90,7 @@ export function createN8nInstance({
     // CONSTRUCTION DU PAYLOAD SELON LE TYPE
     if (input.isChatMode && input.sessionId && input.message) {
       // MODE CHAT EXPLICITE
-      logger.info(`Mode CHAT détecté pour ${module.name}`);
+      logger.debug(`Mode CHAT détecté pour ${module.name}`);
 
       payload = {
         sessionId: input.sessionId,
@@ -111,7 +115,7 @@ export function createN8nInstance({
         auth: authData,
       };
 
-      logger.info(`Payload chat préparé:`, {
+      logger.debug(`Payload chat préparé:`, {
         sessionId: input.sessionId.slice(-8),
         chatInputLength: JSON.stringify({
           message: input.message,
@@ -207,37 +211,29 @@ export function createN8nInstance({
     const basicAuth = Buffer.from(`${username}:${password}`).toString("base64");
     headers["Authorization"] = `Basic ${basicAuth}`;
 
-    console.log("🔐 PRODUCTION AUTH CONFIG:", {
-      method: "Basic Auth",
-      username: username,
-      password_length: password.length,
-      auth_header_preview: `Basic ${basicAuth.substring(0, 30)}...`,
-      curl_test_passed: true,
-      endpoint: module.endpoint,
-    });
-
-    logger.info("Using Basic Auth (curl test validated) for all modules");
-
     // Logging de l'exécution
-    logger.info(`Executing n8n workflow`, {
-      module: module.name,
-      user: userEmail,
-      plan: userPlan,
-      credits: userProfile.credit_balance,
-      trigger_type: triggerType,
-      auth_method: "Basic Auth (validated)",
-      endpoint: module.endpoint,
-      payload_preview: {
-        sessionId: payload.sessionId || null,
-        hasChatInput: !!payload.chatInput,
-        hasInput: !!payload.input,
-        triggerType: triggerType,
-        isChatMode: input.isChatMode || false,
-        messagePreview: input.message
-          ? input.message.substring(0, 50) + "..."
-          : null,
-      },
-    });
+    logger.debug(
+      `Executing n8n workflow`,
+      toSnakeCase({
+        module: module.name,
+        user: userEmail,
+        plan: userPlan,
+        credits: userProfile.credit_balance,
+        trigger_type: triggerType,
+        auth_method: "Basic Auth (validated)",
+        endpoint: module.endpoint,
+        payload_preview: {
+          sessionId: payload.sessionId || null,
+          hasChatInput: !!payload.chatInput,
+          hasInput: !!payload.input,
+          triggerType: triggerType,
+          isChatMode: input.isChatMode || false,
+          messagePreview: input.message
+            ? input.message.substring(0, 50) + "..."
+            : null,
+        },
+      })
+    );
 
     try {
       // Configuration des timeouts par module
@@ -258,15 +254,11 @@ export function createN8nInstance({
         logger.warn(`Timeout après ${timeoutMs / 1000}s pour ${module.name}`);
       }, timeoutMs);
 
-      logger.info(
-        `Timeout configuré à ${timeoutMs / 1000}s pour ${module.name}`
-      );
-
       // Exécution de la requête vers N8N
       const response = await fetch(module.endpoint, {
         method: "POST",
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(toSnakeCase(payload)),
         signal: controller.signal,
       });
 
