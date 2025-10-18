@@ -21,7 +21,7 @@ export type GetTemplateByIdResult = Result<
 export type CreateTemplateResult = Result<
   RealEstateTemplate,
   Error,
-  "UNKNOWN_ERROR" | "TEMPLATE_ALREADY_EXISTS"
+  "UNKNOWN_ERROR"
 >;
 
 export type UpdateTemplateResult = Result<
@@ -30,11 +30,7 @@ export type UpdateTemplateResult = Result<
   "UNKNOWN_ERROR" | "TEMPLATE_NOT_FOUND"
 >;
 
-export type DeleteTemplateResult = Result<
-  void,
-  Error,
-  "UNKNOWN_ERROR" | "TEMPLATE_NOT_FOUND"
->;
+export type DeleteTemplateResult = Result<void, Error, "UNKNOWN_ERROR">;
 
 export interface TemplateRepo {
   getTemplates(query: GetTemplatesQuery): Promise<GetTemplatesResult>;

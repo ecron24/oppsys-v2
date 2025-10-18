@@ -20,29 +20,9 @@ export const deleteTemplateUseCase = buildUseCase()
       templateId,
       userId
     );
-
-    if (!templateResult.success) {
-      ctx.logger.error(
-        "[deleteTemplate] template not found",
-        templateResult.error,
-        { templateId, userId }
-      );
-      return {
-        success: false,
-        kind: "TEMPLATE_NOT_FOUND",
-        error: new Error("Template not found or not authorized"),
-      };
-    }
+    if (!templateResult.success) return templateResult;
 
     const template = templateResult.data;
-    if (!template) {
-      return {
-        success: false,
-        kind: "TEMPLATE_NOT_FOUND",
-        error: new Error("Template not found or not authorized"),
-      };
-    }
-
     // Delete file from storage
     const deleteFileResult = await ctx.supabase.storage
       .from("templates")
@@ -73,7 +53,7 @@ export const deleteTemplateUseCase = buildUseCase()
         success: false,
         kind: "TEMPLATE_DELETION_FAILED",
         error: new Error("Failed to delete template"),
-      };
+      } as const;
     }
 
     return {

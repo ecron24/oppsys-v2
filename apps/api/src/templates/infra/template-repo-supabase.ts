@@ -123,7 +123,7 @@ export class TemplateRepoSupabase implements TemplateRepo {
         success: true,
         data: template,
       };
-    }, "TEMPLATE_ALREADY_EXISTS");
+    });
   }
 
   async updateTemplate(
