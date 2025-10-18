@@ -163,13 +163,14 @@ export class ProfileRepoSupabase implements ProfileRepo {
         .eq("id", id)
         .select(
           `
-            *,
-          plans (
-            name,
-            monthly_credits,
-            price_cents
-          )
-        `
+             *,
+           plans (
+             name,
+             slug,
+             monthly_credits,
+             price_cents
+           )
+         `
         )
         .maybeSingle();
 

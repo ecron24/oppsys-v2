@@ -11,6 +11,7 @@ import { socialRouter } from "./social/presentation/social-router";
 import { scheduleRouter } from "./schedule/presentation/schedule-router";
 import { transcriptionRouter } from "./transcriptions/presentation/transcription-router";
 import { documentsRouter } from "./documents/presentation/documents-router";
+import { formationRouter } from "./formations/presentation/formation-router";
 
 export const apiRouter = honoRouter((ctx) => {
   const publicApiRouter = new Hono()
@@ -29,7 +30,8 @@ export const apiRouter = honoRouter((ctx) => {
     .route("/api/social", socialRouter)
     .route("/api/schedule", scheduleRouter)
     .route("/api/transcriptions", transcriptionRouter)
-    .route("/api/documents", documentsRouter);
+    .route("/api/documents", documentsRouter)
+    .route("/api/formations", formationRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)

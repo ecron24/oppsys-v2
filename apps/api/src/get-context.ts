@@ -14,6 +14,7 @@ import { SocialAuthService } from "./social/app/services/social-auth-service";
 import { SocialTokenManager } from "./social/app/services/social-token-manager";
 import { ScheduledTaskRepoSupabase } from "./schedule/infra/scheduled-task-repo-supabase";
 import { TranscriptionRepoSupabase } from "./transcriptions/infra/transcription-repo-supabase";
+import { FormationRepoSupabase } from "./formations/infra/formation-repo-supabase";
 
 export function getContext() {
   const logger = new LoggerWinston();
@@ -38,6 +39,7 @@ export function getContext() {
     socialTokenRepo,
     scheduledTaskRepo: new ScheduledTaskRepoSupabase(supabase, logger),
     transcriptionRepo,
+    formationRepo: new FormationRepoSupabase(supabase, logger),
     supabase,
   };
 }
