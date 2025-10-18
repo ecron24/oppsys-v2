@@ -6,6 +6,7 @@ import type {
 } from "../domain/notification-repo";
 import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
+import { toSnakeCase } from "src/lib/to-snake-case";
 
 export class NotificationRepoSupabase implements NotificationRepo {
   constructor(
@@ -22,7 +23,7 @@ export class NotificationRepoSupabase implements NotificationRepo {
         type: notification.type,
         title: notification.title,
         message: notification.message,
-        data: notification.data,
+        data: toSnakeCase(notification.data || {}),
         expires_at: notification.expiresAt,
       });
 

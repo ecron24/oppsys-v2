@@ -2,6 +2,7 @@ import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import {
   ModuleSchema,
   ModuleUsageSchema,
+  type Module,
   type ModuleUsage,
 } from "../domain/module";
 import type {
@@ -18,6 +19,7 @@ import { toCamelCase } from "src/lib/to-camel-case";
 import z from "zod";
 import type { ListModulesQuery } from "../app/get-modules-use-case";
 import type { ModuleUsageHistoryQuery } from "../app/get-module-usage-history-use-case";
+import { toSnakeCase } from "src/lib/to-snake-case";
 
 export class ModuleRepoSupabase implements ModuleRepo {
   constructor(
@@ -100,7 +102,7 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
       return {
         success: true,
-        data: ModuleSchema.parse(toCamelCase(data)),
+        data: ModuleSchema.parse(toCamelCase(data) as Module),
       } as const;
     });
   }
@@ -174,17 +176,11 @@ export class ModuleRepoSupabase implements ModuleRepo {
       const { data, error } = await this.supabase
         .from("module_usage")
         .insert({
-          user_id: usage.userId,
-          module_id: usage.moduleId,
-          module_slug: usage.moduleSlug,
-          credits_used: usage.creditsUsed,
-          input: usage.input,
-          status: usage.status || "pending",
           output: null,
           used_at: new Date().toISOString(),
-          metadata: usage.metadata,
+          ...toSnakeCase(usage),
         })
-        .select()
+        .select("*")
         .single();
 
       if (error) {
@@ -194,7 +190,7 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
       return {
         success: true,
-        data: ModuleUsageSchema.parse(toCamelCase(data)),
+        data: ModuleUsageSchema.parse(toCamelCase(data) as ModuleUsage),
       } as const;
     });
   }
@@ -207,10 +203,7 @@ export class ModuleRepoSupabase implements ModuleRepo {
       const { error, data } = await this.supabase
         .from("module_usage")
         .update({
-          output: usageUpdate.output,
-          status: usageUpdate.status,
-          error_message: usageUpdate.errorMessage,
-          execution_time: usageUpdate.executionTime,
+          ...toSnakeCase(usageUpdate),
         })
         .eq("id", id)
         .select();

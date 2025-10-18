@@ -10,6 +10,7 @@ import type { Logger } from "src/logger/domain/logger";
 import type { Json, OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
 import { toCamelCase } from "src/lib/to-camel-case";
+import { toSnakeCase } from "src/lib/to-snake-case";
 
 export class ChatSessionRepoSupabase implements ChatSessionRepo {
   constructor(
@@ -63,12 +64,14 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
       const { data: newSession, error } = await this.supabase
         .from("chat_sessions")
-        .insert({
-          user_id: params.userId,
-          module_slug: params.moduleSlug,
-          session_data: {},
-          expires_at: expiresAt.toISOString(),
-        })
+        .insert(
+          toSnakeCase({
+            user_id: params.userId,
+            module_slug: params.moduleSlug,
+            session_data: {},
+            expires_at: expiresAt.toISOString(),
+          })
+        )
         .select("*")
         .single();
 
@@ -92,10 +95,12 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
     return await tryCatch(async () => {
       const { error: updateError, data } = await this.supabase
         .from("chat_sessions")
-        .update({
-          session_data: params.sessionData as Json,
-          last_activity: new Date().toISOString(),
-        })
+        .update(
+          toSnakeCase({
+            session_data: params.sessionData as Json,
+            last_activity: new Date().toISOString(),
+          })
+        )
         .eq("id", params.sessionId)
         .select();
 
@@ -118,14 +123,14 @@ export class ChatSessionRepoSupabase implements ChatSessionRepo {
 
       return {
         success: true,
-        data: {
+        data: toCamelCase({
           id: params.sessionId,
           userId: "",
           moduleSlug: "",
           sessionData: params.sessionData,
           createdAt: "",
           expiresAt: "",
-        },
+        }),
       } as const;
     });
   }

@@ -18,6 +18,7 @@ import { tryCatch } from "src/lib/try-catch";
 import type { Json } from "@oppsys/supabase";
 import { toCamelCase } from "src/lib/to-camel-case";
 import type { Logger } from "src/logger/domain/logger";
+import { toSnakeCase } from "src/lib/to-snake-case";
 
 export class ScheduledTaskRepoSupabase implements ScheduledTaskRepo {
   constructor(
@@ -123,13 +124,15 @@ export class ScheduledTaskRepoSupabase implements ScheduledTaskRepo {
     return tryCatch(async () => {
       const { data, error } = await this.supabase
         .from("scheduled_tasks")
-        .insert({
-          user_id: task.userId,
-          module_id: task.moduleId,
-          execution_time: task.executionTime,
-          payload: task.payload as Json,
-          status: "scheduled",
-        })
+        .insert(
+          toSnakeCase({
+            user_id: task.userId,
+            module_id: task.moduleId,
+            execution_time: task.executionTime,
+            payload: task.payload as Json,
+            status: "scheduled",
+          })
+        )
         .select(
           `
           *,
@@ -160,10 +163,10 @@ export class ScheduledTaskRepoSupabase implements ScheduledTaskRepo {
     data: UpdateScheduledTask
   ): Promise<UpdateScheduledTaskResult> {
     return tryCatch(async () => {
-      const updatePayload = {
+      const updatePayload = toSnakeCase({
         ...data,
         result: data.result as Json,
-      };
+      });
 
       const { data: updatedData, error } = await this.supabase
         .from("scheduled_tasks")

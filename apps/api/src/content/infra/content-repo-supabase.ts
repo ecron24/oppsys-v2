@@ -164,8 +164,11 @@ export class ContentRepoSupabase implements ContentRepo {
       const { data, error } = await this.supabase
         .from("generated_content")
         .insert({
-          ...toSnakeCase({ ...params.contentData, userId: params.userId }),
-          metadata: params.contentData.metadata as Json,
+          ...toSnakeCase({
+            ...params.contentData,
+            userId: params.userId,
+            metadata: params.contentData.metadata as Json,
+          }),
         })
         .select()
         .single();

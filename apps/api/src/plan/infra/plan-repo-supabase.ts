@@ -37,7 +37,7 @@ export class PlanRepoSupabase implements PlanRepo {
         } as const;
       }
 
-      const plan: Plan = {
+      const plan: Plan = toCamelCase({
         id: data.id,
         name: data.name,
         monthlyCredits: data.monthly_credits,
@@ -49,7 +49,7 @@ export class PlanRepoSupabase implements PlanRepo {
         features: data.features,
         stripePriceId: data.stripe_price_id,
         stripeProductId: data.stripe_product_id,
-      };
+      });
       return { success: true, data: PlanSchema.parse(plan) } as const;
     });
   }
