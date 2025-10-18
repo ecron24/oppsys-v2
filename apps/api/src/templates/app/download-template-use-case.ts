@@ -1,5 +1,6 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
+import { downloadFile } from "@oppsys/supabase";
 
 const DownloadTemplateUseCaseInputSchema = z.object({
   templateId: z.string(),
@@ -24,11 +25,12 @@ export const downloadTemplateUseCase = buildUseCase()
 
     const template = templateResult.data;
     // Download file from storage
-    const downloadResult = await ctx.supabase.storage
-      .from("templates")
-      .download(template.filePath);
+    const downloadResult = await downloadFile(ctx, {
+      bucket: "templates",
+      filePath: template.filePath,
+    });
 
-    if (downloadResult.error) {
+    if (!downloadResult.success) {
       ctx.logger.error(
         "[downloadTemplate] file download failed",
         downloadResult.error,
@@ -57,7 +59,7 @@ export const downloadTemplateUseCase = buildUseCase()
     return {
       success: true,
       data: {
-        fileData: await downloadResult.data.arrayBuffer(),
+        fileData: await downloadResult.data.file.arrayBuffer(),
         contentType,
         filename: template.name,
       },

@@ -2,6 +2,7 @@ import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
 import { fileMiddleware } from "./template-utils";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
+import { uploadFile, removeFile } from "@oppsys/supabase";
 
 export const UploadTemplateBody = z.object({
   leaseType: z.enum([
@@ -21,10 +22,6 @@ const UploadTemplateUseCaseInputSchema = z.object({
   body: UploadTemplateBody,
 });
 
-export type UploadTemplateUseCaseInput = z.infer<
-  typeof UploadTemplateUseCaseInputSchema
->;
-
 export const uploadTemplateUseCase = buildUseCase()
   .input(UploadTemplateUseCaseInputSchema)
   .handle(async (ctx, input) => {
@@ -39,14 +36,14 @@ export const uploadTemplateUseCase = buildUseCase()
     const filePath = `real-estate/${userId}/${Date.now()}-${file.name}`;
 
     // Upload file to storage
-    const uploadResult = await ctx.supabase.storage
-      .from("templates")
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+    const uploadResult = await uploadFile(ctx, {
+      bucket: "templates",
+      filePath,
+      file: buffer,
+      options: { contentType: file.type, upsert: false },
+    });
 
-    if (uploadResult.error) {
+    if (!uploadResult.success) {
       ctx.logger.error(
         "[uploadTemplate] file upload failed",
         uploadResult.error,
@@ -72,7 +69,7 @@ export const uploadTemplateUseCase = buildUseCase()
 
     if (!createResult.success) {
       // Clean up uploaded file if database insert fails
-      await ctx.supabase.storage.from("templates").remove([filePath]);
+      await removeFile(ctx, { bucket: "templates", files: [filePath] });
       ctx.logger.error(
         "[uploadTemplate] template creation failed",
         createResult.error,

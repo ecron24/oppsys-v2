@@ -6,6 +6,7 @@ import {
   InsufficientCreditError,
   PremiumOnlyError,
 } from "src/modules/domain/exception";
+import { createSignedUrl } from "@oppsys/supabase";
 
 export const GetFormationContentBody = z.object({
   formationId: z.uuid(),
@@ -116,20 +117,23 @@ export const getFormationContentUseCase = buildUseCase()
     let responseData;
     switch (formatConfig.source.type) {
       case "supabase": {
-        // TODO
-        const signedUrlResult = await ctx.supabase.storage
-          .from("formations")
-          .createSignedUrl(formatConfig.source.path!, 3600); // 1 heure
-        if (signedUrlResult.error) {
+        const signed = await createSignedUrl(ctx, {
+          bucket: "formations",
+          filePath: formatConfig.source.path!,
+          expiresIn: 3600,
+        });
+
+        if (!signed.success) {
           return {
             success: false,
             kind: "UNKNOWN_ERROR",
             error: new Error("Failed to generate signed URL"),
           };
         }
+
         responseData = {
           type: "supabase_url" as const,
-          url: signedUrlResult.data.signedUrl,
+          url: signed.data.signedUrl,
           expiresIn: 3600,
           filename: formatConfig.source.path!.split("/").pop(),
         };

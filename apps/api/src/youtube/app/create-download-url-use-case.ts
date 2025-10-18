@@ -1,5 +1,6 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
+import { createSignedUrl } from "@oppsys/supabase";
 
 export const CreateDownloadUrlInput = z.object({
   filePath: z.string(),
@@ -9,19 +10,19 @@ export const CreateDownloadUrlInput = z.object({
 export const createDownloadUrlUseCase = buildUseCase()
   .input(CreateDownloadUrlInput)
   .handle(async (ctx, input) => {
-    const { data, error } = await ctx.supabase.storage
-      .from("youtube-videos")
-      .createSignedUrl(input.filePath, input.expiresIn || 7200);
+    const signed = await createSignedUrl(ctx, {
+      bucket: "youtube-videos",
+      filePath: input.filePath,
+      expiresIn: input.expiresIn || 7200,
+    });
 
-    if (error) {
-      ctx.logger.error("[createDownloadUrl]: ", error, { input });
-      throw error;
+    if (!signed.success) {
+      ctx.logger.error("[createDownloadUrl]: ", signed.error, { input });
+      throw signed.error;
     }
 
     return {
       success: true,
-      data: {
-        signedUrl: data.signedUrl,
-      },
+      data: { signedUrl: signed.data.signedUrl },
     } as const;
   });

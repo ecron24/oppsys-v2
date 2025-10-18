@@ -1,6 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
+import { removeFile } from "@oppsys/supabase";
 
 const CleanupExpiredFilesUseCaseInput = z.object({
   user: UserInContextSchema,
@@ -33,14 +34,15 @@ export const cleanupExpiredFilesUseCase = buildUseCase()
     // Delete files from storage
     for (const transcription of expiredTranscriptions) {
       if (transcription.filePath) {
-        const { error: deleteError } = await ctx.supabase.storage
-          .from("transcription-files")
-          .remove([transcription.filePath]);
+        const deleteResult = await removeFile(ctx, {
+          bucket: "transcription-files",
+          files: [transcription.filePath],
+        });
 
-        if (deleteError) {
+        if (!deleteResult.success) {
           ctx.logger.error(
             "[cleanupExpiredFiles] file deletion failed",
-            deleteError,
+            deleteResult.error,
             { filePath: transcription.filePath }
           );
         } else {

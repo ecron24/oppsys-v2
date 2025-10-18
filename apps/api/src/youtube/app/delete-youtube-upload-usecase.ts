@@ -1,6 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import z from "zod";
+import { removeFile } from "@oppsys/supabase";
 
 const DeleteYouTubeUploadInputSchema = z.object({
   id: z.uuid(),
@@ -24,13 +25,14 @@ export const deleteYouTubeUploadUseCase = buildUseCase()
     if (upload.thumbnailFilePath) filesToDelete.push(upload.thumbnailFilePath);
 
     if (filesToDelete.length > 0) {
-      const { error: deleteError } = await ctx.supabase.storage
-        .from("youtube-videos")
-        .remove(filesToDelete);
+      const deleteResult = await removeFile(ctx, {
+        bucket: "youtube-videos",
+        files: filesToDelete,
+      });
 
-      if (deleteError) {
+      if (!deleteResult.success) {
         ctx.logger.warn("[deleteYouTubeUpload]: Error deleting files", {
-          error: deleteError,
+          error: deleteResult.error,
         });
       }
     }

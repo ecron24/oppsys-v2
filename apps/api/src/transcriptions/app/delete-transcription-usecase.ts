@@ -1,6 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
+import { removeFile } from "@oppsys/supabase";
 
 const DeleteTranscriptionUseCaseInput = z.object({
   id: z.uuid(),
@@ -23,14 +24,14 @@ export const deleteTranscriptionUseCase = buildUseCase()
 
     // Delete file from storage if exists
     if (transcription.filePath) {
-      // TODO: make me in @oppsys/supabase
-      const { error: deleteError } = await ctx.supabase.storage
-        .from("transcription-files")
-        .remove([transcription.filePath]);
+      const deleteResult = await removeFile(ctx, {
+        bucket: "transcription-files",
+        files: [transcription.filePath],
+      });
 
-      if (deleteError) {
+      if (!deleteResult.success) {
         ctx.logger.warn("[deleteTranscription] file deletion failed", {
-          error: deleteError,
+          error: deleteResult.error,
           filePath: transcription.filePath,
         });
         // Continue with deletion

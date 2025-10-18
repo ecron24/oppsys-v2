@@ -1,3 +1,4 @@
+import { removeFile } from "@oppsys/supabase";
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
 
@@ -24,11 +25,12 @@ export const deleteTemplateUseCase = buildUseCase()
 
     const template = templateResult.data;
     // Delete file from storage
-    const deleteFileResult = await ctx.supabase.storage
-      .from("templates")
-      .remove([template.filePath]);
+    const deleteFileResult = await removeFile(ctx, {
+      bucket: "templates",
+      files: [template.filePath],
+    });
 
-    if (deleteFileResult.error) {
+    if (!deleteFileResult.success) {
       ctx.logger.error(
         "[deleteTemplate] file deletion failed",
         deleteFileResult.error,
