@@ -79,8 +79,9 @@ export class TemplateRepoSupabase implements TemplateRepo {
         throw new Error("Template not found");
       }
 
-      const template = RealEstateTemplateSchema.parse(toCamelCase(data));
-
+      const template = RealEstateTemplateSchema.parse(
+        toCamelCase(data) as RealEstateTemplate
+      );
       return {
         success: true,
         data: template,
@@ -111,8 +112,9 @@ export class TemplateRepoSupabase implements TemplateRepo {
         throw error;
       }
 
-      const template = RealEstateTemplateSchema.parse(toCamelCase(data));
-
+      const template = RealEstateTemplateSchema.parse(
+        toCamelCase(data) as RealEstateTemplate
+      );
       return {
         success: true,
         data: template,
@@ -146,8 +148,9 @@ export class TemplateRepoSupabase implements TemplateRepo {
         throw error;
       }
 
-      const template = RealEstateTemplateSchema.parse(toCamelCase(data));
-
+      const template = RealEstateTemplateSchema.parse(
+        toCamelCase(data) as RealEstateTemplate
+      );
       return {
         success: true,
         data: template,

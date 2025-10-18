@@ -1,20 +1,16 @@
 import { Hono } from "hono";
 import { honoRouter } from "src/lib/hono-router";
 import { getTemplatesUseCase } from "../app/get-templates-use-case";
-import { uploadTemplateUseCase } from "../app/upload-template-use-case";
+import {
+  UploadTemplateBody,
+  uploadTemplateUseCase,
+} from "../app/upload-template-use-case";
 import { downloadTemplateUseCase } from "../app/download-template-use-case";
 import { deleteTemplateUseCase } from "../app/delete-template-use-case";
 import { handleResultResponse } from "src/lib/handle-result-response";
 import { getUserInContext } from "src/lib/get-user-in-context";
 import { describeRoute } from "hono-openapi";
-import z from "zod";
-
-// Schema for upload validation
-const UploadTemplateSchema = z.object({
-  leaseType: z.string(),
-  category: z.string().optional(),
-  isPublic: z.coerce.boolean().optional(),
-});
+import { zValidatorWrapper } from "src/lib/validator-wrapper";
 
 export const templateRouter = honoRouter((ctx) => {
   const router = new Hono()
@@ -37,58 +33,15 @@ export const templateRouter = honoRouter((ctx) => {
     .post(
       "/upload",
       describeRoute({ description: "Upload a new real estate template" }),
+      zValidatorWrapper("form", UploadTemplateBody),
       async (c) => {
         const user = getUserInContext(c);
-
         // Handle multipart form data
-        const formData = await c.req.formData();
-        const file = formData.get("template") as File;
-        const leaseType = formData.get("leaseType") as string;
-        const category = formData.get("category") as string;
-        const isPublic = formData.get("isPublic") as string;
-
-        if (!file || !(file instanceof File)) {
-          return c.json(
-            {
-              success: false,
-              error: "No file provided",
-            },
-            400
-          );
-        }
-
-        // Validate input
-        const validation = UploadTemplateSchema.safeParse({
-          leaseType,
-          category,
-          isPublic: isPublic === "true",
-        });
-
-        if (!validation.success) {
-          return c.json(
-            {
-              success: false,
-              error: "Invalid input",
-              details: z.prettifyError(validation.error),
-            },
-            400
-          );
-        }
-
-        // Convert file to buffer
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const body = c.req.valid("form");
 
         const result = await uploadTemplateUseCase(ctx, {
-          userId: user.id,
-          file: {
-            originalname: file.name,
-            buffer,
-            mimetype: file.type,
-            size: file.size,
-          },
-          leaseType: validation.data.leaseType,
-          category: validation.data.category,
-          isPublic: validation.data.isPublic,
+          user,
+          body,
         });
 
         return handleResultResponse(c, result, { oppSysContext: ctx });

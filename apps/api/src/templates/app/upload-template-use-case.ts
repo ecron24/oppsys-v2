@@ -1,17 +1,24 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
+import { fileMiddleware } from "./template-utils";
+import { UserInContextSchema } from "src/lib/get-user-in-context";
+
+export const UploadTemplateBody = z.object({
+  leaseType: z.enum([
+    "residential_free",
+    "residential_pro",
+    "furnished",
+    "commercial",
+    "professional",
+  ]),
+  category: z.string().optional(),
+  isPublic: z.coerce.boolean().optional(),
+  file: z.instanceof(File),
+});
 
 const UploadTemplateUseCaseInputSchema = z.object({
-  userId: z.string(),
-  file: z.object({
-    originalname: z.string(),
-    buffer: z.instanceof(Buffer),
-    mimetype: z.string(),
-    size: z.number(),
-  }),
-  leaseType: z.string(),
-  category: z.string().optional(),
-  isPublic: z.boolean().optional(),
+  user: UserInContextSchema,
+  body: UploadTemplateBody,
 });
 
 export type UploadTemplateUseCaseInput = z.infer<
@@ -21,32 +28,21 @@ export type UploadTemplateUseCaseInput = z.infer<
 export const uploadTemplateUseCase = buildUseCase()
   .input(UploadTemplateUseCaseInputSchema)
   .handle(async (ctx, input) => {
-    const { userId, file, leaseType, category, isPublic } = input;
+    const { id: userId } = input.user;
+    const { file, leaseType, category, isPublic } = input.body;
+    const fileResult = fileMiddleware(file);
+    if (!fileResult.success) return fileResult;
 
-    // Validate lease type
-    const validLeaseTypes = [
-      "residential_free",
-      "residential_pro",
-      "furnished",
-      "commercial",
-      "professional",
-    ];
-    if (!validLeaseTypes.includes(leaseType)) {
-      return {
-        success: false,
-        kind: "INVALID_LEASE_TYPE",
-        error: new Error("Invalid lease type"),
-      };
-    }
-
+    // Convert file to buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
     // Generate file path
-    const filePath = `real-estate/${userId}/${Date.now()}-${file.originalname}`;
+    const filePath = `real-estate/${userId}/${Date.now()}-${file.name}`;
 
     // Upload file to storage
     const uploadResult = await ctx.supabase.storage
       .from("templates")
-      .upload(filePath, file.buffer, {
-        contentType: file.mimetype,
+      .upload(filePath, buffer, {
+        contentType: file.type,
         upsert: false,
       });
 
@@ -66,7 +62,7 @@ export const uploadTemplateUseCase = buildUseCase()
     // Create template record
     const createResult = await ctx.templateRepo.createTemplate({
       userId,
-      name: file.originalname,
+      name: file.name,
       filePath,
       fileSize: file.size,
       leaseType,
