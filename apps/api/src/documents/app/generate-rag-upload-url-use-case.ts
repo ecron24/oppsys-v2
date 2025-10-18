@@ -1,6 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import z from "zod";
 import { GenerateRagUploadUrlInputSchema } from "../domain/documents";
+import { createSignedUploadUrl } from "@oppsys/supabase";
 
 const GenerateRagUploadUrlUseCaseInputSchema =
   GenerateRagUploadUrlInputSchema.extend({
@@ -17,17 +18,15 @@ export const generateRagUploadUrlUseCase = buildUseCase()
     const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = `${userId}/rag/${timestamp}_${safeName}`;
 
-    // TODO: make me in @oppsys/supabase
-    const { data, error } = await ctx.supabase.storage
-      .from("document-rag")
-      .createSignedUploadUrl(filePath, {
-        upsert: false,
-      });
+    const signedResult = await createSignedUploadUrl(
+      { supabase: ctx.supabase },
+      { bucket: "document-rag", filePath }
+    );
 
-    if (error) {
+    if (!signedResult.success) {
       ctx.logger.error(
         "[generateRagUploadUrl]: create signed upload url failed",
-        error,
+        signedResult.error,
         { filePath }
       );
       return {
@@ -40,7 +39,7 @@ export const generateRagUploadUrlUseCase = buildUseCase()
     return {
       success: true,
       data: {
-        uploadUrl: data.signedUrl,
+        uploadUrl: signedResult.data.signedUrl,
         filePath: filePath,
       },
     } as const;
