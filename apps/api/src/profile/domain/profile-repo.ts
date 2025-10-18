@@ -14,6 +14,11 @@ export type GetProfileResult = Result<
   Error,
   "PROFILE_NOT_FOUND"
 >;
+export type DeleteProfileResult = Result<
+  void,
+  Error,
+  "UNKNOWN_ERROR" | "PROFILE_NOT_FOUND"
+>;
 export type CheckCreditsResult = Result<
   CreditCheckResult,
   Error,
@@ -28,6 +33,7 @@ export type AddCreditsResult = Result<void, Error, "UNKNOWN_ERROR">;
 
 export interface ProfileRepo {
   create(profile: Profile): Promise<CreateProfileResult>;
+  deleteById(id: string): Promise<DeleteProfileResult>;
   getByIdWithPlan(id: string): Promise<GetProfileResult>;
   checkCredits(
     userId: string,

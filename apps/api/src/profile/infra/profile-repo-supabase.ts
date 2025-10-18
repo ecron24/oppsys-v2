@@ -6,6 +6,7 @@ import type {
   CheckCreditsResult,
   DeductCreditsResult,
   UpdateProfileResult,
+  DeleteProfileResult,
 } from "src/profile/domain/profile-repo";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
@@ -24,6 +25,19 @@ export class ProfileRepoSupabase implements ProfileRepo {
     private supabase: OppSysSupabaseClient,
     private logger: Logger
   ) {}
+
+  async deleteById(userId: string): Promise<DeleteProfileResult> {
+    return await tryCatch(async () => {
+      const { error } = await this.supabase.auth.admin.deleteUser(userId);
+
+      if (error) {
+        this.logger.error("[create]: ", error, { userId });
+        throw error;
+      }
+
+      return { success: true as const, data: undefined };
+    });
+  }
 
   async create(profile: Profile): Promise<CreateProfileResult> {
     return await tryCatch(async () => {

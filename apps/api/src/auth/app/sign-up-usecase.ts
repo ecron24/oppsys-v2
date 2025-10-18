@@ -29,7 +29,8 @@ export const signUpUseCase = buildUseCase()
       timezone: "Europe/Paris",
     });
     if (!profileResult.success) {
-      // TODO: delete user
+      // Essayer de supprimer l'utilisateur auth si le profil échoue
+      await ctx.profileRepo.deleteById(signUpResult.data.user.id);
       return profileResult;
     }
 
