@@ -2,4 +2,3 @@ services:
   api:
     build:
       target: prod
-      
