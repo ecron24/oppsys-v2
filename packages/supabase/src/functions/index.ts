@@ -4,3 +4,4 @@ export * from "./create-signed-url";
 export * from "./upload-file";
 export * from "./download-file";
 export * from "./remove-file";
+export * from "./create-transcription-upload-url";
