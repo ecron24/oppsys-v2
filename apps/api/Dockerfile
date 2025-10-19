@@ -22,7 +22,10 @@ RUN pnpm turbo run build --filter=@oppsys/api
 FROM node:22-alpine AS prod
 WORKDIR /app
 ENV NODE_ENV=prod
-COPY --from=build /app .
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+COPY --from=build --chown=nodejs:nodejs /app /app
+USER nodejs
 EXPOSE 4441
 ENV HOSTNAME="0.0.0.0"
 WORKDIR /app/apps/api

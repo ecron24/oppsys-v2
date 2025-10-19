@@ -6,3 +6,10 @@ dist
 
 .env
 .env.*
+
+.pnpm-store
+out
+turbo
+.turbo
+*.log
+.DS_Store

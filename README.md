@@ -1,5 +1,30 @@
 # oppsys-v2
 
+## Setup
+
+### with docker
+
+- `production`:
+
+```sh
+docker compose --build -d
+```
+
+1. Access api with <http://localhost:4441>
+2. Access client with <http://localhost:5551>
+
+### manual
+
+- `development`:
+
+```sh
+pnpm i
+pnpm dev
+```
+
+1. Access api with <http://localhost:4441>
+2. Access client with <http://localhost:5173>
+
 ## Structure du projet
 
 ```bash
