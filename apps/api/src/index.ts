@@ -92,7 +92,12 @@ app.get(
         version: "1.0.0",
         description: "Greeting API",
       },
-      servers: [{ url: "http://localhost:3000", description: "Local Server" }],
+      servers: [
+        {
+          url: `http://localhost:${env.API_PORT}`,
+          description: "Local Server",
+        },
+      ],
     },
   })
 );
@@ -104,8 +109,8 @@ app.notFound((c) => {
 });
 
 app.onError((error, c) => {
+  console.error("Interval server error", error);
   if (error instanceof HTTPException) {
-    console.error(error.cause);
     return c.json({ error: error.message }, error.status);
   }
   return c.json({ error: "Internal Server error" }, 500);
