@@ -16,6 +16,7 @@
     "@oppsys/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.13",
     "hono": "catalog:",
+    "next-themes": "^0.4.6",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "^7.9.3",
