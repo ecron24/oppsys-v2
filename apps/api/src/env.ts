@@ -13,6 +13,7 @@ const envSchema = z.object({
   N8N_WEBHOOK_AUTH_PASS: z.string().min(1),
   OAUTH_TOKEN_ENCRYPTION_KEY: z.string().min(1),
   CRON_SECRET: z.string().min(1),
+  API_PORT: z.coerce.number().default(4441),
   API_BASE_URL: z.string().min(1),
 });
 

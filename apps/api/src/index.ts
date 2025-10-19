@@ -114,7 +114,7 @@ app.onError((error, c) => {
 serve(
   {
     fetch: app.fetch,
-    port: 3000,
+    port: env.API_PORT,
   },
   (info) => {
     logger.info(`Server is running on http://localhost:${info.port}`);
