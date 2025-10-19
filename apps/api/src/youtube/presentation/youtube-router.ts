@@ -7,6 +7,7 @@ import {
   CreateVideoUploadUrlBody,
   createVideoUploadUrlUseCase,
 } from "../app/create-video-upload-url-usecase";
+import { describeRoute, validator } from "hono-openapi";
 import {
   CreateThumbnailUploadUrlBody,
   createThumbnailUploadUrlUseCase,
@@ -37,7 +38,9 @@ export const youtubeRouter = honoRouter((ctx) => {
     // Créer une URL d'upload pour une vidéo
     .post(
       "/video-upload-url",
+      describeRoute({ description: "Create video upload URL" }),
       zValidatorWrapper("json", CreateVideoUploadUrlBody),
+      validator("json", CreateVideoUploadUrlBody),
       async (c) => {
         const user = getUserInContext(c);
         const body = { ...c.req.valid("json") };
@@ -49,7 +52,9 @@ export const youtubeRouter = honoRouter((ctx) => {
     //  Créer une URL signée pour l'upload thumbnail
     .post(
       "/thumbnail-upload-url",
+      describeRoute({ description: "Create thumbnail upload URL" }),
       zValidatorWrapper("json", CreateThumbnailUploadUrlBody),
+      validator("json", CreateThumbnailUploadUrlBody),
       async (c) => {
         const user = getUserInContext(c);
         const body = { ...c.req.valid("json") };
@@ -64,7 +69,9 @@ export const youtubeRouter = honoRouter((ctx) => {
     // Créer et lancer un upload YouTube
     .post(
       "/",
+      describeRoute({ description: "Create and start a YouTube upload" }),
       zValidatorWrapper("json", YouTubeUploadOptionsSchema),
+      validator("json", YouTubeUploadOptionsSchema),
       async (c) => {
         const user = getUserInContext(c);
         const body = { ...c.req.valid("json") };
@@ -75,7 +82,9 @@ export const youtubeRouter = honoRouter((ctx) => {
     // Statistiques YouTube de l'utilisateur
     .get(
       "/stats",
+      describeRoute({ description: "Get YouTube statistics for user" }),
       zValidatorWrapper("query", GetYoutubeStatsQuery),
+      validator("query", GetYoutubeStatsQuery),
       async (c) => {
         const user = getUserInContext(c);
         const query = { ...c.req.valid("query") };
@@ -94,7 +103,9 @@ export const youtubeRouter = honoRouter((ctx) => {
     // Lister les uploads YouTube de l'utilisateur
     .get(
       "/",
+      describeRoute({ description: "List user's YouTube uploads" }),
       zValidatorWrapper("query", ListYouTubeUploadsQuerySchema),
+      validator("query", ListYouTubeUploadsQuerySchema),
       async (c) => {
         const user = getUserInContext(c);
         const query = { ...c.req.valid("query") };
@@ -104,26 +115,41 @@ export const youtubeRouter = honoRouter((ctx) => {
     )
 
     // Obtenir un upload YouTube spécifique
-    .get("/:id", zValidatorWrapper("param", z.uuid()), async (c) => {
-      const user = getUserInContext(c);
-      const id = c.req.valid("param");
-      const result = await getYouTubeUploadUseCase(ctx, { id, user });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .get(
+      "/:id",
+      describeRoute({ description: "Get a YouTube upload by ID" }),
+      zValidatorWrapper("param", z.uuid()),
+      validator("param", z.uuid()),
+      async (c) => {
+        const user = getUserInContext(c);
+        const id = c.req.valid("param");
+        const result = await getYouTubeUploadUseCase(ctx, { id, user });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
 
     // Relancer un upload YouTube échoué
-    .post("/:id/retry", zValidatorWrapper("param", z.uuid()), async (c) => {
-      const user = getUserInContext(c);
-      const id = c.req.valid("param");
-      const result = await retryYouTubeUploadUseCase(ctx, { id, user });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .post(
+      "/:id/retry",
+      describeRoute({ description: "Retry a failed YouTube upload" }),
+      zValidatorWrapper("param", z.uuid()),
+      validator("param", z.uuid()),
+      async (c) => {
+        const user = getUserInContext(c);
+        const id = c.req.valid("param");
+        const result = await retryYouTubeUploadUseCase(ctx, { id, user });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
 
     //  Mettre à jour les analytics d'une vidéo
     .post(
       "/:id/analytics",
+      describeRoute({ description: "Update video analytics" }),
       zValidatorWrapper("param", z.uuid()),
+      validator("param", z.uuid()),
       zValidatorWrapper("json", UpdateVideoAnalyticsBody),
+      validator("json", UpdateVideoAnalyticsBody),
       async (c) => {
         const id = c.req.valid("param");
         const body = c.req.valid("json");
@@ -135,17 +161,25 @@ export const youtubeRouter = honoRouter((ctx) => {
       }
     )
     // Supprimer un upload YouTube et ses fichiers
-    .delete("/:id", zValidatorWrapper("param", z.uuid()), async (c) => {
-      const user = getUserInContext(c);
-      const id = c.req.valid("param");
-      const result = await deleteYouTubeUploadUseCase(ctx, { user, id });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .delete(
+      "/:id",
+      describeRoute({ description: "Delete a YouTube upload and its files" }),
+      zValidatorWrapper("param", z.uuid()),
+      validator("param", z.uuid()),
+      async (c) => {
+        const user = getUserInContext(c);
+        const id = c.req.valid("param");
+        const result = await deleteYouTubeUploadUseCase(ctx, { user, id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
 
     // Callback pour recevoir le résultat de N8N
     .post(
       "/:id/callback",
+      describeRoute({ description: "YouTube callback endpoint (N8N)" }),
       zValidatorWrapper("json", HandleYouTubeCallbackBody),
+      validator("json", HandleYouTubeCallbackBody),
       async (c) => {
         const user = getUserInContext(c);
         const { id } = c.req.param();
@@ -160,11 +194,15 @@ export const youtubeRouter = honoRouter((ctx) => {
     )
 
     //  Nettoyer les fichiers expirés (route admin)
-    .post("/cleanup", async (c) => {
-      const user = getUserInContext(c);
-      const result = await cleanupExpiredUploadsUseCase(ctx, { user });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    });
+    .post(
+      "/cleanup",
+      describeRoute({ description: "Cleanup expired uploads (admin)" }),
+      async (c) => {
+        const user = getUserInContext(c);
+        const result = await cleanupExpiredUploadsUseCase(ctx, { user });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    );
 
   return router;
 });

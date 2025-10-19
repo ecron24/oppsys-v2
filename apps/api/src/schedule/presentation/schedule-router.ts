@@ -15,6 +15,7 @@ import {
   UpdateTaskBodySchema,
 } from "../app";
 import { requireCronSecret } from "./utils";
+import { describeRoute, validator } from "hono-openapi";
 
 export const scheduleRouter = honoRouter((ctx) => {
   const router = new Hono()
@@ -22,8 +23,11 @@ export const scheduleRouter = honoRouter((ctx) => {
     // Schedule a new task
     .post(
       "/:module_slug/schedule",
+      describeRoute({ description: "Schedule a new task for a module" }),
       zValidatorWrapper("param", z.object({ moduleSlug: z.string() })),
+      validator("param", z.object({ moduleSlug: z.string() })),
       zValidatorWrapper("json", ScheduleTaskBodySchema),
+      validator("json", ScheduleTaskBodySchema),
       async (c) => {
         const { moduleSlug } = c.req.valid("param");
         const { inputData, executionTime } = c.req.valid("json");
@@ -45,7 +49,9 @@ export const scheduleRouter = honoRouter((ctx) => {
     // Run scheduled tasks (cron job)
     .post(
       "/worker/run-tasks",
+      describeRoute({ description: "Run scheduled tasks (cron)" }),
       zValidatorWrapper("query", RunScheduledTasksUseCaseInput),
+      validator("query", RunScheduledTasksUseCaseInput),
       async (c) => {
         requireCronSecret(c);
         const { limit } = c.req.valid("query");
@@ -67,8 +73,11 @@ export const scheduleRouter = honoRouter((ctx) => {
     // Update a scheduled task
     .put(
       "/update-task/:taskId",
+      describeRoute({ description: "Update a scheduled task" }),
       zValidatorWrapper("param", z.object({ taskId: z.string() })),
+      validator("param", z.object({ taskId: z.string() })),
       zValidatorWrapper("json", UpdateTaskBodySchema),
+      validator("json", UpdateTaskBodySchema),
       async (c) => {
         const { taskId } = c.req.valid("param");
         const { executionTime } = c.req.valid("json");

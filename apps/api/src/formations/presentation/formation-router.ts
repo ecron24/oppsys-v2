@@ -8,13 +8,18 @@ import {
 } from "../app/get-formation-content-use-case";
 import { getUserFormationAccessUseCase } from "../app/get-user-formation-access-use-case";
 import { getUserInContext } from "src/lib/get-user-in-context";
+import { describeRoute, validator } from "hono-openapi";
 
 export const formationRouter = honoRouter((ctx) => {
   const router = new Hono()
     // Récupérer le contenu d'une formation (avec achat automatique)
     .post(
       "/get-content",
+      describeRoute({
+        description: "Get formation content (with purchase flow)",
+      }),
       zValidatorWrapper("json", GetFormationContentBody),
+      validator("json", GetFormationContentBody),
       async (c) => {
         const user = getUserInContext(c);
         const body = c.req.valid("json");
@@ -23,11 +28,15 @@ export const formationRouter = honoRouter((ctx) => {
       }
     )
     // Récupérer les accès formations de l'utilisateur
-    .get("/user-access", async (c) => {
-      const user = getUserInContext(c);
-      const result = await getUserFormationAccessUseCase(ctx, { user });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    });
+    .get(
+      "/user-access",
+      describeRoute({ description: "Get user's formation access list" }),
+      async (c) => {
+        const user = getUserInContext(c);
+        const result = await getUserFormationAccessUseCase(ctx, { user });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    );
 
   return router;
 });

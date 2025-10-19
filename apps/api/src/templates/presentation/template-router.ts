@@ -9,7 +9,7 @@ import { downloadTemplateUseCase } from "../app/download-template-use-case";
 import { deleteTemplateUseCase } from "../app/delete-template-use-case";
 import { handleResultResponse } from "src/lib/handle-result-response";
 import { getUserInContext } from "src/lib/get-user-in-context";
-import { describeRoute } from "hono-openapi";
+import { describeRoute, validator } from "hono-openapi";
 import { zValidatorWrapper } from "src/lib/validator-wrapper";
 
 export const templateRouter = honoRouter((ctx) => {
@@ -34,6 +34,7 @@ export const templateRouter = honoRouter((ctx) => {
       "/upload",
       describeRoute({ description: "Upload a new real estate template" }),
       zValidatorWrapper("form", UploadTemplateBody),
+      validator("form", UploadTemplateBody),
       async (c) => {
         const user = getUserInContext(c);
         // Handle multipart form data
