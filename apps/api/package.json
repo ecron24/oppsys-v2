@@ -5,8 +5,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "concurrently --names type,server -c gray,blue 'tsc --watch' 'tsx watch src/index.ts'",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "tsc && tsc-alias && tsc-esm-fix dist",
+    "start": "tsx dist/index.js",
     "check-types": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts ."
   },
@@ -25,6 +25,7 @@
     "hono-openapi": "^1.1.0",
     "hono-rate-limiter": "^0.4.2",
     "winston": "^3.18.2",
+    "tsx": "^4.7.1",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -33,7 +34,8 @@
     "@typescript-eslint/parser": "^8.45.0",
     "concurrently": "^9.2.1",
     "eslint": "^9.36.0",
-    "tsx": "^4.7.1",
+    "tsc-alias": "^1.8.16",
+    "tsc-esm-fix": "^3.1.2",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.45.0"
   }
