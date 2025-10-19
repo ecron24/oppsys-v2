@@ -37,6 +37,8 @@ export type UpdateYouTubeUploadByIdResult = Result<
   "UNKNOWN_ERROR" | "UPLOAD_NOT_FOUND"
 >;
 
+export type InsertYouTubeAnalyticsResult = Result<void, Error, "UNKNOWN_ERROR">;
+
 export type CleanupExpiredUploadsResult = Result<void, Error, "UNKNOWN_ERROR">;
 
 export type GetTrendingTopicsResult = Result<string[], Error, "UNKNOWN_ERROR">;
@@ -85,6 +87,20 @@ export interface YouTubeRepo {
     uploadId: string,
     data: Partial<YouTubeUpload>
   ): Promise<UpdateYouTubeUploadByIdResult>;
+
+  insertYouTubeAnalytics(data: {
+    uploadId: string;
+    viewCount?: number;
+    likeCount?: number;
+    commentCount?: number;
+    watchTimeMinutes?: number;
+    averageViewDuration?: number;
+    topCountries?: Record<string, unknown>;
+    trafficSources?: Record<string, unknown>;
+    periodStart?: string;
+    periodEnd?: string;
+    detailed?: boolean;
+  }): Promise<InsertYouTubeAnalyticsResult>;
 
   cleanupExpiredUploads(): Promise<CleanupExpiredUploadsResult>;
 

@@ -181,12 +181,10 @@ export const createYouTubeUploadUseCase = buildUseCase()
     }
 
     const upload = uploadResult.data;
-    // TODO: make me in the repos
     // Update status
-    await ctx.supabase
-      .from("youtube_uploads")
-      .update({ status: "uploading" })
-      .eq("id", upload.id);
+    await ctx.youtubeRepo.updateYouTubeUploadById(upload.id, {
+      status: "uploading",
+    });
 
     // Préparer les données pour N8N
     const n8nInput = {

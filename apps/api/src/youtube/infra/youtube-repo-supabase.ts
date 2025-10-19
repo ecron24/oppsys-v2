@@ -1,4 +1,4 @@
-import type { OppSysSupabaseClient } from "@oppsys/supabase";
+import type { Json, OppSysSupabaseClient } from "@oppsys/supabase";
 import type {
   YouTubeRepo,
   CreateVideoUploadUrlResult,
@@ -11,6 +11,7 @@ import type {
   ListYouTubeUploadsResult,
   DeleteYouTubeUploadResult,
   UpdateYouTubeUploadByIdResult,
+  InsertYouTubeAnalyticsResult,
 } from "../domain/youtube-repo";
 import {
   YouTubeUploadSchema,
@@ -351,6 +352,50 @@ export class YouTubeRepoSupabase implements YouTubeRepo {
         this.logger.error("[deleteYouTubeUpload]: ", error, {
           uploadId,
           userId,
+        });
+        throw error;
+      }
+
+      return { success: true, data: undefined } as const;
+    });
+  }
+
+  async insertYouTubeAnalytics(analytics: {
+    uploadId: string;
+    viewCount?: number;
+    likeCount?: number;
+    commentCount?: number;
+    watchTimeMinutes?: number;
+    averageViewDuration?: number;
+    topCountries?: Record<string, unknown>;
+    trafficSources?: Record<string, unknown>;
+    periodStart?: string;
+    periodEnd?: string;
+    detailed?: boolean;
+  }): Promise<InsertYouTubeAnalyticsResult> {
+    return await tryCatch(async () => {
+      const payload = toSnakeCase({
+        youtube_upload_id: analytics.uploadId,
+        views_count: analytics.viewCount ?? 0,
+        likes_count: analytics.likeCount ?? 0,
+        comments_count: analytics.commentCount ?? 0,
+        watch_time_minutes: analytics.watchTimeMinutes ?? 0,
+        average_view_duration: analytics.averageViewDuration ?? 0,
+        top_countries: (analytics.topCountries ?? {}) as Json,
+        traffic_sources: (analytics.trafficSources ?? {}) as Json,
+        period_start:
+          analytics.periodStart ?? new Date().toISOString().split("T")[0],
+        period_end:
+          analytics.periodEnd ?? new Date().toISOString().split("T")[0],
+      });
+
+      const { error } = await this.supabase
+        .from("youtube_analytics")
+        .insert(payload);
+
+      if (error) {
+        this.logger.error("[insertYouTubeAnalytics]: ", error, {
+          analytics: payload,
         });
         throw error;
       }

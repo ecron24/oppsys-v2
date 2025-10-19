@@ -31,27 +31,24 @@ export const updateVideoAnalyticsUseCase = buildUseCase()
     });
     if (!updateResult) return updateResult;
 
-    // TODO: make me in repo
     if (analyticsData.detailed) {
-      const { error: analyticsError } = await ctx.supabase
-        .from("youtube_analytics")
-        .insert({
-          youtube_upload_id: id,
-          views_count: analyticsData.viewCount || 0,
-          likes_count: analyticsData.likeCount || 0,
-          comments_count: analyticsData.commentCount || 0,
-          watch_time_minutes: analyticsData.watchTimeMinutes || 0,
-          average_view_duration: analyticsData.averageViewDuration || 0,
-          top_countries: analyticsData.topCountries || {},
-          traffic_sources: analyticsData.trafficSources || {},
-          period_start:
-            analyticsData.periodStart || new Date().toISOString().split("T")[0],
-          period_end:
-            analyticsData.periodEnd || new Date().toISOString().split("T")[0],
-        });
-      if (analyticsError) {
+      const insertResult = await ctx.youtubeRepo.insertYouTubeAnalytics({
+        uploadId: id,
+        viewCount: analyticsData.viewCount,
+        likeCount: analyticsData.likeCount,
+        commentCount: analyticsData.commentCount,
+        watchTimeMinutes: analyticsData.watchTimeMinutes,
+        averageViewDuration: analyticsData.averageViewDuration,
+        topCountries: analyticsData.topCountries,
+        trafficSources: analyticsData.trafficSources,
+        periodStart: analyticsData.periodStart,
+        periodEnd: analyticsData.periodEnd,
+        detailed: analyticsData.detailed,
+      });
+
+      if (!insertResult.success) {
         ctx.logger.warn("Error inserting detailed analytics:", {
-          analyticsError,
+          error: insertResult?.error || "unknown",
         });
       }
     }
