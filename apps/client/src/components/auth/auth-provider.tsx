@@ -40,11 +40,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!user || user.id !== session.user.id) {
           setLoading(true);
           fetchFullUserProfile();
+          return;
         }
-      } else {
-        setUser(null);
-        setLoading(false);
       }
+      setUser(null);
+      setLoading(false);
     });
 
     initialSession();

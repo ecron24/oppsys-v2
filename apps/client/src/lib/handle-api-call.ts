@@ -19,18 +19,18 @@ export async function handleApiCall<
         data: json.data,
         status: response.status as TStatusSuccess,
       } as const;
-    } else {
-      const json = await response.json();
-      const { error, details } = json as { error: string; details?: string };
-      return {
-        success: false,
-        error,
-        details,
-        status: response.status as TStatusError,
-      } as const;
     }
+    const json = await response.json();
+    const { error, details } = json as { error: string; details?: string };
+    console.error("[handleApiCall::notok]: ", { response, json });
+    return {
+      success: false,
+      error,
+      details,
+      status: response.status as TStatusError,
+    } as const;
   } catch (error) {
-    console.error("[handleApiCall]: ", error);
+    console.error("[handleApiCall::catch]: ", error);
     return {
       success: false,
       error: (error as Error).message,

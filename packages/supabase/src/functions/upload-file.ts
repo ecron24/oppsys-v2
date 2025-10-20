@@ -4,10 +4,7 @@ import { createFn } from "./fn-builder";
 const inputSchema = z.object({
   bucket: z.string().min(1),
   filePath: z.string().min(1),
-  file: z
-    .instanceof(Buffer)
-    .or(z.instanceof(Uint8Array))
-    .or(z.instanceof(ArrayBuffer)),
+  file: z.any(),
   options: z
     .object({
       contentType: z.string().optional(),
@@ -25,6 +22,19 @@ export const uploadFile = createFn()
   .output(outputSchema)
   .handle(async (ctx, input) => {
     const { bucket, filePath, file, options } = input;
+    if (
+      !(
+        file instanceof Buffer ||
+        file instanceof ArrayBuffer ||
+        file instanceof Uint8Array
+      )
+    ) {
+      return {
+        success: false,
+        error: new Error("File must be Buffer or ArrayBuffer"),
+        kind: "VALIDATION_ERROR",
+      };
+    }
 
     const { data, error } = await ctx.supabase.storage
       .from(bucket)
