@@ -135,6 +135,9 @@ importers:
       '@oppsys/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
+      '@oppsys/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@oppsys/ui':
         specifier: workspace:*
         version: link:../../packages/ui
