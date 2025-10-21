@@ -26,17 +26,21 @@ When creating components that are specific to a particular module or feature, it
 
 For managing forms in the application, it is advisable to use the `@tanstack/react-form` library. This library provides a robust and flexible way to handle form state, validation, and submission.
 
-### 3. Create a field component for @tanstack/react-form
+#### a. Create or use a field component for @tanstack/react-form
 
-All tanstack field are located in the `src/components/form` folder. Each field should be created as a separate component. For example, you can create components like `TextField`, `SelectField`, and `CheckboxField` to represent different types of form inputs. As possible, each field component should contain label, field and error message. You can take a look at the `src/components/form/input-field.tsx` file for an example.
+All tanstack field are located in the `packages/ui/src/components/tanstack-form` folder. Each field should be created as a separate component. For example, you can create components like `SelectField`, and `CheckboxField` to represent different types of form inputs. As possible, each field component should contain label, field and error message. You can take a look at the `packages/ui/src/components/tanstack-form/input-field.tsx` file for an example.
 
-### 4. Always use `useAppForm` for form creation
+#### b. Always use `useAppForm` for form creation
 
-When creating forms, it is recommended to use the `useAppForm` hook at `src/components/form/form-setup.tsx`.
+When creating forms, it is recommended to use the `useAppForm` hook at `packages/ui/src/components/tanstack-form/form-setup.tsx`.
 
-### 5. Use `zod` for schema validation
+#### c. Use `zod` for schema validation
 
 For validating form data, use the `zod` library.
+
+#### d. Example
+
+Goto file `packages/ui/src/components/tanstack-form/bug-report-form-exampe.tsx`
 
 ### 6. Use `@tanstack/react-query` for data fetching and mutations, never use server components for that
 
@@ -74,3 +78,4 @@ When go to another page, use `ROUTES` constants from `apps/api/src/routes.ts`.
 - "react": "^19.1.1"
 - "react-dom": "^19.1.1"
 - "tailwindcss": "^4.1.13"
+- "@tanstack/react-form": "^1.23.7"

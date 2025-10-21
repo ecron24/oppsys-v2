@@ -13,16 +13,18 @@
   "dependencies": {
     "@oppsys/api": "workspace:*",
     "@oppsys/supabase": "workspace:*",
-    "@oppsys/ui": "workspace:*",
     "@oppsys/types": "workspace:*",
+    "@oppsys/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.13",
     "hono": "catalog:",
+    "lucide-react": "^0.544.0",
     "next-themes": "^0.4.6",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "^7.9.3",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
+    "@tanstack/react-form": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

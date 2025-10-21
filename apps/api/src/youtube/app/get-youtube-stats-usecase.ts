@@ -3,7 +3,7 @@ import { UserInContextSchema } from "src/lib/get-user-in-context";
 import z from "zod";
 
 export const GetYoutubeStatsQuery = z.object({
-  period: z.number().int().min(1).default(30),
+  period: z.coerce.number().int().min(1).default(30),
 });
 
 const GetYouTubeStatsInputSchema = z.object({

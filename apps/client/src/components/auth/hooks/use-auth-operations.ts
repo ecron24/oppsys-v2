@@ -101,7 +101,7 @@ export const useAuthOperations = () => {
       });
       return;
     }
-    toast.error("Erreur d'envoi");
+    toast.error("Erreur d'envoi du lien magique");
   };
 
   const updateProfile = async (updates: Partial<User>) => {

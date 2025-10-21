@@ -1,5 +1,5 @@
 import { ThemeSwitcher } from "@/components/themes/theme-switcher";
-import { Button } from "@oppsys/ui/components/ui/button";
+import { Button } from "@oppsys/ui/components/button";
 
 export function HomePage() {
   return (

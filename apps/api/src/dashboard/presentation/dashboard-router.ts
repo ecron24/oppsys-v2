@@ -17,7 +17,7 @@ const dashboardQuerySchema = z.object({
 });
 
 const activityQuerySchema = z.object({
-  limit: z.number().min(1).max(50).default(10),
+  limit: z.coerce.number().min(1).max(50).default(10),
 });
 
 export const dashboardRouter = honoRouter((ctx) => {

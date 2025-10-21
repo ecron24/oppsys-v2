@@ -2,7 +2,7 @@ import { buildUseCase } from "../../lib/use-case-builder";
 import z from "zod";
 
 export const RunScheduledTasksUseCaseInput = z.object({
-  limit: z.number().int().min(1).max(10).default(10),
+  limit: z.coerce.number().int().min(1).max(10).default(10),
 });
 
 export const runScheduledTasksUseCase = buildUseCase()
