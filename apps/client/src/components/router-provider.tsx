@@ -6,7 +6,7 @@ import { SidebarLayout } from "./sidebar-layout";
 import { HomePage } from "@/app/home-page";
 import { routes } from "@/routes";
 import { GuestRoute } from "./guard/guest-route";
-import { LoginPage } from "@/app/(auth)/login-page";
+import { LoginPage } from "@/app/(auth)/login/login-page";
 import { OtpPage } from "@/app/(auth)/otp/otp-page";
 
 const router = createBrowserRouter([
