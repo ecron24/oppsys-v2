@@ -8,6 +8,7 @@ export const routes = {
   },
   auth: {
     login: () => "/login",
+    otp: () => "/otp",
   },
   completeProfile: {
     index: () => "/complete-profile",

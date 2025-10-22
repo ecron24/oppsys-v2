@@ -4,7 +4,9 @@ import z from "zod";
 import { FieldGroup } from "@oppsys/ui/components/field";
 import { useAuthOperations } from "@/components/auth/hooks/use-auth-operations";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { routes } from "@/routes";
+import { ArrowLeft } from "lucide-react";
 
 const formSchema = z.object({
   otpCode: z
@@ -21,7 +23,7 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
       otpCode: "",
     },
     validators: {
-      onChange: formSchema,
+      onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
       const result = await verifyOtp({ email, otp: value.otpCode });
@@ -46,7 +48,8 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
         </p>
       </div>
       <form
-        id="otp-form"
+        id="verify-code-form"
+        className="space-y-6"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
@@ -66,7 +69,7 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
           />
         </FieldGroup>
         <form.AppForm>
-          <form.SubmitButton form="otp-form">
+          <form.SubmitButton form="verify-code-form" className="w-full">
             Vérifier le code
           </form.SubmitButton>
         </form.AppForm>
@@ -80,8 +83,10 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
         >
           Renvoyer le code
         </Button>
-        <Button type="button" onClick={onBack} variant="link">
-          ← Utiliser un mot de passe à la place
+        <Button type="button" onClick={onBack} variant="link" asChild>
+          <Link to={routes.auth.login()}>
+            <ArrowLeft /> Utiliser un mot de passe à la place
+          </Link>
         </Button>
       </div>
     </div>
@@ -89,6 +94,6 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
 }
 
 type OtpVerifyCodeFormProps = {
-  onBack: () => void;
+  onBack?: () => void;
   email: string;
 };

@@ -3,6 +3,9 @@ import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import z from "zod";
 import { FieldGroup } from "@oppsys/ui/components/field";
 import { useAuthOperations } from "@/components/auth/hooks/use-auth-operations";
+import { ArrowLeft, Mail } from "lucide-react";
+import { Link } from "react-router";
+import { routes } from "@/routes";
 
 const formSchema = z.object({
   email: z.email("Email invalide").min(1, "Email requis"),
@@ -15,7 +18,7 @@ export function OtpEmailForm({ onBack, onSent }: OtpEmailFormProps) {
       email: "",
     },
     validators: {
-      onChange: formSchema,
+      onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
       await signInWithOtp(value.email);
@@ -32,6 +35,7 @@ export function OtpEmailForm({ onBack, onSent }: OtpEmailFormProps) {
       </div>
       <form
         id="otp-form"
+        className="space-y-6"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
@@ -46,19 +50,23 @@ export function OtpEmailForm({ onBack, onSent }: OtpEmailFormProps) {
                   label="Adresse email"
                   placeholder="example@gmail.com"
                   type="email"
-                  //  TODO: iconLeft
+                  iconLeft={<Mail className="text-muted-foreground" />}
                 />
               );
             }}
           />
         </FieldGroup>
         <form.AppForm>
-          <form.SubmitButton form="otp-form">Envoyer le code</form.SubmitButton>
+          <form.SubmitButton form="otp-form" className="w-full">
+            Envoyer le code
+          </form.SubmitButton>
         </form.AppForm>
       </form>
       <div className="flex flex-col space-y-3">
-        <Button type="button" onClick={onBack} variant="link">
-          ← Utiliser un mot de passe à la place
+        <Button type="button" onClick={onBack} variant="link" asChild>
+          <Link to={routes.auth.login()}>
+            <ArrowLeft /> Utiliser un mot de passe à la place
+          </Link>
         </Button>
       </div>
     </div>
@@ -66,6 +74,6 @@ export function OtpEmailForm({ onBack, onSent }: OtpEmailFormProps) {
 }
 
 type OtpEmailFormProps = {
-  onBack: () => void;
+  onBack?: () => void;
   onSent: (params: { email: string }) => void;
 };

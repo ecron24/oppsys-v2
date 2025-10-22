@@ -9,7 +9,7 @@ export function AppProvider() {
       <AuthProvider>
         <RouterProvider />
       </AuthProvider>
-      <Toaster />
+      <Toaster position="top-right" expand={true} richColors />
     </ThemeProvider>
   );
 }

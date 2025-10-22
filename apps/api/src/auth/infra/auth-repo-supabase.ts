@@ -29,7 +29,11 @@ export class AuthRepoSupabase implements AuthRepo {
       });
 
       if (error) {
-        this.logger.error("Auth signup error:", error);
+        this.logger.error("Auth signup error:", error, {
+          email,
+          password,
+          fullName,
+        });
         return { success: false, error, kind: "SIGNUP_FAILED" } as const;
       }
 
@@ -61,7 +65,7 @@ export class AuthRepoSupabase implements AuthRepo {
       });
 
       if (error) {
-        this.logger.error("Auth signin error:", error);
+        this.logger.error("Auth signin error:", error, { email, password });
         return { success: false, error, kind: "SIGNIN_FAILED" } as const;
       }
 
@@ -95,7 +99,7 @@ export class AuthRepoSupabase implements AuthRepo {
         options: { emailRedirectTo: redirectTo },
       });
       if (error) {
-        this.logger.error("Magic link error:", error);
+        this.logger.error("Magic link error:", error, { email, redirectTo });
         return { success: false, error, kind: "MAGIC_LINK_FAILED" } as const;
       }
       return { success: true, data: undefined } as const;

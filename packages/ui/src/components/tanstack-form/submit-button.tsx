@@ -19,8 +19,9 @@ export function SubmitButton({
           {...buttonProps}
           disabled={isSubmitting || isLoading}
         >
-          {isSubmitting ||
-            (isLoading && <Loader2Icon className="animate-spin" />)}
+          {(isSubmitting || isLoading) && (
+            <Loader2Icon className="animate-spin" />
+          )}
           {children}
         </Button>
       )}

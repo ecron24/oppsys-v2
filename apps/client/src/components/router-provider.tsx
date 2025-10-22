@@ -7,6 +7,7 @@ import { HomePage } from "@/app/home-page";
 import { routes } from "@/routes";
 import { GuestRoute } from "./guard/guest-route";
 import { LoginPage } from "@/app/(auth)/login-page";
+import { OtpPage } from "@/app/(auth)/otp/otp-page";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,14 @@ const router = createBrowserRouter([
     element: (
       <GuestRoute>
         <LoginPage />
+      </GuestRoute>
+    ),
+  },
+  {
+    path: routes.auth.otp(),
+    element: (
+      <GuestRoute>
+        <OtpPage />
       </GuestRoute>
     ),
   },

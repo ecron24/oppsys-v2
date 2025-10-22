@@ -19,5 +19,5 @@ export function OtpForm({ defaultEmail, onBack }: OtpFormProps) {
 
 type OtpFormProps = {
   defaultEmail?: string;
-  onBack: () => void;
+  onBack?: () => void;
 };

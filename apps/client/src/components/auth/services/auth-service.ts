@@ -6,9 +6,11 @@ import type { AuthChangeEvent, AuthSession, Provider } from "@oppsys/supabase";
 import { toCamelCase } from "@/lib/to-camel-case";
 
 export const authService = {
-  async signInWithPassword(email: string, password: string) {
+  async signInWithPassword(params: { email: string; password: string }) {
     return handleApiCall(
-      await honoClient.api.auth.signin.$post({ json: { email, password } })
+      await honoClient.api.auth.signin.$post({
+        json: { email: params.email, password: params.password },
+      })
     );
   },
 

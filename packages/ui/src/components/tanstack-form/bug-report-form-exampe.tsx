@@ -47,6 +47,7 @@ export function BugReportForm() {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
+      console.log("value", value);
       toast("You submitted the following values:");
     },
   });

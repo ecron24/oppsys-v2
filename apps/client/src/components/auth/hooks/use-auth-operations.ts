@@ -12,15 +12,19 @@ export const useAuthOperations = () => {
   const [loading, setLoading] = useState(false);
   const { setUser } = useAuth();
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (params: { email: string; password: string }) => {
     setLoading(true);
-    const result = await authService.signInWithPassword(email, password);
+    const result = await authService.signInWithPassword(params);
     setLoading(false);
     if (result.success) {
       toast.success("Connexion réussie");
-      return;
+      return result;
     }
-    toast.error("Erreur de connexion");
+    toast.error("Erreur de connexion", {
+      description:
+        "Vérifiez votre email et votre mot de passe, puis réessayez.",
+    });
+    return result;
   };
 
   const signUp = async (
@@ -34,9 +38,10 @@ export const useAuthOperations = () => {
       toast.success("Inscription réussie", {
         description: "Vérifiez votre email pour confirmer votre compte",
       });
-      return;
+      return result;
     }
     toast.error("Erreur d'inscription");
+    return result;
   };
 
   const signOut = async () => {
