@@ -7,23 +7,60 @@ import { toCamelCase } from "@/lib/to-camel-case";
 
 export const authService = {
   async signInWithPassword(params: { email: string; password: string }) {
-    return handleApiCall(
-      await honoClient.api.auth.signin.$post({
-        json: { email: params.email, password: params.password },
-      })
-    );
+    const { error } = await supabase.auth.signInWithPassword({
+      email: params.email,
+      password: params.password,
+    });
+    if (error) {
+      console.error("[signInWithPassword]: ", error, { params });
+      return {
+        success: false,
+        error: "signInWithPassword error",
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: undefined,
+      status: 200,
+    } as const;
+    // return handleApiCall(
+    //   await honoClient.api.auth.signin.$post({
+    //     json: { email: params.email, password: params.password },
+    //   })
+    // );
   },
 
-  async signUp(
-    email: string,
-    password: string,
-    userData: { fullName?: string } = {}
-  ) {
-    return handleApiCall(
-      await honoClient.api.auth.signup.$post({
-        json: { email, password, fullName: userData.fullName },
-      })
-    );
+  async signUp(params: { email: string; password: string; fullName?: string }) {
+    const { error } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
+      options: { data: { full_name: params.fullName || "" } },
+    });
+    if (error) {
+      console.error("[signOut]: ", error, { params });
+      return {
+        success: false,
+        error: "signUp error",
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: undefined,
+      status: 200,
+    } as const;
+    // return handleApiCall(
+    //   await honoClient.api.auth.signup.$post({
+    //     json: {
+    //       email: params.email,
+    //       password: params.email,
+    //       fullName: params.fullName,
+    //     },
+    //   })
+    // );
   },
 
   async signOut(): Promise<ApiResponse<void>> {
@@ -35,13 +72,13 @@ export const authService = {
         error: "Signout error",
         details: error.message,
         status: 500,
-      };
+      } as const;
     }
     return {
       success: true,
       data: undefined,
       status: 200,
-    };
+    } as const;
   },
 
   async resetPasswordForEmail(
@@ -52,7 +89,7 @@ export const authService = {
       redirectTo,
     });
     if (error) {
-      console.error("[resetPasswordForEmail]: ", error);
+      console.error("[resetPasswordForEmail]: ", error, { email, redirectTo });
       return {
         success: false,
         error: error.name,
@@ -70,7 +107,7 @@ export const authService = {
   async updatePasswordUser(newPassword: string): Promise<ApiResponse<void>> {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      console.error("[updatePasswordUser]: ", error);
+      console.error("[updatePasswordUser]: ", error, { newPassword });
       return {
         success: false,
         error: error.name,
@@ -94,7 +131,7 @@ export const authService = {
       options: { redirectTo },
     });
     if (error) {
-      console.error("[signInWithOAuth]: ", error);
+      console.error("[signInWithOAuth]: ", error, { provider, redirectTo });
       return {
         success: false,
         error: error.name,
@@ -130,7 +167,7 @@ export const authService = {
       type: "email" as const,
     });
     if (error) {
-      console.error("[verifyOtp]: ", error);
+      console.error("[verifyOtp]: ", error, { params });
       return {
         success: false,
         error: error.name,

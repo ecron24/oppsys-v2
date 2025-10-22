@@ -1,35 +1,45 @@
-import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
+import { Link, useNavigate } from "react-router";
 import z from "zod";
 import { useAuthOperations } from "../hooks/use-auth-operations";
-import { FieldGroup } from "@oppsys/ui/components/field";
-import { Lock, Mail, Zap } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import { routes } from "@/routes";
+import { FieldGroup } from "@oppsys/ui/components/field";
+import { Lock, Mail } from "lucide-react";
 import { Button } from "@oppsys/ui";
 
-const formSchema = z.object({
-  email: z.email("Email invalide").min(1, "Email requis"),
-  password: z
-    .string()
-    .min(6, "Minimum 6 caractères")
-    .min(1, "Mot de passe requis"),
-});
+const formSchema = z
+  .object({
+    email: z.email("Email invalide").min(1, "Email requis"),
+    password: z
+      .string()
+      .min(6, "Minimum 6 caractères")
+      .min(1, "Mot de passe requis"),
+    fullName: z.string().min(1, "Nom requis"),
+    confirmPassword: z.string().min(6, "Minimum 6 caractères"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
 
-export function LoginForm() {
+export function RegisterForm() {
   const navigate = useNavigate();
-  const { signIn } = useAuthOperations();
+  const { signUp } = useAuthOperations();
   const form = useAppForm({
     defaultValues: {
       email: "",
       password: "",
+      fullName: "",
+      confirmPassword: "",
     },
     validators: {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const result = await signIn({
+      const result = await signUp({
         email: value.email,
         password: value.password,
+        fullName: value.fullName,
       });
       if (result.success) {
         navigate(routes.dashboard.index());
@@ -39,15 +49,6 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
-      {/* TODO: Google signin button */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-card text-muted-foreground">ou</span>
-        </div>
-      </div>
       <form
         id="login-form"
         className="space-y-6"
@@ -57,6 +58,17 @@ export function LoginForm() {
         }}
       >
         <FieldGroup>
+          <form.AppField
+            name="fullName"
+            children={(field) => {
+              return (
+                <field.InputField
+                  label="Adresse email"
+                  placeholder="Votre nom complet"
+                />
+              );
+            }}
+          />
           <form.AppField
             name="email"
             children={(field) => {
@@ -82,32 +94,29 @@ export function LoginForm() {
               );
             }}
           />
+          <form.AppField
+            name="confirmPassword"
+            children={(field) => {
+              return (
+                <field.InputPasswordField
+                  label="Confirmer le mot de passe"
+                  placeholder="******"
+                  iconLeft={<Lock className="text-muted-foreground" />}
+                />
+              );
+            }}
+          />
         </FieldGroup>
         <form.AppForm>
           <form.SubmitButton form="login-form" className="w-full">
-            Se connecter
+            Créer mon compte
           </form.SubmitButton>
         </form.AppForm>
       </form>
       <div className="space-y-2">
         <div className="text-center">
           <Button type="button" variant={"link"} asChild>
-            <Link to={routes.auth.otp()}>
-              <Zap className="h-4 w-4 mr-2" />
-              Mot de passe oublié ? Recevoir un code
-            </Link>
-          </Button>
-        </div>
-        <div className="text-center">
-          <Button
-            type="button"
-            variant={"link"}
-            className="font-semibol text-base"
-            asChild
-          >
-            <Link to={routes.auth.register()}>
-              Pas encore de compte ? Créer un compte
-            </Link>
+            <Link to={routes.auth.login()}>Déjà un compte ? Se connecter</Link>
           </Button>
         </div>
       </div>

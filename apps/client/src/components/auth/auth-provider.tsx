@@ -16,6 +16,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await authService.signOut();
       setUser(null);
     }
+    setLoading(false);
   };
 
   const initialSession = async (): Promise<void> => {
@@ -27,9 +28,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     if (resultSession.data) {
       fetchFullUserProfile();
-    } else {
-      setLoading(false);
+      return;
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -38,7 +39,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = authService.onAuthStateChange((_, session) => {
       if (session?.user) {
         if (!user || user.id !== session.user.id) {
-          setLoading(true);
           fetchFullUserProfile();
           return;
         }

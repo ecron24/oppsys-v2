@@ -27,12 +27,12 @@ export const useAuthOperations = () => {
     return result;
   };
 
-  const signUp = async (
-    email: string,
-    password: string,
-    userData: { fullName?: string } = {}
-  ) => {
-    const result = await authService.signUp(email, password, userData);
+  const signUp = async (params: {
+    email: string;
+    password: string;
+    fullName?: string;
+  }) => {
+    const result = await authService.signUp(params);
     setLoading(false);
     if (result.success) {
       toast.success("Inscription réussie", {
