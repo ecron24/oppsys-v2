@@ -12,7 +12,7 @@ export function AuthenticatedRoute({
   requiredRole,
 }: AuthenticatedRouteProps) {
   const { user, loading } = useAuth();
-  const { sendMagicLink, loading: operationsLoading } = useAuthOperations();
+  const { signInWithOtp, loading: operationsLoading } = useAuthOperations();
 
   if (loading) {
     return <PageLoader />;
@@ -27,7 +27,7 @@ export function AuthenticatedRoute({
   if (!user.emailConfirmedAt) {
     const handleResendEmail = async () => {
       if (!user.email) return;
-      await sendMagicLink(user.email);
+      await signInWithOtp(user.email);
       alert("Email de confirmation renvoyé ! Vérifiez votre boîte email.");
     };
 

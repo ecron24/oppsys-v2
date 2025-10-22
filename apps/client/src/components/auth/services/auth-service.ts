@@ -121,6 +121,28 @@ export const authService = {
     return supabase.auth.onAuthStateChange(callback);
   },
 
+  async verifyOtp(params: { email: string; otp: string }) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: params.email,
+      token: params.otp,
+      type: "email" as const,
+    });
+    if (error) {
+      console.error("[verifyOtp]: ", error);
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: toCamelCase(data),
+      status: 200,
+    } as const;
+  },
+
   async getSession() {
     const { data, error } = await supabase.auth.getSession();
     if (error) {

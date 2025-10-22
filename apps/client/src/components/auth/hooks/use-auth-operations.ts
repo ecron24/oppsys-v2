@@ -6,6 +6,7 @@ import { authService } from "../services/auth-service";
 import type { Provider } from "@oppsys/supabase";
 import type { User } from "../types";
 import { userService } from "../services/user-service";
+import { routes } from "@/routes";
 
 export const useAuthOperations = () => {
   const [loading, setLoading] = useState(false);
@@ -88,7 +89,7 @@ export const useAuthOperations = () => {
     toast.error(`Erreur de connexion ${provider}`);
   };
 
-  const sendMagicLink = async (email: string) => {
+  const signInWithOtp = async (email: string) => {
     setLoading(true);
     const result = await authService.signInWithOtp(
       email,
@@ -96,12 +97,41 @@ export const useAuthOperations = () => {
     );
     setLoading(false);
     if (result.success) {
-      toast.success("Lien magique envoyé", {
+      toast.success("Code de connexion envoyé", {
         description: "Vérifiez votre email",
       });
       return;
     }
-    toast.error("Erreur d'envoi du lien magique");
+    toast.error("Impossible d'envoyer le code de connexion.");
+  };
+
+  const verifyOtp = async (params: { email: string; otp: string }) => {
+    setLoading(true);
+    const result = await authService.verifyOtp(params);
+    setLoading(false);
+    if (result.success && result.data.session?.access_token) {
+      // Fetch user profile after OTP verification
+      // TODO: add options to pass token with : "result.data.session?.access_token"
+      const profileResult = await userService.getMe();
+      if (profileResult.success) {
+        const profile = profileResult.data;
+        const fullName = profile?.fullName ?? "";
+        const hasCompletedProfile = fullName.trim().length > 0;
+        setUser(profile);
+        toast.success("Code vérifié !", {
+          description: "Chargement de votre profil...",
+        });
+        return {
+          success: true,
+          data: { profile, hasCompletedProfile },
+          redirectTo: hasCompletedProfile
+            ? routes.dashboard.index()
+            : routes.completeProfile.index(),
+        } as const;
+      }
+    }
+    toast.error("Code invalide ou expiré");
+    return { success: false } as const;
   };
 
   const updateProfile = async (updates: Partial<User>) => {
@@ -125,7 +155,8 @@ export const useAuthOperations = () => {
     resetPassword,
     updatePassword,
     signInWithProvider,
-    sendMagicLink,
+    signInWithOtp,
+    verifyOtp,
     updateProfile,
   };
 };
