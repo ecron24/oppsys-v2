@@ -1,5 +1,4 @@
 export * from "./components/button";
-export * from "./components/form";
 export * from "./components/input";
 export * from "./components/label";
 export * from "./components/separator";
@@ -7,6 +6,7 @@ export * from "./components/sheet";
 export * from "./components/sidebar";
 export * from "./components/skeleton";
 export * from "./components/tooltip";
+export * from "./components/kbd";
 export * from "./components/sonner";
 export * from "./lib/utils";
 export { toast } from "sonner";
