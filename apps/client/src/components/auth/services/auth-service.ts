@@ -177,7 +177,10 @@ export const authService = {
     }
     return {
       success: true,
-      data: toCamelCase(data),
+      data: {
+        user: data.user ? toCamelCase(data.user) : null,
+        session: data.session ? toCamelCase(data.session) : null,
+      },
       status: 200,
     } as const;
   },

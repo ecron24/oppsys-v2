@@ -114,9 +114,8 @@ export const useAuthOperations = () => {
     setLoading(true);
     const result = await authService.verifyOtp(params);
     setLoading(false);
-    if (result.success && result.data.session?.access_token) {
+    if (result.success && result.data.session?.accessToken) {
       // Fetch user profile after OTP verification
-      // TODO: add options to pass token with : "result.data.session?.access_token"
       const profileResult = await userService.getMe();
       if (profileResult.success) {
         const profile = profileResult.data;
