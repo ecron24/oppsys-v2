@@ -1,4 +1,4 @@
-import { Button } from "@oppsys/ui";
+import { Button, P } from "@oppsys/ui";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import z from "zod";
 import { FieldGroup } from "@oppsys/ui/components/field";
@@ -42,10 +42,10 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-sm text-muted-foreground mb-4">
+        <P className="text-sm text-muted-foreground mb-4">
           Code envoyé à{" "}
           <span className="font-medium text-foreground">{email}</span>
-        </p>
+        </P>
       </div>
       <form
         id="verify-code-form"

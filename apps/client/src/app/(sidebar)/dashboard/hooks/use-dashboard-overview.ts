@@ -9,6 +9,7 @@ export function useDashboardOverview(period: Period = "month") {
     isLoading: loading,
     error,
     refetch,
+    isRefetching,
   } = useQuery<DashboardOverviewData | null>({
     queryKey: queryKeys.dashboard.overview(period),
     queryFn: async () => {
@@ -18,5 +19,5 @@ export function useDashboardOverview(period: Period = "month") {
     },
   });
 
-  return { data, loading, refetch, error };
+  return { data, loading, refetch, error, isRefetching };
 }

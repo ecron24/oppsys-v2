@@ -1,4 +1,4 @@
-import { Button } from "@oppsys/ui";
+import { Button, P } from "@oppsys/ui";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import z from "zod";
 import { FieldGroup } from "@oppsys/ui/components/field";
@@ -29,9 +29,9 @@ export function OtpEmailForm({ onBack, onSent }: OtpEmailFormProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">
+        <P className="text-sm text-muted-foreground">
           Nous vous enverrons un code pour vous connecter
-        </p>
+        </P>
       </div>
       <form
         id="otp-form"

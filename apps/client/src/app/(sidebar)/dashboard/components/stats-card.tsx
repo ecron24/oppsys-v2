@@ -1,3 +1,4 @@
+import { P } from "@oppsys/ui";
 import type { LucideIcon } from "lucide-react";
 import { TrendingUp, AlertCircle } from "lucide-react";
 
@@ -22,11 +23,11 @@ export function StatsCard({ stat }: StatsCardProps) {
       <div className="text-card-foreground rounded-xl p-6 border border-destructive/20 bg-destructive/5 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground">
+            <P className="text-sm font-medium text-muted-foreground">
               {stat.title}
-            </p>
-            <p className="text-sm text-destructive mt-2">Erreur API</p>
-            <p className="text-xs text-destructive/80 mt-1">{stat.error}</p>
+            </P>
+            <P className="text-sm text-destructive mt-2">Erreur API</P>
+            <P className="text-xs text-destructive/80 mt-1">{stat.error}</P>
           </div>
           <div className="bg-destructive/10 p-3 rounded-lg">
             <AlertCircle className="h-5 w-5 text-destructive" />
@@ -40,16 +41,16 @@ export function StatsCard({ stat }: StatsCardProps) {
     <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-xs hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
+          <P className="text-sm font-medium text-muted-foreground">
             {stat.title}
-          </p>
-          <p className="text-2xl font-bold text-card-foreground mt-2">
+          </P>
+          <P className="text-2xl font-bold text-card-foreground mt-2">
             {stat.value}
-          </p>
+          </P>
           {stat.description && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <P className="text-xs text-muted-foreground mt-1">
               {stat.description}
-            </p>
+            </P>
           )}
         </div>
         <div className="bg-gradient-primary p-3 rounded-lg">

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Sparkles, FileText, Plus, RefreshCw, AlertCircle } from "lucide-react";
 import { WithHeader } from "../_components/with-header";
 import { useAuth } from "@/components/auth/hooks/use-auth";
@@ -10,18 +9,15 @@ import { FavoriteModules } from "./components/favorite-modules";
 import { QuickActions } from "./components/quick-actions";
 import { GeneralStats } from "./components/general-stats";
 import { LinkButton } from "@/components/link-button";
-import { Badge, Button } from "@oppsys/ui";
+import { Badge, Button, H2, H4, P } from "@oppsys/ui";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { data: permissions } = usePremiumFeatures();
   const dashboardOverview = useDashboardOverview("month");
-  const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
     await dashboardOverview.refetch();
-    setRefreshing(false);
   };
 
   const planName = dashboardOverview.data?.profile.planName || "Free";
@@ -56,15 +52,15 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <H2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
               {`Bienvenue, ${user?.fullName?.split(" ")[0] || "Utilisateur"}`}
-            </h1>
-            <p className="text-muted-foreground mt-1">
+            </H2>
+            <P className="">
               {dashboardOverview.data?.periodUsage.totalUsage &&
               dashboardOverview.data?.periodUsage.totalUsage > 0
                 ? `Vous avez utilisé ${dashboardOverview.data?.periodUsage.totalUsage} modules ce mois-ci.`
                 : "Commencez à explorer vos modules."}
-            </p>
+            </P>
             {planName && (
               <div className="mt-2">
                 <Badge variant={"primary-outline"}>Plan {planName}</Badge>
@@ -74,11 +70,11 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={handleRefresh}
-              disabled={refreshing}
+              disabled={dashboardOverview.isRefetching}
               variant={"muted"}
             >
               <RefreshCw
-                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${dashboardOverview.isRefetching ? "animate-spin" : ""}`}
               />
               <span>Actualiser</span>
             </Button>
@@ -98,12 +94,12 @@ export default function DashboardPage() {
             <div className="flex">
               <AlertCircle className="h-5 w-5 text-destructive mr-3 mt-0.5" />
               <div>
-                <h4 className="text-sm font-medium text-destructive">
+                <H4 className="text-sm font-medium text-destructive">
                   Erreur de connexion API
-                </h4>
-                <p className="text-sm text-destructive/80 mt-1">
+                </H4>
+                <P className="text-sm text-destructive/80 mt-1">
                   {dashboardOverview.error.message}
-                </p>
+                </P>
               </div>
             </div>
           </div>

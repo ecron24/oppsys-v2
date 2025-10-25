@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { cn } from "@oppsys/ui";
+import { cn, P } from "@oppsys/ui";
 import type { ReactNode } from "react";
 
 const sizeClasses = {
@@ -72,7 +72,7 @@ export function LoadingSpinner({
         <div className="text-center">
           {content}
           {!text && size === "large" && (
-            <p className="mt-4 text-muted-foreground text-lg">Chargement...</p>
+            <P className="mt-4 text-muted-foreground text-lg">Chargement...</P>
           )}
         </div>
       </div>
@@ -96,7 +96,7 @@ export function PageLoader({
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center">
         <LoadingSpinner size="large" color="primary" />
-        <p className="mt-4 text-muted-foreground text-lg">{text}</p>
+        <P className="mt-4 text-muted-foreground text-lg">{text}</P>
       </div>
     </div>
   );

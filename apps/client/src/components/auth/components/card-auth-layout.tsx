@@ -1,3 +1,4 @@
+import { P } from "@oppsys/ui";
 import { Card, CardContent } from "@oppsys/ui/components/card";
 import type { PropsWithChildren } from "react";
 
@@ -11,12 +12,12 @@ export function CardAuthLayout({ children, title }: CardAuthLayoutProps) {
               <img src="/logo.png" alt="Logo Oppsys" className="size-12" />
             </div>
             <h1 className="text-2xl font-bold mb-2">Oppsys</h1>
-            <p className="text-orange-100">{title}</p>
+            <P className="text-orange-100">{title}</P>
           </div>
           <CardContent>{children}</CardContent>
         </Card>
         <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
+          <P className="text-sm text-muted-foreground">
             En continuant, vous acceptez nos{" "}
             <a
               href="https://oppsys.io/legal/terms"
@@ -35,7 +36,7 @@ export function CardAuthLayout({ children, title }: CardAuthLayoutProps) {
             >
               Politique de confidentialité
             </a>
-          </p>
+          </P>
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { H3, H4, P } from "@oppsys/ui";
 
 interface QuickAction {
   title: string;
@@ -72,9 +73,9 @@ export function QuickActions({ isPremium }: QuickActionsProps) {
   return (
     <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-card-foreground">
+        <H3 className="text-lg font-semibold text-card-foreground">
           Actions rapides
-        </h3>
+        </H3>
         <Plus className="h-5 w-5 text-muted-foreground" />
       </div>
       <div className="grid grid-cols-1 gap-3">
@@ -96,14 +97,14 @@ export function QuickActions({ isPremium }: QuickActionsProps) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-medium text-card-foreground group-hover:text-primary transition-colors">
+                  <H4 className="font-medium text-card-foreground group-hover:text-primary transition-colors">
                     {action.title}
-                  </h4>
+                  </H4>
                   {action.badge && action.badge}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <P className="text-sm text-muted-foreground">
                   {action.description}
-                </p>
+                </P>
               </div>
               <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </Link>

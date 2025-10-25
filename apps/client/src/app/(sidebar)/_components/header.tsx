@@ -8,6 +8,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  H1,
+  H3,
+  P,
   SidebarTrigger,
 } from "@oppsys/ui";
 import {
@@ -61,9 +64,9 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
             <SidebarTrigger />
 
             <div className="flex items-center space-x-3">
-              <h1 className="text-xl lg:text-2xl font-bold bg-gradient-primary-blue bg-clip-text text-transparent">
+              <H1 className="text-xl lg:text-2xl font-bold bg-gradient-primary-blue bg-clip-text text-transparent">
                 {title}
-              </h1>
+              </H1>
 
               {breadcrumbs && (
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -105,14 +108,14 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
                 >
                   <div>
                     <div className="px-4 py-3 border-b border-border">
-                      <h3 className="font-semibold text-popover-foreground">
+                      <H3 className="font-semibold text-popover-foreground">
                         Notifications
-                      </h3>
+                      </H3>
                       {unreadNotifications.length > 0 && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <P className="text-sm text-muted-foreground mt-1">
                           {unreadNotifications.length} non lue
                           {unreadNotifications.length > 1 ? "s" : ""}
-                        </p>
+                        </P>
                       )}
                     </div>
 
@@ -148,17 +151,17 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
                                 />
                               </div>
                               <div className="flex-1">
-                                <p className="text-sm font-medium text-popover-foreground">
+                                <P className="text-sm font-medium text-popover-foreground">
                                   {notification.title}
-                                </p>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                </P>
+                                <P className="text-sm text-muted-foreground mt-1">
                                   {notification.message}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                </P>
+                                <P className="text-xs text-muted-foreground mt-1">
                                   {new Date(
                                     notification.created_at
                                   ).toLocaleDateString("fr-FR")}
-                                </p>
+                                </P>
                               </div>
                             </div>
                           </div>
@@ -166,9 +169,9 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
                       ) : (
                         <div className="px-4 py-8 text-center">
                           <Bell className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                          <p className="text-sm text-muted-foreground">
+                          <P className="text-sm text-muted-foreground">
                             Aucune notification
-                          </p>
+                          </P>
                         </div>
                       )}
                     </div>
@@ -205,12 +208,12 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
                 >
                   <div className="">
                     <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-medium text-popover-foreground truncate">
+                      <P className="text-sm font-medium text-popover-foreground truncate">
                         {user?.fullName || "Utilisateur"}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      </P>
+                      <P className="text-sm text-muted-foreground truncate">
                         {user?.email}
-                      </p>
+                      </P>
 
                       <div className="mt-3 space-y-2">
                         <div className="flex items-center justify-between text-xs">
@@ -296,10 +299,10 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertCircle className="size-4 text-destructive" />
-              <p className="text-sm text-red-700 dark:text-red-300">
+              <P className="text-sm text-red-700 dark:text-red-300">
                 <span className="font-medium">Attention</span> Vos crédits sont
                 presque épuisés
-              </p>
+              </P>
             </div>
             <LinkButton to={routes.billing.index()} variant={"destructive"}>
               Recharger

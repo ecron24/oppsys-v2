@@ -18,6 +18,7 @@ import {
   Button,
   cn,
   Kbd,
+  P,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -358,12 +359,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </span>
                 </div>
 
-                <p className="text-xs text-muted-foreground mb-3">
+                <P className="text-xs text-muted-foreground mb-3">
                   {/* {socialConnections.length > 0
                 ? `${socialConnections.filter((c) => c.is_valid).length}/${socialConnections.length} réseaux connectés`
                 : "Connectez vos réseaux sociaux"} */}
                   Connectez vos réseaux sociaux
-                </p>
+                </P>
                 {/* 
             <SocialStatusList
               connections={socialConnections}

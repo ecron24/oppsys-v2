@@ -3,7 +3,7 @@ import { useAuth } from "../auth/hooks/use-auth";
 import { useAuthOperations } from "../auth/hooks/use-auth-operations";
 import { Navigate } from "react-router";
 import { Mail, Shield } from "lucide-react";
-import { Button } from "@oppsys/ui";
+import { Button, H2, P } from "@oppsys/ui";
 import { PageLoader } from "../loading";
 import { routes } from "@/routes";
 
@@ -41,14 +41,14 @@ export function AuthenticatedRoute({
               <Mail className="w-8 h-8 text-primary" />
             </div>
 
-            <h2 className="text-xl font-semibold text-card-foreground mb-2">
+            <H2 className="text-xl font-semibold text-card-foreground mb-2">
               Email non confirmé
-            </h2>
+            </H2>
 
-            <p className="text-muted-foreground mb-6">
+            <P className="text-muted-foreground mb-6">
               Veuillez vérifier votre boîte email et cliquer sur le lien de
               confirmation pour accéder à votre compte.
-            </p>
+            </P>
 
             <div className="space-y-3">
               <Button
@@ -83,14 +83,14 @@ export function AuthenticatedRoute({
               <Shield className="w-8 h-8 text-destructive" />
             </div>
 
-            <h2 className="text-xl font-semibold text-card-foreground mb-2">
+            <H2 className="text-xl font-semibold text-card-foreground mb-2">
               Accès refusé
-            </h2>
+            </H2>
 
-            <p className="text-muted-foreground mb-6">
+            <P className="text-muted-foreground mb-6">
               Vous n'avez pas les permissions nécessaires pour accéder à cette
               page.
-            </p>
+            </P>
 
             <Button onClick={() => window.history.back()} className="w-full">
               Retour

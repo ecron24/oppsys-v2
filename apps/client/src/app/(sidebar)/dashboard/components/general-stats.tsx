@@ -1,5 +1,6 @@
 import { Target } from "lucide-react";
 import type { DashboardContentData, PeriodUsage } from "../type";
+import { H3 } from "@oppsys/ui";
 
 interface GeneralStatsProps {
   content: DashboardContentData;
@@ -19,9 +20,9 @@ export function GeneralStats({ content, periodUsage }: GeneralStatsProps) {
   return (
     <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-card-foreground">
+        <H3 className="text-lg font-semibold text-card-foreground">
           Statistiques
-        </h3>
+        </H3>
         <Target className="h-5 w-5 text-muted-foreground" />
       </div>
       <div className="space-y-5">
