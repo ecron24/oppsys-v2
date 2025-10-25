@@ -1,3 +1,5 @@
+import { WithHeader } from "../_components/with-header";
+
 export function ContentPage() {
-  return <>ContentPage</>;
+  return <WithHeader title="Contenu">ContentPage</WithHeader>;
 }

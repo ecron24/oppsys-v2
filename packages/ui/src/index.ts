@@ -8,5 +8,6 @@ export * from "./components/skeleton";
 export * from "./components/tooltip";
 export * from "./components/kbd";
 export * from "./components/sonner";
+export * from "./components/dropdown-menu";
 export * from "./lib/utils";
 export { toast } from "sonner";

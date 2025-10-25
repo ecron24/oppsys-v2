@@ -126,6 +126,10 @@
     @apply bg-gradient-to-r from-primary to-orange-600;
   }
 
+  .bg-gradient-primary-blue {
+    @apply bg-gradient-to-r from-primary to-blue-600;
+  }
+
   .bg-gradient-red {
     @apply bg-gradient-to-r from-red-500 to-red-600;
   }
