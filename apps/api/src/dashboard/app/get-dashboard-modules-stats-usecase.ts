@@ -1,11 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
-import {
-  ModuleStatSchema,
-  PeriodSchema,
-  type ModuleStat,
-} from "../domain/dashboard";
+import { PeriodSchema, type ModuleStat } from "../domain/dashboard";
 import type { Module } from "src/modules/domain/module";
 import { periodToDate } from "./dashboard-utils";
 
@@ -16,7 +12,6 @@ export const GetDashboardModulesStatsInput = z.object({
 
 export const getDashboardModulesStatsUseCase = buildUseCase()
   .input(GetDashboardModulesStatsInput)
-  .output(ModuleStatSchema.array())
   .handle(async (ctx: OppSysContext, input) => {
     const { period, userId } = input;
     // 1. Calculate period
@@ -83,7 +78,7 @@ export const getDashboardModulesStatsUseCase = buildUseCase()
     const moduleStatsArray: ModuleStat[] = Object.values(statsByModule)
       .map((stat) => ({
         ...stat,
-        success_rate:
+        successRate:
           stat.totalUsage > 0
             ? Math.round((stat.successfulUsage / stat.totalUsage) * 100)
             : 0,

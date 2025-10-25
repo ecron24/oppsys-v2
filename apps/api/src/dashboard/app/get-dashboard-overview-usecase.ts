@@ -69,14 +69,11 @@ export const getDashboardOverviewUseCase = buildUseCase()
       successfulUsage: usage.filter((u) => u.status === "success").length,
       failedUsage: usage.filter((u) => u.status === "failed").length,
       usageByType: usage.reduce(
-        (acc, module) => {
-          module?.modules?.forEach((mod) => {
-            const type = mod.type || "unknown";
-            if (!acc[type]) acc[type] = { count: 0, credits: 0 };
-            acc[type].count += 1;
-            acc[type].credits += Number(module["creditsUsed"] ?? 0);
-          });
-
+        (acc, u) => {
+          const type = u.modules?.type || "unknown";
+          if (!acc[type]) acc[type] = { count: 0, credits: 0 };
+          acc[type].count++;
+          acc[type].credits += u.creditsUsed || 0;
           return acc;
         },
         {} as Record<string, { count: number; credits: number }>

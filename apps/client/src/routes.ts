@@ -15,6 +15,7 @@ export const routes = {
       const queryString = searchParams.toString();
       return `/modules${queryString ? `?${queryString}` : ""}`;
     },
+    id: (moduleId: string) => `/modules/${moduleId}`,
   },
   content: {
     index: () => "/content",

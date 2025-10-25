@@ -10,4 +10,9 @@ export const queryKeys = {
   user: {
     permissions: ["user", "permissions"],
   },
+  dashboard: {
+    overview: (period: string) => ["dashboard", "overview", period],
+    modulesStats: (period: string) => ["dashboard", "modulesStats", period],
+    performanceStats: ["dashboard", "performanceStats"],
+  },
 };
