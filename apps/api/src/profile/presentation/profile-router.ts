@@ -12,6 +12,7 @@ import {
   getAllContentUseCase,
   GetAllContentUseCaseQuery,
 } from "src/content/app/get-all-content-use-case";
+import { getPermissionsUseCase } from "../app/get-permissions-use-case";
 
 export const profileRouter = honoRouter((ctx) => {
   const router = new Hono()
@@ -36,6 +37,15 @@ export const profileRouter = honoRouter((ctx) => {
           body,
           user,
         });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
+    .get(
+      "/permissions",
+      describeRoute({ description: "Get user permissions" }),
+      async (c) => {
+        const user = getUserInContext(c);
+        const result = await getPermissionsUseCase(ctx, { user });
         return handleResultResponse(c, result, { oppSysContext: ctx });
       }
     )

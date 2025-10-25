@@ -7,4 +7,7 @@ export const queryKeys = {
     session: ["auth", "session"],
     user: ["auth", "user"],
   },
+  user: {
+    permissions: ["user", "permissions"],
+  },
 };

@@ -11,16 +11,7 @@ export const getProfileUseCase = buildUseCase()
   .handle(async (ctx: OppSysContext, input) => {
     const result = await ctx.profileRepo.getByIdWithPlan(input.userId);
 
-    if (!result.success) {
-      ctx.logger.error("[getProfileUseCase] failed", result.error, {
-        userId: input.userId,
-      });
-      return {
-        success: false,
-        kind: "PROFILE_NOT_FOUND",
-        error: new Error("Profile not found"),
-      } as const;
-    }
+    if (!result.success) return result;
 
     return { success: true, data: result.data } as const;
   });
