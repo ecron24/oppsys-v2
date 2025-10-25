@@ -26,7 +26,7 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const result = await verifyOtp({ email, otp: value.otpCode });
+      const result = await verifyOtp.mutateAsync({ email, otp: value.otpCode });
       if (!result.success) return;
       navigate(result.redirectTo);
     },
@@ -35,7 +35,7 @@ export function OtpVerifyCodeForm({ onBack, email }: OtpVerifyCodeFormProps) {
 
   const handleSendOTP = async () => {
     setResending(true);
-    await signInWithOtp(email);
+    await signInWithOtp.mutateAsync(email);
     setResending(false);
   };
 

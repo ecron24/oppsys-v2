@@ -36,7 +36,7 @@ export function RegisterForm() {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const result = await signUp({
+      const result = await signUp.mutateAsync({
         email: value.email,
         password: value.password,
         fullName: value.fullName,

@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import { useState, type PropsWithChildren } from "react";
 import { useAuth } from "../auth/hooks/use-auth";
 import { useAuthOperations } from "../auth/hooks/use-auth-operations";
 import { Navigate } from "react-router";
@@ -12,7 +12,8 @@ export function AuthenticatedRoute({
   requiredRole,
 }: AuthenticatedRouteProps) {
   const { user, loading } = useAuth();
-  const { signInWithOtp, loading: operationsLoading } = useAuthOperations();
+  const [resending, setResending] = useState(false);
+  const { signInWithOtp } = useAuthOperations();
 
   if (loading) {
     return <PageLoader />;
@@ -27,8 +28,9 @@ export function AuthenticatedRoute({
   if (!user.emailConfirmedAt) {
     const handleResendEmail = async () => {
       if (!user.email) return;
-      await signInWithOtp(user.email);
-      alert("Email de confirmation renvoyé ! Vérifiez votre boîte email.");
+      setResending(true);
+      await signInWithOtp.mutateAsync(user.email);
+      setResending(false);
     };
 
     return (
@@ -58,11 +60,11 @@ export function AuthenticatedRoute({
 
               <Button
                 onClick={handleResendEmail}
-                disabled={operationsLoading}
+                disabled={resending}
                 variant={"outline"}
                 className="w-full"
               >
-                {operationsLoading ? "Envoi en cours..." : "Renvoyer l'email"}
+                {resending ? "Envoi en cours..." : "Renvoyer l'email"}
               </Button>
             </div>
           </div>

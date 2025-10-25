@@ -27,7 +27,7 @@ export function LoginForm() {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const result = await signIn({
+      const result = await signIn.mutateAsync({
         email: value.email,
         password: value.password,
       });

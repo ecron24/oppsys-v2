@@ -16,6 +16,8 @@
     "@oppsys/types": "workspace:*",
     "@oppsys/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.13",
+    "@tanstack/react-form": "catalog:",
+    "@tanstack/react-query": "^5.90.5",
     "hono": "catalog:",
     "lucide-react": "^0.544.0",
     "next-themes": "^0.4.6",
@@ -24,11 +26,11 @@
     "react-router": "^7.9.3",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
-    "@tanstack/react-form": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@tanstack/eslint-plugin-query": "^5.91.2",
     "@types/node": "^24.6.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -7,6 +7,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import path from "path";
 import { fileURLToPath } from "url";
 import parser from "@typescript-eslint/parser";
+import pluginQuery from "@tanstack/eslint-plugin-query";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -20,6 +21,7 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
+      ...pluginQuery.configs["flat/recommended"],
     ],
     languageOptions: {
       ecmaVersion: 2020,

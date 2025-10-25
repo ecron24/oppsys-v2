@@ -21,7 +21,7 @@ export function OtpEmailForm({ onBack, onSent }: OtpEmailFormProps) {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      await signInWithOtp(value.email);
+      await signInWithOtp.mutateAsync(value.email);
       onSent({ email: value.email });
     },
   });
