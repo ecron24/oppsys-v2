@@ -4,6 +4,7 @@ import { usePerformanceStats } from "../hooks/use-performance-stats";
 import { formatTimeAgo } from "@/lib/date-humanizer";
 import { LinkButton } from "@/components/link-button";
 import { H3, P } from "@oppsys/ui";
+import { routes } from "@/routes";
 
 export function PerformanceStats() {
   const { stats, loading, error } = usePerformanceStats();
@@ -48,7 +49,7 @@ export function PerformanceStats() {
           Performances de contenu
         </H3>
         <Link
-          to="/content"
+          to={routes.content.index()}
           className="text-primary hover:text-primary/80 text-sm font-medium transition-colors"
         >
           Voir tout
@@ -99,7 +100,10 @@ export function PerformanceStats() {
           <P className="text-xs text-muted-foreground mt-1">
             Vos statistiques apparaîtront ici après vos premières créations.
           </P>
-          <LinkButton to="/modules" className="bg-gradient-primary mt-3">
+          <LinkButton
+            to={routes.modules.index()}
+            className="bg-gradient-primary mt-3"
+          >
             <Sparkles className="h-4 w-4" />
             Créer du contenu
           </LinkButton>

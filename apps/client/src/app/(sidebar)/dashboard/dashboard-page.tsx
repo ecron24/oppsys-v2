@@ -10,6 +10,7 @@ import { QuickActions } from "./components/quick-actions";
 import { GeneralStats } from "./components/general-stats";
 import { LinkButton } from "@/components/link-button";
 import { Badge, Button, H2, H4, P } from "@oppsys/ui";
+import { routes } from "@/routes";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -80,7 +81,7 @@ export default function DashboardPage() {
             </Button>
 
             <LinkButton
-              to="/modules"
+              to={routes.modules.index()}
               className=" text-white bg-gradient-primary"
             >
               <Plus className="h-4 w-4" />

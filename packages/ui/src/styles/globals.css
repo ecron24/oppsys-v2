@@ -119,6 +119,32 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* 🎨 SCROLLBAR PREMIUM */
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: var(--muted-foreground);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary);
+  }
+
+  ::-webkit-scrollbar-corner {
+    @apply bg-transparent;
+  }
 }
 
 @layer utilities {

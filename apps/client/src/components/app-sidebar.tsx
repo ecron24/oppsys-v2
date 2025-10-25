@@ -15,7 +15,6 @@ import {
   Zap,
 } from "lucide-react";
 import {
-  Button,
   cn,
   Kbd,
   P,
@@ -39,6 +38,7 @@ import {
   InputGroupInput,
 } from "@oppsys/ui/components/input-group";
 import { useState } from "react";
+import { LinkButton } from "./link-button";
 
 const navItems = [
   {
@@ -372,23 +372,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="mb-3"
             /> */}
 
-                <Button variant={"secondary"} asChild>
-                  <Link
-                    to="/profile"
-                    onClick={() => {
-                      setTimeout(() => {
-                        const event = new CustomEvent("navigateToSocialTab");
-                        window.dispatchEvent(event);
-                      }, 100);
-                    }}
-                    className="button-primary w-full block text-center text-xs py-2"
-                  >
-                    {/* {socialConnections.filter((c) => c.is_valid).length > 0
+                <LinkButton
+                  to={routes.profile.index()}
+                  variant={"secondary"}
+                  onClick={() => {
+                    setTimeout(() => {
+                      const event = new CustomEvent("navigateToSocialTab");
+                      window.dispatchEvent(event);
+                    }, 100);
+                  }}
+                  className="button-primary w-full block text-center text-xs py-2"
+                >
+                  {/* {socialConnections.filter((c) => c.is_valid).length > 0
                 ? "Gérer les connexions"
                 : "Connecter les réseaux"} */}
-                    Connecter les réseaux
-                  </Link>
-                </Button>
+                  Connecter les réseaux
+                </LinkButton>
               </div>
             </div>
             <div className="p-3 border-t border-border text-center">
