@@ -12,7 +12,7 @@ import { GeneralStats } from "./components/general-stats";
 import { LinkButton } from "@/components/link-button";
 import { Badge, Button } from "@oppsys/ui";
 
-export function DashboardPage() {
+export default function DashboardPage() {
   const { user } = useAuth();
   const { data: permissions } = usePremiumFeatures();
   const dashboardOverview = useDashboardOverview("month");

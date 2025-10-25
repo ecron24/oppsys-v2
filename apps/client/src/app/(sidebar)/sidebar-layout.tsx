@@ -2,7 +2,7 @@ import { SidebarProvider } from "@oppsys/ui";
 import { Outlet } from "react-router";
 import { AppSidebar } from "../../components/app-sidebar";
 
-export function SidebarLayout() {
+export default function SidebarLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />

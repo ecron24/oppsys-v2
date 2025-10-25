@@ -1,19 +1,23 @@
-import { SearchPage } from "@/app/search/search-page";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider as RouterDomProvider } from "react-router/dom";
 import { AuthenticatedRoute } from "./guard/authenticated-route";
-import { HomePage } from "@/app/home-page";
 import { routes } from "@/routes";
 import { GuestRoute } from "./guard/guest-route";
-import { LoginPage } from "@/app/(auth)/login/login-page";
-import { OtpPage } from "@/app/(auth)/otp/otp-page";
-import { RegisterPage } from "@/app/(auth)/register/register-page";
-import { DashboardPage } from "@/app/(sidebar)/dashboard/dashboard-page";
-import { ModulesPage } from "@/app/(sidebar)/modules/modules-page";
-import { SidebarLayout } from "@/app/(sidebar)/sidebar-layout";
-import { ContentPage } from "@/app/(sidebar)/content/content-page";
-import { BillingPage } from "@/app/(sidebar)/billing/billing-page";
-import { ProfilePage } from "@/app/(sidebar)/profile/profile-page";
+import { lazy } from "react";
+
+const ProfilePage = lazy(() => import("@/app/(sidebar)/profile/profile-page"));
+const DashboardPage = lazy(
+  () => import("@/app/(sidebar)/dashboard/dashboard-page")
+);
+const ModulesPage = lazy(() => import("@/app/(sidebar)/modules/modules-page"));
+const ContentPage = lazy(() => import("@/app/(sidebar)/content/content-page"));
+const BillingPage = lazy(() => import("@/app/(sidebar)/billing/billing-page"));
+const LoginPage = lazy(() => import("@/app/(auth)/login/login-page"));
+const OtpPage = lazy(() => import("@/app/(auth)/otp/otp-page"));
+const HomePage = lazy(() => import("@/app/home-page"));
+const RegisterPage = lazy(() => import("@/app/(auth)/register/register-page"));
+const SearchPage = lazy(() => import("@/app/search/search-page"));
+const SidebarLayout = lazy(() => import("@/app/(sidebar)/sidebar-layout"));
 
 const router = createBrowserRouter([
   {
