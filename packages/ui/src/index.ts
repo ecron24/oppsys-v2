@@ -10,6 +10,8 @@ export * from "./components/kbd";
 export * from "./components/sonner";
 export * from "./components/badge";
 export * from "./components/typography";
+export * from "./components/tabs";
+export * from "./components/tanstack-form/form-setup";
 export * from "./components/dropdown-menu";
 export * from "./lib/utils";
 export { toast } from "sonner";
