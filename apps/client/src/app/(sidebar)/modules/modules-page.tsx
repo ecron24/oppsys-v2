@@ -21,6 +21,7 @@ import { WithHeader } from "../_components/with-header";
 import { LinkButton } from "@/components/link-button";
 import { useModules } from "./_hooks/use-modules";
 import { MODULE_CATEGORIES_MAPPING } from "./modules-config";
+import { ModuleCardSkeleton } from "./_components/module-card-skeleton";
 
 export default function ModulesPage() {
   const navigate = useNavigate();
@@ -32,7 +33,8 @@ export default function ModulesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const { modules, getFeaturedModules, searchModules } = useModules();
+  const { modules, isLoading, getFeaturedModules, searchModules } =
+    useModules();
 
   const actualBalance = user?.creditBalance || 0;
 
@@ -210,17 +212,33 @@ export default function ModulesPage() {
 
               <div id="all-modules">
                 {iaModules.length === 0 ? (
-                  <div className="card text-center py-12">
-                    <div>
-                      <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <H4 className="text-lg font-medium mb-2">
-                        Aucun résultat
-                      </H4>
-                      <P className="text-muted-foreground">
-                        Essayez de modifier vos critères de recherche
-                      </P>
-                    </div>
-                  </div>
+                  <>
+                    {isLoading ? (
+                      <div
+                        className={
+                          viewMode === "grid"
+                            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            : "space-y-4"
+                        }
+                      >
+                        {[1, 2, 3].map((i) => (
+                          <ModuleCardSkeleton viewMode={viewMode} key={i} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="card text-center py-12">
+                        <div>
+                          <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <H4 className="text-lg font-medium mb-2">
+                            Aucun résultat
+                          </H4>
+                          <P className="text-muted-foreground">
+                            Essayez de modifier vos critères de recherche
+                          </P>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div
                     className={
@@ -304,17 +322,33 @@ export default function ModulesPage() {
 
               <div id="all-formations">
                 {formationModules.length === 0 ? (
-                  <div className="card text-center py-12">
-                    <div>
-                      <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <H4 className="text-lg font-medium mb-2">
-                        Aucun résultat
-                      </H4>
-                      <p className="text-muted-foreground">
-                        Essayez de modifier vos critères de recherche
-                      </p>
-                    </div>
-                  </div>
+                  <>
+                    {isLoading ? (
+                      <div
+                        className={
+                          viewMode === "grid"
+                            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            : "space-y-4"
+                        }
+                      >
+                        {[1, 2, 3].map((i) => (
+                          <ModuleCardSkeleton viewMode={viewMode} key={i} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="card text-center py-12">
+                        <div>
+                          <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <H4 className="text-lg font-medium mb-2">
+                            Aucun résultat
+                          </H4>
+                          <P className="text-muted-foreground">
+                            Essayez de modifier vos critères de recherche
+                          </P>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div
                     className={
