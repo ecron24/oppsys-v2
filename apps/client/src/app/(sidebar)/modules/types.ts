@@ -1,70 +1,30 @@
+import type { honoClient } from "@/lib/hono-client";
+import type { InferRequestType, InferResponseType } from "hono";
 import type { LucideIcon } from "lucide-react";
 import { lazy } from "react";
 
-export interface ModuleFormat {
-  id: string;
-  label: string;
-  description: string;
-  cost: number;
-  premium: boolean;
-  icon: LucideIcon;
-  source: {
-    type: string;
-    path?: string;
-    id?: string;
-  };
-}
-
-export interface ModuleLevel {
-  id: string;
-  label: string;
-  description: string;
-  premium: boolean;
-  chapters: number;
-  duration: string;
-  icon: LucideIcon;
-  objectives: string[];
-  formats: {
-    pdf: ModuleFormat;
-    podcast: ModuleFormat;
-    video: ModuleFormat;
-  };
-}
-
-export interface ModuleConfig {
-  id: string;
-  levels: {
-    debutant: ModuleLevel;
-    middle: ModuleLevel;
-    advanced: ModuleLevel;
-  };
-}
-
-export interface Module {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
+export type ModuleMapping = {
   icon: LucideIcon;
   component: ReturnType<typeof lazy>;
-  category: string;
-  baseCost: number;
   featured: boolean;
-  dbId: string;
-  dbSlug: string;
-  apiEndpoint: string;
-  n8nWebhookUrl: string;
-  type: string;
-  webhookKey: string;
   estimatedTime?: string;
-  n8n_trigger_type?: string;
   isNew?: boolean;
-  config?: ModuleConfig;
-}
+};
 
-export interface Category {
+export type CategoryMapping = {
   name: string;
-}
+};
+
+export type ModuleApi = InferResponseType<
+  typeof honoClient.api.modules.$get,
+  200
+>["data"]["modules"][number];
+
+export type Module = ModuleApi & ModuleMapping;
+
+export type ListModulesQuerySchema = InferRequestType<
+  typeof honoClient.api.modules.$get
+>["query"];
 
 export type ViewMode = "grid" | "list";
 

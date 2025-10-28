@@ -13,7 +13,7 @@ export const CompactModuleCard = ({
   currentBalance,
 }: CompactModuleCardProps) => {
   const Icon = module.icon;
-  const canAfford = currentBalance >= module.baseCost;
+  const canAfford = currentBalance >= module.creditCost;
 
   return (
     <div
@@ -39,7 +39,7 @@ export const CompactModuleCard = ({
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
-                {module.baseCost} crédits
+                {module.creditCost} crédits
               </Badge>
               <span className="text-xs text-muted-foreground capitalize">
                 {module.category}

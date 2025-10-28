@@ -15,4 +15,7 @@ export const queryKeys = {
     modulesStats: (period: string) => ["dashboard", "modulesStats", period],
     performanceStats: ["dashboard", "performanceStats"],
   },
+  modules: {
+    list: ["modules", "list"],
+  },
 };

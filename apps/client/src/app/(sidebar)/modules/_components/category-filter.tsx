@@ -1,5 +1,5 @@
 import { Button } from "@oppsys/ui";
-import { MODULE_CATEGORIES } from "@/app/(sidebar)/modules/modules-config";
+import { MODULE_CATEGORIES_MAPPING } from "@/app/(sidebar)/modules/modules-config";
 
 interface CategoryFilterProps {
   categories: string[];
@@ -23,7 +23,7 @@ export const CategoryFilter = ({
       >
         {category === "all"
           ? "Tous"
-          : MODULE_CATEGORIES[category]?.name || category}
+          : MODULE_CATEGORIES_MAPPING[category]?.name || category}
       </Button>
     ))}
   </div>

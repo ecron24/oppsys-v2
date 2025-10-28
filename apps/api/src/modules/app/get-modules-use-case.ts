@@ -20,7 +20,18 @@ export type ListModulesQuery = z.infer<typeof ListModulesQuerySchema>;
 export const getModulesUseCase = buildUseCase()
   .input(ListModulesQuerySchema)
   .handle(async (ctx, query) => {
-    const modules = await ctx.moduleRepo.list(query);
+    const modulesResults = await ctx.moduleRepo.list(query);
+    if (!modulesResults.success) return modulesResults;
+    const modulesClean = modulesResults.data.data.map((module) => {
+      const { ...rest } = module;
+      return rest;
+    });
 
-    return modules;
+    return {
+      success: true,
+      data: {
+        modules: modulesClean,
+        total: modulesResults.data.total,
+      },
+    };
   });

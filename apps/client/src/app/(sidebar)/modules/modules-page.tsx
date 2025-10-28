@@ -11,12 +11,6 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/hooks/use-auth";
-import {
-  MODULES_CONFIG,
-  MODULE_CATEGORIES,
-  getFeaturedModules,
-  searchModules,
-} from "./modules-config";
 import { CompactModuleCard } from "./_components/compact-module-card";
 import { ViewToggle } from "./_components/view-toggle";
 import { CategoryFilter } from "./_components/category-filter";
@@ -25,6 +19,8 @@ import type { ViewMode, TabValue } from "@/app/(sidebar)/modules/types";
 import { routes } from "@/routes";
 import { WithHeader } from "../_components/with-header";
 import { LinkButton } from "@/components/link-button";
+import { useModules } from "./_hooks/use-modules";
+import { MODULE_CATEGORIES_MAPPING } from "./modules-config";
 
 export default function ModulesPage() {
   const navigate = useNavigate();
@@ -36,6 +32,7 @@ export default function ModulesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const { modules, getFeaturedModules, searchModules } = useModules();
 
   const actualBalance = user?.creditBalance || 0;
 
@@ -45,17 +42,17 @@ export default function ModulesPage() {
   }, [searchParams]);
 
   const { iaModules, formationModules, iaCategories } = useMemo(() => {
-    const allModules = Object.values(MODULES_CONFIG);
+    const allModules = modules;
     const searched = searchTerm ? searchModules(searchTerm) : allModules;
 
     const iaFiltered = searched.filter((m) => m.category !== "formation");
-    const formationFiltered = searched.filter(
-      (m) => m.category === "formation"
-    );
+    const formationModules = searched.filter((m) => m.category === "formation");
 
-    const iaCats = [
+    const iaCategories = [
       "all",
-      ...Object.keys(MODULE_CATEGORIES).filter((cat) => cat !== "formation"),
+      ...Object.keys(MODULE_CATEGORIES_MAPPING).filter(
+        (cat) => cat !== "formation"
+      ),
     ];
 
     return {
@@ -63,12 +60,15 @@ export default function ModulesPage() {
         selectedCategory === "all" || selectedCategory === "formation"
           ? iaFiltered
           : iaFiltered.filter((m) => m.category === selectedCategory),
-      formationModules: formationFiltered,
-      iaCategories: iaCats,
+      formationModules,
+      iaCategories,
     };
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, searchModules, modules]);
 
-  const allFeaturedModules = useMemo(() => getFeaturedModules(), []);
+  const allFeaturedModules = useMemo(
+    () => getFeaturedModules(),
+    [getFeaturedModules]
+  );
   const featuredIaModules = useMemo(
     () => allFeaturedModules.filter((m) => m.category !== "formation"),
     [allFeaturedModules]
@@ -141,7 +141,7 @@ export default function ModulesPage() {
 
           <TabsContent value="modules" className="mt-6 space-y-6">
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-40">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Rechercher un module..."
@@ -150,8 +150,10 @@ export default function ModulesPage() {
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2 items-center">
+              <div>
                 <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+              </div>
+              <div className="flex gap-2 items-center">
                 <CategoryFilter
                   categories={iaCategories}
                   selected={selectedCategory}
@@ -199,7 +201,7 @@ export default function ModulesPage() {
                   <P className="text-sm text-muted-foreground mt-1">
                     {iaModules.length} module{iaModules.length !== 1 ? "s" : ""}
                     {selectedCategory !== "all"
-                      ? ` dans ${MODULE_CATEGORIES[selectedCategory]?.name || ""}`
+                      ? ` dans ${MODULE_CATEGORIES_MAPPING[selectedCategory]?.name || ""}`
                       : " disponible"}
                     {iaModules.length !== 1 ? "s" : ""}
                   </P>
@@ -232,7 +234,6 @@ export default function ModulesPage() {
                         key={module.id}
                         module={module}
                         onModuleClick={handleModuleClick}
-                        featured={module.featured}
                         viewMode={viewMode}
                         currentBalance={actualBalance}
                       />
@@ -327,7 +328,6 @@ export default function ModulesPage() {
                         key={module.id}
                         module={module}
                         onModuleClick={handleModuleClick}
-                        featured={module.featured}
                         viewMode={viewMode}
                         currentBalance={actualBalance}
                       />

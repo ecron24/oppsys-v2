@@ -6,6 +6,7 @@ import {
   StringNullableSchema,
   UuidSchema,
 } from "src/common/common-schema";
+import { ConfigSchema } from "./module-config";
 
 export const ModuleSchema = z.object({
   id: z.string(),
@@ -16,7 +17,7 @@ export const ModuleSchema = z.object({
   creditCost: z.number(),
   endpoint: z.url(),
   n8nTriggerType: nullableSchema(z.enum(["CHAT", "STANDARD"])),
-  config: nullableSchema(z.any()),
+  config: nullableSchema(ConfigSchema),
   isActive: z.boolean(),
   category: nullableSchema(z.string()),
   createdAt: nullableSchema(IsoDatetime),
