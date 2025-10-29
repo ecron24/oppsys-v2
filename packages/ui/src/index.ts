@@ -11,6 +11,7 @@ export * from "./components/sonner";
 export * from "./components/badge";
 export * from "./components/typography";
 export * from "./components/tabs";
+export * from "./components/dialog";
 export * from "./components/tanstack-form/form-setup";
 export * from "./components/dropdown-menu";
 export * from "./lib/utils";
