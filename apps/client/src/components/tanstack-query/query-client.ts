@@ -19,4 +19,7 @@ export const queryKeys = {
   modules: {
     list: ["modules", "list"],
   },
+  plans: {
+    list: ["plans", "list"],
+  },
 };

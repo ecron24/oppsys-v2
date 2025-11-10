@@ -13,7 +13,10 @@ export type GetPlanByNameResult = Result<
   "UNKNOWN_ERROR" | "PLAN_NOT_FOUND"
 >;
 
+export type GetAllResult = Result<Plan[], Error, "UNKNOWN_ERROR">;
+
 export interface PlanRepo {
+  getAll(): Promise<GetAllResult>;
   getByName(name: string): Promise<GetPlanByNameResult>;
   getHistoryByUserId(userId: string): Promise<GetPlanHistoryResult>;
 }

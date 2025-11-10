@@ -22,6 +22,7 @@ import { LinkButton } from "@/components/link-button";
 import { useModules } from "./_hooks/use-modules";
 import { MODULE_CATEGORIES_MAPPING } from "./modules-config";
 import { ModuleCardSkeleton } from "./_components/module-card-skeleton";
+import { Card, CardContent } from "@oppsys/ui/components/card";
 
 export default function ModulesPage() {
   const navigate = useNavigate();
@@ -95,7 +96,7 @@ export default function ModulesPage() {
       <div>
         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <div>
-            <H2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+            <H2 className="md:text-3xl text-foreground">
               Catalogue & Formations
             </H2>
 
@@ -226,8 +227,8 @@ export default function ModulesPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="card text-center py-12">
-                        <div>
+                      <Card className="text-center py-12">
+                        <CardContent>
                           <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                           <H4 className="text-lg font-medium mb-2">
                             Aucun résultat
@@ -235,8 +236,8 @@ export default function ModulesPage() {
                           <P className="text-muted-foreground">
                             Essayez de modifier vos critères de recherche
                           </P>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     )}
                   </>
                 ) : (
@@ -336,8 +337,8 @@ export default function ModulesPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="card text-center py-12">
-                        <div>
+                      <Card className="text-center py-12">
+                        <CardContent>
                           <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                           <H4 className="text-lg font-medium mb-2">
                             Aucun résultat
@@ -345,8 +346,8 @@ export default function ModulesPage() {
                           <P className="text-muted-foreground">
                             Essayez de modifier vos critères de recherche
                           </P>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     )}
                   </>
                 ) : (

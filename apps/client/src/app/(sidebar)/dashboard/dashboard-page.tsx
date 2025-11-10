@@ -53,10 +53,10 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <H2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">
+            <H2 className="md:text-3xl text-foreground">
               {`Bienvenue, ${user?.fullName?.split(" ")[0] || "Utilisateur"}`}
             </H2>
-            <P className="">
+            <P className="text-muted-foreground mt-2">
               {dashboardOverview.data?.periodUsage.totalUsage &&
               dashboardOverview.data?.periodUsage.totalUsage > 0
                 ? `Vous avez utilisé ${dashboardOverview.data?.periodUsage.totalUsage} modules ce mois-ci.`

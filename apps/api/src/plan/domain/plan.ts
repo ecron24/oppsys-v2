@@ -15,7 +15,7 @@ export const PlanSchema = z.object({
   isActive: BooleanNullableSchema,
   createdAt: StringNullableSchema,
   updatedAt: StringNullableSchema,
-  features: nullableSchema(z.any()),
+  features: nullableSchema(z.string().array()),
   stripePriceId: StringNullableSchema,
   stripeProductId: StringNullableSchema,
 });

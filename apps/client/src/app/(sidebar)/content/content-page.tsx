@@ -17,6 +17,7 @@ import { WithHeader } from "../_components/with-header";
 import { LinkButton } from "@/components/link-button";
 import { routes } from "@/routes";
 import { DialogViewContent } from "./components/dialog-view-content";
+import { Card, CardContent } from "@oppsys/ui/components/card";
 
 export default function ContentPage() {
   {
@@ -168,8 +169,9 @@ export default function ContentPage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <H2 className="text-2xl font-bold">Mon Contenu</H2>
-              <P className="text-muted-foreground">
+              <H2 className="md:text-3xl text-foreground">Mon Contenu</H2>
+
+              <P className="text-muted-foreground mt-2">
                 Gérez tout le contenu que vous avez généré.
               </P>
             </div>
@@ -184,8 +186,8 @@ export default function ContentPage() {
 
           <RecentActivityHorizontal />
 
-          <div className="card">
-            <div className="flex space-x-4">
+          <Card className="">
+            <CardContent className="flex space-x-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -207,8 +209,8 @@ export default function ContentPage() {
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {paginatedContent.length === 0 ? (
             <div className="text-center py-12">

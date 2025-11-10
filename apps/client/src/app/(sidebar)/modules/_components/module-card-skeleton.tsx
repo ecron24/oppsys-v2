@@ -1,13 +1,14 @@
 import { Skeleton } from "@oppsys/ui";
 import type { ViewMode } from "../types";
+import { Card, CardContent } from "@oppsys/ui/components/card";
 
 export function ModuleCardSkeleton({
   viewMode = "grid",
 }: ModuleCardSkeletonProps) {
   if (viewMode === "list") {
     return (
-      <div className="card hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between p-4">
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
             <Skeleton className="bg-muted p-3 rounded-lg h-10 w-10" />
             <div className="flex-1">
@@ -25,8 +26,8 @@ export function ModuleCardSkeleton({
             </div>
           </div>
           <Skeleton className="h-9 w-24 ml-4" />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
