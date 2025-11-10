@@ -15,15 +15,19 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         "destructive-outline":
-          "text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20 dark:text-destructive-300 dark:hover:bg-destructive/20 dark:focus-visible:ring-destructive/30",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         muted: "bg-muted shadow-xs text-muted-foreground hover:bg-muted/70",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        "secondary-outline":
+          "text-secondary bg-secondary-foreground hover:bg-secondary/15",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        success:
+          "text-white bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

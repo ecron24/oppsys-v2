@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "pnpm turbo dev",
     "check-types": "pnpm turbo check-types",
     "lint": "pnpm turbo lint",
     "typegen": "pnpm turbo typegen",

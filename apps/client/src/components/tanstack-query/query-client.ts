@@ -13,6 +13,7 @@ export const queryKeys = {
   dashboard: {
     overview: (period: string) => ["dashboard", "overview", period],
     modulesStats: (period: string) => ["dashboard", "modulesStats", period],
+    recentActivity: (limit: string) => ["dashboard", "recentActivity", limit],
     performanceStats: ["dashboard", "performanceStats"],
   },
   modules: {

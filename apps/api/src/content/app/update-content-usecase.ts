@@ -14,6 +14,17 @@ export const updateContentUseCase = buildUseCase()
   .input(UpdateContentInput)
   .handle(async (ctx, input) => {
     const { id, userId, updateData } = input;
-    const result = await ctx.contentRepo.update({ id, userId, updateData });
+    const contentResult = await ctx.contentRepo.getById({ id, userId });
+    if (!contentResult.success) return contentResult;
+    const oldMetadata = contentResult.data?.metadata ?? {};
+    const newMetadata = updateData?.metadata ?? {};
+    const result = await ctx.contentRepo.update({
+      id,
+      userId,
+      updateData: {
+        ...updateData,
+        metadata: { ...oldMetadata, ...newMetadata },
+      },
+    });
     return result;
   });

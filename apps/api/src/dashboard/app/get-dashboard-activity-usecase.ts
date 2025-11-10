@@ -37,8 +37,8 @@ export const getDashboardActivityUseCase = buildUseCase()
           id: usage.id,
           type: "usage" as const,
           date: usage.usedAt || "",
-          moduleName: "Module inconnu",
-          moduleType: "unknown",
+          moduleName: usage.modules?.name || "Module inconnu",
+          moduleType: usage.modules?.type || "unknown",
           status: usage.status || "",
           creditsUsed: usage.creditsUsed,
         };
@@ -50,8 +50,8 @@ export const getDashboardActivityUseCase = buildUseCase()
           date: content.createdAt,
           title: content.title,
           contentType: content.type,
-          moduleName: "Module inconnu",
-          moduleType: "unknown",
+          moduleName: content.modules?.name || "Module inconnu",
+          moduleType: content.modules?.type || "unknown",
         };
       }),
     ]

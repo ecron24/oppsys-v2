@@ -11,6 +11,8 @@ import type {
   GetContentStatsResult,
   SearchContentResult,
   SubmitContentForApprovalResult,
+  UpdateContentApprovalHistoryResult,
+  UpdateContentApprovalParams,
   UpdateContentResult,
 } from "../domain/content-repo";
 import {
@@ -204,6 +206,7 @@ export class ContentRepoSupabase implements ContentRepo {
             id,
             name,
             slug,
+            type,
             category
           )
         `,
@@ -455,6 +458,58 @@ export class ContentRepoSupabase implements ContentRepo {
       }
 
       const mapped = data.map(toCamelCase) as ContentApproval[];
+      return {
+        success: true,
+        data: mapped,
+      } as const;
+    });
+  }
+
+  async updateContentApproval(
+    params: UpdateContentApprovalParams
+  ): Promise<UpdateContentApprovalHistoryResult> {
+    return await tryCatch(async () => {
+      const { data, error } = await this.supabase
+        .from("content_approvals")
+        .update({
+          approver_id: params.userId,
+          status: params.status,
+          feedback: params.feedback,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("content_id", params.contentId)
+        .select(
+          `
+          *,
+          approver:profiles(
+            id,
+            full_name,
+            email
+          )
+        `
+        )
+        .maybeSingle();
+
+      if (error) {
+        this.logger.error("[getApprovalHistory] failed", error, {
+          id: params.contentId,
+        });
+        return {
+          success: false,
+          kind: "UNKNOWN_ERROR",
+          error: new Error("unknown error"),
+        } as const;
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          kind: "NOT_FOUND",
+          error: new Error("content not found : id=" + params.id),
+        } as const;
+      }
+
+      const mapped = toCamelCase(data) as ContentApproval;
       return {
         success: true,
         data: mapped,

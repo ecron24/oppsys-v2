@@ -46,6 +46,16 @@ export type GetContentApprovalHistoryResult = Result<
   "UNKNOWN_ERROR"
 >;
 
+export type UpdateContentApprovalHistoryResult = Result<
+  ContentApproval,
+  Error,
+  "UNKNOWN_ERROR" | "NOT_FOUND"
+>;
+export type UpdateContentApprovalParams = Partial<ContentApproval> & {
+  contentId: string;
+  userId: string;
+};
+
 export interface ContentRepo {
   getStats(params: {
     userId: string;
@@ -89,4 +99,8 @@ export interface ContentRepo {
   getApprovalHistory(params: {
     contentId: string;
   }): Promise<GetContentApprovalHistoryResult>;
+
+  updateContentApproval(
+    params: UpdateContentApprovalParams
+  ): Promise<UpdateContentApprovalHistoryResult>;
 }

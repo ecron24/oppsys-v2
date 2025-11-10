@@ -5,6 +5,8 @@ import {
   StringNullableSchema,
   UuidSchema,
 } from "src/common/common-schema";
+import { ModuleSchema } from "src/modules/domain/module";
+import { ContentMetadataSchema } from "./content-metadata";
 
 export const ContentSchema = z.object({
   id: UuidSchema,
@@ -17,13 +19,22 @@ export const ContentSchema = z.object({
   url: nullableSchema(z.url()),
   filePath: StringNullableSchema,
   moduleSlug: z.string(),
-  moduleType: StringNullableSchema,
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  metadata: ContentMetadataSchema,
+  htmlPreview: StringNullableSchema,
   tags: z.array(z.string()).optional(),
   isFavorite: z.boolean().optional(),
   status: z.string().optional(),
   createdAt: IsoDatetime,
   updatedAt: nullableSchema(IsoDatetime),
+  modules: nullableSchema(
+    ModuleSchema.pick({
+      id: true,
+      name: true,
+      slug: true,
+      category: true,
+      type: true,
+    })
+  ),
 });
 export type Content = z.infer<typeof ContentSchema>;
 

@@ -25,4 +25,14 @@ export const dashboardService = {
       })
     );
   },
+
+  async getActivity(query: { limit?: number }) {
+    return await handleApiCall(
+      await honoClient.api.dashboard.activity.$get({
+        query: {
+          limit: query.limit?.toString(),
+        },
+      })
+    );
+  },
 };

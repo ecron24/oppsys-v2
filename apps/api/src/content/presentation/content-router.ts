@@ -32,6 +32,10 @@ import {
   GetAllContentUseCaseQuery,
 } from "../app/get-all-content-use-case";
 import { describeRoute, validator } from "hono-openapi";
+import {
+  UpdateContentApprovalBody,
+  updateContentApprovalUseCase,
+} from "../app/update-content-approval-use-case";
 
 export const contentRouter = honoRouter((ctx) => {
   const router = new Hono()
@@ -141,6 +145,25 @@ export const contentRouter = honoRouter((ctx) => {
       async (c) => {
         const id = c.req.param("id");
         const result = await getApprovalHistoryUseCase(ctx, { contentId: id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
+    .put(
+      "/generated/:id/approval-history",
+      describeRoute({
+        description: "Update approval history for generated content",
+      }),
+      zValidatorWrapper("json", UpdateContentApprovalBody),
+      validator("json", UpdateContentApprovalBody),
+      async (c) => {
+        const id = c.req.param("id");
+        const body = c.req.valid("json");
+        const user = getUserInContext(c);
+        const result = await updateContentApprovalUseCase(ctx, {
+          id,
+          userId: user.id,
+          updateData: body,
+        });
         return handleResultResponse(c, result, { oppSysContext: ctx });
       }
     )
