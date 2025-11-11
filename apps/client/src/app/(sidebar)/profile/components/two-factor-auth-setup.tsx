@@ -1,6 +1,4 @@
-// src/components/account/TwoFactorAuthSetup.jsx - VERSION SANS TRADUCTIONS
-import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { useState } from "react";
 import {
   Shield,
   CheckCircle,
@@ -9,68 +7,41 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@/components/auth/auth-types";
+import { Button, H4, Input, Label, P } from "@oppsys/ui";
+import { authService } from "@/components/auth/services/auth-service";
 
-const TwoFactorAuthSetup = ({ userId }) => {
-  const [loading, setLoading] = useState(false);
+export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
   const [enrolling, setEnrolling] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [disabling, setDisabling] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [qrCode, setQrCode] = useState(null);
-  const [secret, setSecret] = useState(null);
-  const [factorId, setFactorId] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string | null>(null);
+  const [factorId, setFactorId] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
-  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
-
-  // Vérifier le statut 2FA
-  useEffect(() => {
-    const check2FAStatus = async () => {
-      if (!userId) return;
-
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("twofa_enabled")
-          .eq("id", userId)
-          .single();
-
-        if (error) throw error;
-        setIs2FAEnabled(data?.twofa_enabled || false);
-      } catch (err) {
-        console.error("Error checking 2FA status:", err);
-        setError("Erreur lors de la vérification du statut 2FA");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    check2FAStatus();
-  }, [userId]);
+  const is2FAEnabled = user.twofaEnabled || false;
 
   const startMFAEnrollment = async () => {
-    try {
-      setEnrolling(true);
-      setError(null);
-      setSuccess(null);
+    setEnrolling(true);
+    setError(null);
+    setSuccess(null);
 
-      const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: "totp",
-        friendlyName: "My App",
-      });
+    const result = await authService.enrollMfa({
+      factorType: "totp",
+      friendlyName: "My App",
+    });
+    setEnrolling(false);
 
-      if (error) throw error;
-
-      setQrCode(data.totp.qr_code);
-      setSecret(data.totp.secret);
-      setFactorId(data.id);
-    } catch (err) {
-      console.error("Error starting MFA enrollment:", err);
-      setError(err.message || "Erreur lors de la configuration 2FA");
-    } finally {
-      setEnrolling(false);
+    if (result.success) {
+      setQrCode(result.data.totp.qrCode);
+      setSecret(result.data.totp.secret);
+      setFactorId(result.data.id);
+      return;
     }
+    setError(result.error);
   };
 
   const verifyTOTP = async () => {
@@ -94,23 +65,21 @@ const TwoFactorAuthSetup = ({ userId }) => {
 
       if (challengeError) throw challengeError;
 
-      const { data: verifyData, error: verifyError } =
-        await supabase.auth.mfa.verify({
-          factorId: factorId,
-          challengeId: challengeData.id,
-          code: verificationCode,
-        });
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: factorId,
+        challengeId: challengeData.id,
+        code: verificationCode,
+      });
 
       if (verifyError) throw verifyError;
 
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ twofa_enabled: true })
-        .eq("id", userId);
+        .eq("id", user.id);
 
       if (updateError) throw updateError;
 
-      setIs2FAEnabled(true);
       setQrCode(null);
       setSecret(null);
       setFactorId(null);
@@ -118,7 +87,8 @@ const TwoFactorAuthSetup = ({ userId }) => {
       setSuccess("Authentification à deux facteurs activée avec succès !");
     } catch (err) {
       console.error("Error verifying TOTP:", err);
-      setError(err.message || "Erreur lors de la vérification");
+      const error = err as Error;
+      setError(error?.message || "Erreur lors de la vérification");
     } finally {
       setVerifying(false);
     }
@@ -154,15 +124,15 @@ const TwoFactorAuthSetup = ({ userId }) => {
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ twofa_enabled: false })
-        .eq("id", userId);
+        .eq("id", user.id);
 
       if (updateError) throw updateError;
 
-      setIs2FAEnabled(false);
       setSuccess("Authentification à deux facteurs désactivée");
     } catch (err) {
       console.error("Error disabling 2FA:", err);
-      setError(err.message || "Erreur lors de la désactivation");
+      const error = err as Error;
+      setError(error?.message || "Erreur lors de la désactivation");
     } finally {
       setDisabling(false);
     }
@@ -171,37 +141,25 @@ const TwoFactorAuthSetup = ({ userId }) => {
   const resetError = () => setError(null);
   const resetSuccess = () => setSuccess(null);
 
-  if (loading) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-        <div className="flex items-center justify-center py-6">
-          <RefreshCw className="mr-2 h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="text-muted-foreground">
-            Chargement des paramètres d'authentification...
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="rounded-lg bg-gradient-to-br from-primary to-orange-600 p-3">
+          <div className="rounded-lg bg-gradient-primary p-3">
             <Shield className="h-5 w-5 text-white" />
           </div>
-          <h3 className="text-lg font-semibold text-card-foreground">
+          <H4 className="text-lg font-semibold text-card-foreground">
             Authentification à deux facteurs
-          </h3>
+          </H4>
         </div>
         {(error || success) && (
-          <button
+          <Button
             onClick={error ? resetError : resetSuccess}
-            className="text-muted-foreground transition-colors hover:text-card-foreground"
+            variant={"ghost"}
+            size={"icon"}
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -210,8 +168,8 @@ const TwoFactorAuthSetup = ({ userId }) => {
           <div className="flex items-center">
             <AlertCircle className="mr-3 h-5 w-5 text-destructive" />
             <div>
-              <p className="text-sm font-medium text-destructive">Erreur</p>
-              <p className="mt-1 text-sm text-destructive/80">{error}</p>
+              <P className="text-sm font-medium text-destructive">Erreur</P>
+              <P className="mt-1 text-sm text-destructive/80">{error}</P>
             </div>
           </div>
         </div>
@@ -222,8 +180,8 @@ const TwoFactorAuthSetup = ({ userId }) => {
           <div className="flex items-center">
             <CheckCircle className="mr-3 h-5 w-5 text-green-600" />
             <div>
-              <p className="text-sm font-medium text-green-800">Succès</p>
-              <p className="mt-1 text-sm text-green-700">{success}</p>
+              <P className="text-sm font-medium text-green-800">Succès</P>
+              <P className="mt-1 text-sm text-green-700">{success}</P>
             </div>
           </div>
         </div>
@@ -236,20 +194,20 @@ const TwoFactorAuthSetup = ({ userId }) => {
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-card-foreground">
+              <P className="font-medium text-card-foreground">
                 Authentification à deux facteurs activée
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              </P>
+              <P className="mt-1 text-sm text-muted-foreground">
                 Votre compte est protégé par une couche de sécurité
                 supplémentaire.
-              </p>
+              </P>
             </div>
           </div>
 
-          <button
+          <Button
             onClick={disableMFA}
             disabled={disabling}
-            className="inline-flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-50"
+            variant={"destructive-outline"}
           >
             {disabling ? (
               <>
@@ -262,19 +220,19 @@ const TwoFactorAuthSetup = ({ userId }) => {
                 Désactiver l'authentification à deux facteurs
               </>
             )}
-          </button>
+          </Button>
         </div>
       ) : qrCode ? (
         <div className="space-y-6">
           <div className="space-y-4">
             <div>
-              <p className="mb-4 text-card-foreground">
+              <P className="mb-4 text-card-foreground">
                 <span className="font-semibold">Étape 1:</span>{" "}
                 <span className="text-muted-foreground">
                   Scannez ce code QR avec votre application d'authentification
                   (Google Authenticator, Authy, Microsoft Authenticator, etc.)
                 </span>
-              </p>
+              </P>
 
               <div className="mb-4 flex items-center justify-center rounded-lg border border-border bg-white p-6">
                 <img
@@ -295,7 +253,7 @@ const TwoFactorAuthSetup = ({ userId }) => {
             </div>
 
             <div>
-              <label
+              <Label
                 htmlFor="verificationCode"
                 className="mb-3 block text-sm font-medium text-card-foreground"
               >
@@ -303,9 +261,9 @@ const TwoFactorAuthSetup = ({ userId }) => {
                 <span className="text-muted-foreground">
                   Entrez le code de vérification à 6 chiffres
                 </span>
-              </label>
+              </Label>
               <div className="flex space-x-3">
-                <input
+                <Input
                   id="verificationCode"
                   type="text"
                   value={verificationCode}
@@ -315,14 +273,13 @@ const TwoFactorAuthSetup = ({ userId }) => {
                     )
                   }
                   placeholder="123456"
-                  className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   maxLength={6}
                   disabled={verifying}
                 />
-                <button
+                <Button
                   onClick={verifyTOTP}
                   disabled={verifying || verificationCode.length !== 6}
-                  className="rounded-lg bg-gradient-to-r from-primary to-orange-600 px-6 py-2 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                  className="bg-gradient-primary"
                 >
                   {verifying ? (
                     <div className="flex items-center gap-2">
@@ -332,47 +289,47 @@ const TwoFactorAuthSetup = ({ userId }) => {
                   ) : (
                     "Vérifier"
                   )}
-                </button>
+                </Button>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <P className="mt-2 text-sm text-muted-foreground">
                 Saisissez le code à 6 chiffres affiché dans votre application
                 d'authentification.
-              </p>
+              </P>
             </div>
           </div>
 
           <div className="border-t border-border pt-4">
-            <button
+            <Button
               onClick={() => {
                 setQrCode(null);
                 setSecret(null);
                 setFactorId(null);
                 setVerificationCode("");
               }}
-              className="text-sm text-muted-foreground underline transition-colors hover:text-card-foreground"
+              variant={"muted"}
             >
               Annuler la configuration
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
         <div className="space-y-6">
           <div>
-            <p className="mb-3 text-card-foreground">
+            <P className="mb-3 text-card-foreground">
               L'authentification à deux facteurs (2FA) ajoute une couche
               supplémentaire de sécurité à votre compte.
-            </p>
-            <p className="text-sm text-muted-foreground">
+            </P>
+            <P className="text-sm text-muted-foreground">
               Une fois activée, vous devrez fournir à la fois votre mot de passe
               et un code unique généré par une application d'authentification
               pour accéder à votre compte.
-            </p>
+            </P>
           </div>
 
-          <button
+          <Button
             onClick={startMFAEnrollment}
             disabled={enrolling}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-gradient-primary"
           >
             {enrolling ? (
               <>
@@ -385,11 +342,13 @@ const TwoFactorAuthSetup = ({ userId }) => {
                 Activer l'authentification à deux facteurs
               </>
             )}
-          </button>
+          </Button>
         </div>
       )}
     </div>
   );
 };
 
-export default TwoFactorAuthSetup;
+type TwoFactorAuthSetupProps = {
+  user: User;
+};

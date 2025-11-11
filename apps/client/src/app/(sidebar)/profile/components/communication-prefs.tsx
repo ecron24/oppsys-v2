@@ -1,7 +1,5 @@
-// src/components/account/CommunicationPrefs.jsx
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
-import { toast } from "sonner";
+import { toast } from "@oppsys/ui";
 import {
   Mail,
   Shield,
@@ -12,17 +10,29 @@ import {
   RefreshCw,
   RotateCcw,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-const CommunicationPrefs = ({ clientId }) => {
+export const CommunicationPrefs = ({ clientId }: CommunicationPrefsProps) => {
   const [marketingEmails, setMarketingEmails] = useState(false);
   const [productUpdates, setProductUpdates] = useState(false);
   const [securityAlerts, setSecurityAlerts] = useState(true);
   const [usageReports, setUsageReports] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(null);
-  const [initialPrefs, setInitialPrefs] = useState({});
+  const [initialPrefs, setInitialPrefs] = useState<{
+    client_id: string;
+    marketing_emails: boolean;
+    product_updates: boolean;
+    security_alerts: boolean;
+    usage_reports: boolean;
+    updated_at: string;
+  } | null>(null);
+
+  // FIXME: I just avoid linter
+  void error;
+  void success;
 
   useEffect(() => {
     const fetchPreferences = async () => {
@@ -30,6 +40,7 @@ const CommunicationPrefs = ({ clientId }) => {
       try {
         setLoading(true);
         setError(null);
+        // TODO: use api
         const { data, error } = await supabase
           .from("communication_preferences")
           .select("*")
@@ -47,7 +58,7 @@ const CommunicationPrefs = ({ clientId }) => {
           setUsageReports(data.usage_reports || false);
           setInitialPrefs(data);
         }
-      } catch (err) {
+      } catch {
         setError("Erreur lors du chargement des préférences");
       } finally {
         setLoading(false);
@@ -57,10 +68,10 @@ const CommunicationPrefs = ({ clientId }) => {
   }, [clientId]);
 
   const hasChanges =
-    initialPrefs.marketing_emails !== marketingEmails ||
-    initialPrefs.product_updates !== productUpdates ||
-    initialPrefs.security_alerts !== securityAlerts ||
-    initialPrefs.usage_reports !== usageReports;
+    initialPrefs?.marketing_emails !== marketingEmails ||
+    initialPrefs?.product_updates !== productUpdates ||
+    initialPrefs?.security_alerts !== securityAlerts ||
+    initialPrefs?.usage_reports !== usageReports;
 
   const savePreferences = async () => {
     if (!clientId) return;
@@ -95,7 +106,7 @@ const CommunicationPrefs = ({ clientId }) => {
 
       setInitialPrefs(prefsData); // Mettre à jour l'état initial après sauvegarde
       toast.success("Préférences sauvegardées avec succès");
-    } catch (err) {
+    } catch {
       toast.error("Erreur lors de la sauvegarde");
       setError("Erreur lors de la sauvegarde");
     } finally {
@@ -290,4 +301,6 @@ const CommunicationPrefs = ({ clientId }) => {
   );
 };
 
-export default CommunicationPrefs;
+type CommunicationPrefsProps = {
+  clientId?: string;
+};

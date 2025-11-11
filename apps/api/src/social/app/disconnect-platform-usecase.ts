@@ -18,6 +18,6 @@ export const disconnectPlatformUseCase = buildUseCase()
 
     return {
       success: true,
-      data: undefined,
-    };
+      data: "ok",
+    } as const;
   });

@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@oppsys/ui";
 import { contentService } from "../services/content-service";
 import type { Content } from "../types";
-import type { User } from "@/components/auth/types";
+import type { User } from "@/components/auth/auth-types";
 
 export const useRealtimeSubscription = (
   user: User | null,

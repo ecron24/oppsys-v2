@@ -1,6 +1,6 @@
 import { handleApiCall } from "@/lib/handle-api-call";
 import { honoClient } from "@/lib/hono-client";
-import type { User } from "../types";
+import type { User } from "../auth-types";
 
 export const userService = {
   async getMe() {

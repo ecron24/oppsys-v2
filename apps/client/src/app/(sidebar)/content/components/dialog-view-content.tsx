@@ -12,7 +12,7 @@ import { getCorrectModuleSlug } from "../utils/content-utils";
 import { ContentPreview } from "./content-preview";
 import { Link } from "react-router";
 import { Calendar, Edit, Share2, Trash, XCircle } from "lucide-react";
-import type { User } from "@/components/auth/types";
+import type { User } from "@/components/auth/auth-types";
 
 export function DialogViewContent({
   content,

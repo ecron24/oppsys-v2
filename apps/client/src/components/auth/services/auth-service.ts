@@ -2,7 +2,12 @@ import { handleApiCall } from "@/lib/handle-api-call";
 import { supabase } from "@/lib/supabase";
 import { honoClient } from "@/lib/hono-client";
 import type { ApiResponse } from "@oppsys/types";
-import type { AuthChangeEvent, AuthSession, Provider } from "@oppsys/supabase";
+import type {
+  AuthChangeEvent,
+  AuthSession,
+  Provider,
+  MFAEnrollParams,
+} from "@oppsys/supabase";
 import { toCamelCase } from "@/lib/to-camel-case";
 
 export const authService = {
@@ -181,6 +186,27 @@ export const authService = {
         user: data.user ? toCamelCase(data.user) : null,
         session: data.session ? toCamelCase(data.session) : null,
       },
+      status: 200,
+    } as const;
+  },
+
+  async enrollMfa(params: MFAEnrollParams) {
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: "My App",
+    });
+    if (error) {
+      console.error("[enrollMfa]: ", error, { params });
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: toCamelCase(data),
       status: 200,
     } as const;
   },

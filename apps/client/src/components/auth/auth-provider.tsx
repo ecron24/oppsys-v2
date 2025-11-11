@@ -2,7 +2,7 @@ import { useEffect, useMemo, type PropsWithChildren } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { authService } from "./services/auth-service";
 import { userService } from "./services/user-service";
-import type { User } from "./types";
+import type { User } from "./auth-types";
 import { AuthContext, type AuthContextType } from "./auth-context";
 import { queryClient, queryKeys } from "../tanstack-query/query-client";
 

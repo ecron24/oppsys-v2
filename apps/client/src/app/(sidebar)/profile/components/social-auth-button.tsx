@@ -1,6 +1,6 @@
 // components/social/SocialAuthButton.jsx
 import { useState } from "react";
-import Button from "../ui/Button";
+import { Button } from "@oppsys/ui";
 import {
   Facebook,
   Instagram,
@@ -13,6 +13,7 @@ import {
   ExternalLink,
   AlertCircle,
 } from "lucide-react";
+import type { Platform, SocialConnection } from "../profile-types";
 
 // Configuration des plateformes
 const PLATFORM_CONFIG = {
@@ -67,7 +68,7 @@ const PLATFORM_CONFIG = {
   },
 };
 
-export default function SocialAuthButton({
+export function SocialAuthButton({
   platform,
   onConnect,
   loading = false,
@@ -77,7 +78,7 @@ export default function SocialAuthButton({
   showIcon = true,
   showText = true,
   className = "",
-}) {
+}: SocialAuthButtonProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const config = PLATFORM_CONFIG[platform];
 
@@ -165,8 +166,18 @@ export default function SocialAuthButton({
     </Button>
   );
 }
+type SocialAuthButtonProps = {
+  platform: Platform;
+  onConnect: (platform: Platform) => Promise<void>;
+  loading?: boolean;
+  disabled?: boolean;
+  size: "default" | "sm" | "lg";
+  variant: "default" | "branded" | "outline" | "ghost";
+  showIcon?: boolean;
+  showText?: boolean;
+  className?: string;
+};
 
-// Composant pour afficher plusieurs boutons de connexion
 export function SocialAuthButtons({
   platforms = [],
   onConnect,
@@ -175,7 +186,7 @@ export function SocialAuthButtons({
   size = "default",
   className = "",
   columns = 2,
-}) {
+}: SocialAuthButtonsProps) {
   const gridClasses = {
     1: "grid-cols-1",
     2: "grid-cols-1 sm:grid-cols-2",
@@ -198,20 +209,28 @@ export function SocialAuthButtons({
     </div>
   );
 }
+type SocialAuthButtonsProps = {
+  platforms: Platform[];
+  onConnect: (platform: Platform) => Promise<void>;
+  loading?: boolean;
+  variant?: "default" | "branded" | "outline" | "ghost";
+  size?: "default" | "sm" | "lg";
+  className?: string;
+  columns?: 1 | 2 | 3 | 4;
+};
 
-// Composant pour un bouton de connexion avec statut
 export function SocialAuthButtonWithStatus({
   platform,
   connection,
   onConnect,
   onDisconnect,
   loading = false,
-}) {
+}: SocialAuthButtonWithStatusProps) {
   const config = PLATFORM_CONFIG[platform];
-  const isConnected = connection?.is_valid;
+  const isConnected = connection?.isValid;
   const isExpiring =
-    connection?.expires_at &&
-    new Date(connection.expires_at) <
+    connection?.expiresAt &&
+    new Date(connection.expiresAt) <
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   if (isConnected) {
@@ -226,8 +245,8 @@ export function SocialAuthButtonWithStatus({
           <div>
             <p className="text-sm font-medium text-green-900">{config.name}</p>
             <p className="text-xs text-green-700">
-              {connection.platform_username
-                ? `@${connection.platform_username}`
+              {connection.platformUsername
+                ? `@${connection.platformUsername}`
                 : "Connecté"}
             </p>
             {isExpiring && (
@@ -279,3 +298,10 @@ export function SocialAuthButtonWithStatus({
     </div>
   );
 }
+type SocialAuthButtonWithStatusProps = {
+  platform: Platform;
+  connection: SocialConnection | null;
+  onConnect: (platform: Platform) => Promise<void>;
+  onDisconnect: (platform: Platform) => Promise<void>;
+  loading?: boolean;
+};

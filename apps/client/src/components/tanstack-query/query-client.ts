@@ -8,6 +8,7 @@ export const queryKeys = {
     user: ["auth", "user"],
   },
   user: {
+    all: () => ["user"],
     permissions: ["user", "permissions"],
   },
   dashboard: {

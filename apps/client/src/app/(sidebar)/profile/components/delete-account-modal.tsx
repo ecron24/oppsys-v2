@@ -1,8 +1,5 @@
-// src/components/account/DeleteAccountModal.jsx
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
-import { Modal } from "../ui/Modal";
+import { useNavigate } from "react-router";
 import {
   AlertTriangle,
   Trash2,
@@ -13,16 +10,23 @@ import {
   Mail,
   Database,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { Dialog, DialogContent } from "@oppsys/ui";
 
-export default function DeleteAccountModal({ isOpen, onClose, clientId }) {
+export function DeleteAccountModal({
+  isOpen,
+  onClose,
+  clientId,
+}: DeleteAccountModalProps) {
   const navigate = useNavigate();
 
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
 
   const handleDelete = async () => {
+    if (!clientId) return;
     if (confirmText !== "DELETE") {
       setError("Le texte de confirmation est incorrect.");
       return;
@@ -33,11 +37,12 @@ export default function DeleteAccountModal({ isOpen, onClose, clientId }) {
     setStep(2);
 
     try {
-      const { error: deleteError } = await supabase.rpc("delete_user_account", {
-        user_id: clientId,
-      });
+      // TODO: use api route to delete account
+      //   const { error: deleteError } = await supabase.rpc("delete_user_account", {
+      //     user_id: clientId,
+      //   });
 
-      if (deleteError) throw deleteError;
+      //   if (deleteError) throw deleteError;
 
       setStep(3);
 
@@ -56,8 +61,9 @@ export default function DeleteAccountModal({ isOpen, onClose, clientId }) {
       }, 3000);
     } catch (err) {
       console.error("Error deleting account:", err);
+      const error = err instanceof Error ? err : new Error(String(err));
       setError(
-        err.message || "Une erreur est survenue lors de la suppression."
+        error.message || "Une erreur est survenue lors de la suppression."
       );
       setStep(1);
     } finally {
@@ -226,17 +232,26 @@ export default function DeleteAccountModal({ isOpen, onClose, clientId }) {
   );
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      size="medium"
-      closeOnOverlayClick={!isDeleting}
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open) return;
+        handleClose();
+      }}
     >
-      <div className="bg-card text-card-foreground">
-        {step === 1 && renderConfirmationStep()}
-        {step === 2 && renderProcessingStep()}
-        {step === 3 && renderSuccessStep()}
-      </div>
-    </Modal>
+      <DialogContent>
+        <div className="bg-card text-card-foreground">
+          {step === 1 && renderConfirmationStep()}
+          {step === 2 && renderProcessingStep()}
+          {step === 3 && renderSuccessStep()}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
+
+type DeleteAccountModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  clientId?: string;
+};

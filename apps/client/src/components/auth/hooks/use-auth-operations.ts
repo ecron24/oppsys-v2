@@ -4,7 +4,7 @@ import { toast } from "@oppsys/ui";
 import { authService } from "../services/auth-service";
 import { userService } from "../services/user-service";
 import type { Provider } from "@oppsys/supabase";
-import type { User } from "../types";
+import type { User } from "../auth-types";
 import { routes } from "@/routes";
 
 export const useAuthOperations = () => {

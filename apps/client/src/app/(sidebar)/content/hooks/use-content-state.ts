@@ -1,7 +1,7 @@
 import { contentService } from "../services/content-service";
 import { toast } from "@oppsys/ui";
 import type { Content, ContentMetadata } from "../types";
-import type { User } from "@/components/auth/types";
+import type { User } from "@/components/auth/auth-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/components/tanstack-query/query-client";
 // import { mockContents } from "./mock-data";
