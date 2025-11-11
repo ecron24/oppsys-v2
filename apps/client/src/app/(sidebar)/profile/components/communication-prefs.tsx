@@ -10,8 +10,8 @@ import {
   RefreshCw,
   RotateCcw,
 } from "lucide-react";
-import { communicationPrefsService } from "../../communication-prefs/communication-prefs-service";
-import type { CommunicationPrefs as CommunicationPrefsType } from "../../communication-prefs/communication-prefs-types";
+import type { CommunicationPrefs as CommunicationPrefsType } from "@/components/communication-prefs/communication-prefs-types";
+import { communicationPrefsService } from "@/components/communication-prefs/communication-prefs-service";
 
 export const CommunicationPrefs = ({ clientId }: CommunicationPrefsProps) => {
   const [marketingEmails, setMarketingEmails] = useState(false);
