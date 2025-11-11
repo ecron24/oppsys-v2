@@ -1,6 +1,6 @@
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { useProfile } from "../hooks/use-profile";
-import { Button, H3 } from "@oppsys/ui";
+import { Button, H3, H4, P } from "@oppsys/ui";
 import { LoadingSpinner } from "@/components/loading";
 import { Download, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -32,16 +32,15 @@ export const DataTab = () => {
                 <Download className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h4 className="font-medium text-card-foreground">
+                <H4 className="font-medium text-card-foreground">
                   Exporter mes données
-                </h4>
-                <p className="mb-3 mt-1 text-sm text-muted-foreground">
+                </H4>
+                <P className="mb-3 mt-1 text-sm text-muted-foreground">
                   Téléchargez une copie de toutes vos données
-                </p>
+                </P>
                 <Button
                   onClick={() => user?.id && exportData()}
                   disabled={isExporting}
-                  className="flex items-center space-x-2 px-4 py-2"
                 >
                   {isExporting ? (
                     <LoadingSpinner size="sm" color="white" />
@@ -61,17 +60,16 @@ export const DataTab = () => {
                 <Trash2 className="h-5 w-5 text-destructive" />
               </div>
               <div className="flex-1">
-                <h4 className="font-medium text-destructive">
+                <H4 className="font-medium text-destructive">
                   Supprimer mon compte
-                </h4>
-                <p className="mb-3 mt-1 text-sm text-destructive/80">
+                </H4>
+                <P className="mb-3 mt-1 text-sm text-destructive/80">
                   Suppression définitive de toutes vos données
-                </p>
+                </P>
                 <Button
                   onClick={() => setDeleteModalOpen(true)}
                   disabled={isExporting}
                   variant="destructive"
-                  className="flex items-center space-x-2 px-4 py-2"
                 >
                   {isExporting ? (
                     <LoadingSpinner size="sm" color="white" />

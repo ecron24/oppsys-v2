@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSocialConnections } from "../hooks/use-social-connections";
-import { Button } from "@oppsys/ui";
+import { Button, H3, P } from "@oppsys/ui";
 import { LoadingSpinner } from "@/components/loading";
 import {
   CheckCircle,
@@ -37,13 +37,13 @@ export const SocialTab = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="mb-4 text-lg font-medium text-card-foreground">
+        <H3 className="mb-4 text-lg font-medium text-card-foreground">
           Connexions Réseaux Sociaux
-        </h3>
-        <p className="mb-6 text-sm text-muted-foreground">
+        </H3>
+        <P className="mb-6 text-sm text-muted-foreground">
           Connectez vos comptes sociaux pour publier automatiquement depuis vos
           modules IA.
-        </p>
+        </P>
 
         {/* Statistiques rapides */}
         {stats && (
@@ -52,10 +52,10 @@ export const SocialTab = () => {
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <div>
-                  <p className="text-lg font-semibold text-green-900">
+                  <P className="text-lg font-semibold text-green-900">
                     {stats.valid}
-                  </p>
-                  <p className="text-xs text-green-700">Connectés</p>
+                  </P>
+                  <P className="text-xs text-green-700">Connectés</P>
                 </div>
               </div>
             </div>
@@ -63,10 +63,10 @@ export const SocialTab = () => {
               <div className="flex items-center space-x-2">
                 <XCircle className="h-4 w-4 text-gray-600" />
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <P className="text-lg font-semibold text-gray-900">
                     {stats.invalid}
-                  </p>
-                  <p className="text-xs text-gray-700">Inactifs</p>
+                  </P>
+                  <P className="text-xs text-gray-700">Inactifs</P>
                 </div>
               </div>
             </div>
@@ -74,10 +74,10 @@ export const SocialTab = () => {
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-4 w-4 text-orange-600" />
                 <div>
-                  <p className="text-lg font-semibold text-orange-900">
+                  <P className="text-lg font-semibold text-orange-900">
                     {stats.expiringSoon}
-                  </p>
-                  <p className="text-xs text-orange-700">Expirent bientôt</p>
+                  </P>
+                  <P className="text-xs text-orange-700">Expirent bientôt</P>
                 </div>
               </div>
             </div>
@@ -85,9 +85,9 @@ export const SocialTab = () => {
               <div className="flex items-center space-x-2">
                 <Share2 className="h-4 w-4 text-blue-600" />
                 <div>
-                  <p className="text-lg font-semibold text-blue-900">
+                  <P className="text-lg font-semibold text-blue-900">
                     {stats.total}
-                  </p>
+                  </P>
                   <p className="text-xs text-blue-700">Total</p>
                 </div>
               </div>
@@ -97,12 +97,12 @@ export const SocialTab = () => {
 
         {/* Connexions rapides */}
         <div className="mb-6 rounded-lg bg-muted/30 p-6">
-          <h4 className="mb-3 font-medium">Connexions Rapides</h4>
-          <p className="mb-4 text-sm text-muted-foreground">
+          <H3 className="mb-3 font-medium">Connexions Rapides</H3>
+          <P className="mb-4 text-sm text-muted-foreground">
             {connections.length > 0
               ? "Gérez vos connexions existantes ou ajoutez de nouveaux réseaux :"
               : "Connectez vos réseaux sociaux préférés pour commencer :"}
-          </p>
+          </P>
           <SocialAuthButtons
             platforms={[
               "facebook",
@@ -121,7 +121,7 @@ export const SocialTab = () => {
         {/* Liste des connexions existantes */}
         {connections.length > 0 && (
           <div className="space-y-3">
-            <h4 className="font-medium">Connexions actuelles</h4>
+            <H3 className="font-medium">Connexions actuelles</H3>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {connections.map((connection) => {
                 const isExpiring =
@@ -153,10 +153,10 @@ export const SocialTab = () => {
                         />
                       </div>
                       <div>
-                        <p className="text-sm font-medium capitalize">
+                        <P className="text-sm font-medium capitalize">
                           {connection.platform}
-                        </p>
-                        <p
+                        </P>
+                        <P
                           className={`text-xs ${
                             connection.isValid
                               ? "text-green-700"
@@ -166,42 +166,39 @@ export const SocialTab = () => {
                           {connection.isValid ? "Connecté" : "Déconnecté"}
                           {connection.platformUsername &&
                             ` • @${connection.platformUsername}`}
-                        </p>
+                        </P>
                         {isExpiring && (
-                          <p className="mt-1 flex items-center text-xs text-orange-600">
+                          <P className="mt-1 flex items-center text-xs text-orange-600">
                             <AlertCircle className="mr-1 h-3 w-3" />
                             Expire bientôt
-                          </p>
+                          </P>
                         )}
                       </div>
                     </div>
 
                     <div className="flex space-x-2">
                       {connection.isValid && (
-                        <button
+                        <Button
                           onClick={() => refresh(connection.platform)}
                           disabled={isLoading}
-                          className="rounded p-1 text-blue-600 hover:bg-blue-100"
+                          variant={"secondary"}
+                          size={"icon"}
                           title="Actualiser"
                         >
                           <RefreshCw className="h-4 w-4" />
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button
                         onClick={() =>
                           connection.isValid
                             ? disconnect(connection.platform)
                             : connectMutation.mutate(connection.platform)
                         }
                         disabled={isLoading}
-                        className={`rounded px-3 py-1 text-xs ${
-                          connection.isValid
-                            ? "text-red-600 hover:bg-red-100"
-                            : "text-green-600 hover:bg-green-100"
-                        }`}
+                        variant={connection.isValid ? "destructive" : "success"}
                       >
                         {connection.isValid ? "Déconnecter" : "Reconnecter"}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );
@@ -212,9 +209,9 @@ export const SocialTab = () => {
 
         {/* Conseils d'utilisation */}
         <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <h4 className="mb-2 font-medium text-blue-900">
+          <H3 className="mb-2 font-medium text-blue-900">
             💡 Comment ça marche ?
-          </h4>
+          </H3>
           <ul className="space-y-1 text-sm text-blue-800">
             <li>• Connectez vos comptes sociaux une seule fois</li>
             <li>• Vos modules IA utilisent automatiquement ces connexions</li>
@@ -225,11 +222,7 @@ export const SocialTab = () => {
 
         {/* Bouton de rechargement */}
         <div className="mt-6">
-          <Button
-            onClick={() => refetchConnections()}
-            disabled={isLoading}
-            className="flex items-center space-x-2 px-6 py-2"
-          >
+          <Button onClick={() => refetchConnections()} disabled={isLoading}>
             {isLoading ? (
               <LoadingSpinner size="sm" color="white" />
             ) : (

@@ -23,4 +23,8 @@ export const queryKeys = {
   plans: {
     list: ["plans", "list"],
   },
+  social: {
+    socialConnections: ["social", "social-connections"],
+    socialStats: ["social", "social-stats"],
+  },
 };

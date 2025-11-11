@@ -7,10 +7,10 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import type { User } from "@/components/auth/auth-types";
-import { Button, H4, Input, Label, P } from "@oppsys/ui";
+import { Button, H4, Input, Label, P, toast } from "@oppsys/ui";
 import { authService } from "@/components/auth/services/auth-service";
+import { twoFactorService } from "@/components/auth/services/two-factor-service";
 
 export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
   const [enrolling, setEnrolling] = useState(false);
@@ -45,53 +45,28 @@ export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
   };
 
   const verifyTOTP = async () => {
-    try {
-      setVerifying(true);
-      setError(null);
-      setSuccess(null);
-
-      if (!verificationCode || verificationCode.length !== 6) {
-        throw new Error("Code à 6 chiffres requis");
-      }
-
-      if (!factorId) {
-        throw new Error("ID de facteur manquant");
-      }
-
-      const { data: challengeData, error: challengeError } =
-        await supabase.auth.mfa.challenge({
-          factorId: factorId,
-        });
-
-      if (challengeError) throw challengeError;
-
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: factorId,
-        challengeId: challengeData.id,
-        code: verificationCode,
-      });
-
-      if (verifyError) throw verifyError;
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ twofa_enabled: true })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
-
+    setVerifying(true);
+    setError(null);
+    setSuccess(null);
+    if (!factorId) {
+      toast.error("ID de facteur manquant");
+      return;
+    }
+    const verifyResult = await twoFactorService.verifyTOTP({
+      factorId,
+      verificationCode,
+    });
+    setVerifying(false);
+    if (verifyResult.success) {
       setQrCode(null);
       setSecret(null);
       setFactorId(null);
       setVerificationCode("");
       setSuccess("Authentification à deux facteurs activée avec succès !");
-    } catch (err) {
-      console.error("Error verifying TOTP:", err);
-      const error = err as Error;
-      setError(error?.message || "Erreur lors de la vérification");
-    } finally {
-      setVerifying(false);
+      return;
     }
+
+    setError(verifyResult.error);
   };
 
   const disableMFA = async () => {
@@ -102,40 +77,17 @@ export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
       return;
     }
 
-    try {
-      setDisabling(true);
-      setError(null);
-      setSuccess(null);
-
-      const { data: factorsData, error: factorsError } =
-        await supabase.auth.mfa.listFactors();
-      if (factorsError) throw factorsError;
-
-      const totpFactor = factorsData?.totp?.find(
-        (factor) => factor.status === "verified"
-      );
-      if (totpFactor) {
-        const { error: unenrollError } = await supabase.auth.mfa.unenroll({
-          factorId: totpFactor.id,
-        });
-        if (unenrollError) throw unenrollError;
-      }
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ twofa_enabled: false })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
-
+    setDisabling(true);
+    setError(null);
+    setSuccess(null);
+    const result = await twoFactorService.disableMfa();
+    setDisabling(false);
+    if (result.success) {
       setSuccess("Authentification à deux facteurs désactivée");
-    } catch (err) {
-      console.error("Error disabling 2FA:", err);
-      const error = err as Error;
-      setError(error?.message || "Erreur lors de la désactivation");
-    } finally {
-      setDisabling(false);
+      return;
     }
+
+    setError(result.error || "Erreur lors de la désactivation");
   };
 
   const resetError = () => setError(null);

@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@oppsys/ui";
 import { userService } from "@/components/auth/services/user-service";
 import { useAuthOperations } from "@/components/auth/hooks/use-auth-operations";
-import { profileService } from "../services/profile-service";
 import type { GeneralForm, SecurityForm } from "../profile-types";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { queryKeys } from "@/components/tanstack-query/query-client";
@@ -52,7 +51,7 @@ export const useProfile = () => {
   const exportDataMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("User not authenticated");
-      await profileService.exportUserData(user);
+      await userService.exportUserData(user);
     },
     onSuccess: () => {
       toast.success("Données exportées avec succès");

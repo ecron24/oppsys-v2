@@ -7,4 +7,7 @@ export {
   type Provider,
   type AuthChangeEvent,
   type MFAEnrollParams,
+  type MFAVerifyParams,
+  type MFAChallengeParams,
+  type MFAUnenrollParams,
 } from "@supabase/supabase-js";

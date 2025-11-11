@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@oppsys/ui";
 import { socialService } from "../services/social-service";
 import type { Platform } from "../profile-types";
+import { queryKeys } from "@/components/tanstack-query/query-client";
 
 export const useSocialConnections = () => {
   const queryClient = useQueryClient();
@@ -11,12 +12,12 @@ export const useSocialConnections = () => {
     isLoading: connectionsLoading,
     refetch: refetchConnections,
   } = useQuery({
-    queryKey: ["social-connections"],
+    queryKey: queryKeys.social.socialConnections,
     queryFn: () => socialService.getConnections(),
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["social-stats"],
+    queryKey: queryKeys.social.socialStats,
     queryFn: () => socialService.getStats(),
   });
 
@@ -38,8 +39,12 @@ export const useSocialConnections = () => {
           if (event.data.type === "SOCIAL_AUTH_SUCCESS") {
             popup?.close();
             toast.success(`${platform} connecté avec succès !`);
-            queryClient.invalidateQueries({ queryKey: ["social-connections"] });
-            queryClient.invalidateQueries({ queryKey: ["social-stats"] });
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.social.socialConnections,
+            });
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.social.socialStats,
+            });
             window.removeEventListener("message", messageHandler);
             resolve();
           } else if (event.data.type === "SOCIAL_AUTH_ERROR") {
@@ -68,8 +73,10 @@ export const useSocialConnections = () => {
       toast.success(`${platform} déconnecté`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["social-connections"] });
-      queryClient.invalidateQueries({ queryKey: ["social-stats"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.social.socialConnections,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.social.socialStats });
     },
     onError: () => {
       toast.error("Erreur lors de la déconnexion");
@@ -82,8 +89,10 @@ export const useSocialConnections = () => {
       toast.success(`Token ${platform} actualisé`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["social-connections"] });
-      queryClient.invalidateQueries({ queryKey: ["social-stats"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.social.socialConnections,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.social.socialStats });
     },
     onError: () => {
       toast.error("Erreur lors de l'actualisation");

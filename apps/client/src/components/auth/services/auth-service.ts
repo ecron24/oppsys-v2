@@ -7,6 +7,9 @@ import type {
   AuthSession,
   Provider,
   MFAEnrollParams,
+  MFAVerifyParams,
+  MFAChallengeParams,
+  MFAUnenrollParams,
 } from "@oppsys/supabase";
 import { toCamelCase } from "@/lib/to-camel-case";
 
@@ -207,6 +210,78 @@ export const authService = {
     return {
       success: true,
       data: toCamelCase(data),
+      status: 200,
+    } as const;
+  },
+
+  async verifyMfa(params: MFAVerifyParams) {
+    const { data, error } = await supabase.auth.mfa.verify(params);
+    if (error) {
+      console.error("[verifyMfa]: ", error, { params });
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: data ? toCamelCase(data) : null,
+      status: 200,
+    } as const;
+  },
+
+  async challengeMfa(params: MFAChallengeParams) {
+    const { data, error } = await supabase.auth.mfa.challenge(params);
+    if (error) {
+      console.error("[challengeMfa]: ", error, { params });
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: data ? toCamelCase(data) : null,
+      status: 200,
+    } as const;
+  },
+
+  async listFactorsMfa() {
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) {
+      console.error("[listFactors]: ", error);
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: data ? toCamelCase(data) : null,
+      status: 200,
+    } as const;
+  },
+
+  async unenroll(params: MFAUnenrollParams) {
+    const { data, error } = await supabase.auth.mfa.unenroll(params);
+    if (error) {
+      console.error("[listFactors]: ", error);
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: data ? toCamelCase(data) : null,
       status: 200,
     } as const;
   },
