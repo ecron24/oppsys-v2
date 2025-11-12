@@ -18,6 +18,9 @@ const HomePage = lazy(() => import("@/app/home-page"));
 const RegisterPage = lazy(() => import("@/app/(auth)/register/register-page"));
 const SearchPage = lazy(() => import("@/app/search/search-page"));
 const SidebarLayout = lazy(() => import("@/app/(sidebar)/sidebar-layout"));
+const CompleteProfilePage = lazy(
+  () => import("@/app/(sidebar)/complete-profile/complete-profile-page")
+);
 
 const router = createBrowserRouter([
   {
@@ -34,6 +37,10 @@ const router = createBrowserRouter([
       { path: routes.content.index(), element: <ContentPage /> },
       { path: routes.billing.index(), element: <BillingPage /> },
       { path: routes.profile.index(), element: <ProfilePage /> },
+      {
+        path: routes.completeProfile.index(),
+        element: <CompleteProfilePage />,
+      },
     ],
   },
   {
