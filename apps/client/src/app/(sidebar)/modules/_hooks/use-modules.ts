@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { modulesService } from "../_service/modulesService";
+import { modulesService } from "../_service/modules-service";
 import { queryKeys } from "@/components/tanstack-query/query-client";
 import { MODULES_CONFIG_MAPPING } from "../modules-config";
 import type { ModuleMapping } from "../types";

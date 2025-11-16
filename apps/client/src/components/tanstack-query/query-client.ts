@@ -19,6 +19,7 @@ export const queryKeys = {
   },
   modules: {
     list: ["modules", "list"],
+    id: (id: string) => ["modules", id],
   },
   plans: {
     list: ["plans", "list"],

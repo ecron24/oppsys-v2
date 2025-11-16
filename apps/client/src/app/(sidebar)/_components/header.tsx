@@ -69,10 +69,12 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
               </H1>
 
               {breadcrumbs && (
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
                   {breadcrumbs.map((crumb, idx) => (
                     <span key={idx} className="flex items-center">
-                      {idx > 0 && <span className="mx-1">/</span>}
+                      {idx < breadcrumbs.length && (
+                        <span className="mx-1">/</span>
+                      )}
                       <span className="capitalize">{crumb}</span>
                     </span>
                   ))}

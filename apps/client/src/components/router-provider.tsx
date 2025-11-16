@@ -4,6 +4,7 @@ import { AuthenticatedRoute } from "./guard/authenticated-route";
 import { routes } from "@/routes";
 import { GuestRoute } from "./guard/guest-route";
 import { lazy } from "react";
+import ModuleIdPage from "@/app/(sidebar)/modules/[id]/module-id-page";
 
 const ProfilePage = lazy(() => import("@/app/(sidebar)/profile/profile-page"));
 const DashboardPage = lazy(
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: routes.dashboard.index(), element: <DashboardPage /> },
       { path: routes.modules.index(), element: <ModulesPage /> },
+      { path: routes.modules.id(":moduleId"), element: <ModuleIdPage /> },
       { path: routes.content.index(), element: <ContentPage /> },
       { path: routes.billing.index(), element: <BillingPage /> },
       { path: routes.profile.index(), element: <ProfilePage /> },

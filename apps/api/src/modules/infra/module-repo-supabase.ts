@@ -87,17 +87,17 @@ export class ModuleRepoSupabase implements ModuleRepo {
 
       const { data, error } = await q.maybeSingle();
 
+      if (error) {
+        this.logger.error("[findByIdOrSlug] :", error, { idOrSlug });
+        throw error;
+      }
+
       if (!data) {
         return {
           success: false,
           kind: "MODULE_NOT_FOUND",
           error: new Error("MODULE not found : params=" + idOrSlug),
         } as const;
-      }
-
-      if (error) {
-        this.logger.error("[findByIdOrSlug] :", error, { idOrSlug });
-        throw error;
       }
 
       return {
