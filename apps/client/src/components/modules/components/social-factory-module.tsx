@@ -81,36 +81,6 @@ import type { RagDocument } from "../../documents/document-types";
 import type { LucideIcon } from "lucide-react";
 import { contentService } from "@/components/content/content-service.ts";
 
-// Types
-type SocialFactoryConfig = {
-  networks: Record<
-    string,
-    {
-      label: string;
-      cost: number;
-      iconKey: string;
-      maxImages: number;
-      bgColor?: string;
-      color?: string;
-    }
-  >;
-  postTypes: Record<
-    string,
-    {
-      label: string;
-      description: string;
-      iconKey: string;
-      cost: number;
-    }
-  >;
-  contentStyles: Record<string, { label: string }>;
-  objectives: Record<string, { label: string; iconKey: string }>;
-  ctaTypes: Array<{ value: string; label: string }>;
-  premiumFeatures: string[];
-};
-
-type ModuleWithConfig = Module & { config: SocialFactoryConfig };
-
 type Template = {
   id: string;
   name: string;
@@ -132,7 +102,7 @@ type Template = {
 };
 
 type SocialFactoryModuleProps = {
-  module: ModuleWithConfig;
+  module: Module;
 };
 
 export default function SocialFactoryModule({
@@ -147,28 +117,46 @@ export default function SocialFactoryModule({
 
   // CONFIGURATION VIA L'API
   const networksFromAPI = useMemo(
-    () => module?.config?.networks || {},
-    [module?.config?.networks]
+    () =>
+      module?.config && "networks" in module.config
+        ? module.config.networks
+        : {},
+    [module?.config]
   );
   const postTypesFromAPI = useMemo(
-    () => module?.config?.postTypes || {},
-    [module?.config?.postTypes]
+    () =>
+      module?.config && "postTypes" in module.config
+        ? module.config.postTypes
+        : {},
+    [module?.config]
   );
   const contentStylesFromAPI = useMemo(
-    () => module?.config?.contentStyles || {},
-    [module?.config?.contentStyles]
+    () =>
+      module?.config && "contentStyles" in module.config
+        ? module.config.contentStyles
+        : {},
+    [module?.config]
   );
   const objectivesFromAPI = useMemo(
-    () => module?.config?.objectives || {},
-    [module?.config?.objectives]
+    () =>
+      module?.config && "objectives" in module.config
+        ? module.config.objectives
+        : {},
+    [module?.config]
   );
   const ctaTypesFromAPI = useMemo(
-    () => module?.config?.ctaTypes || [],
-    [module?.config?.ctaTypes]
+    () =>
+      (module?.config && "ctaTypes" in module.config
+        ? module.config.ctaTypes
+        : []) as { value: string; label: string }[],
+    [module?.config]
   );
   const premiumFeaturesFromAPI = useMemo(
-    () => module?.config?.premiumFeatures || [],
-    [module?.config?.premiumFeatures]
+    () =>
+      module?.config && "premiumFeatures" in module.config
+        ? module.config.premiumFeatures
+        : [],
+    [module?.config]
   );
 
   // ÉTATS

@@ -18,7 +18,9 @@ function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-export function toSnakeCase<T extends object>(obj: T): CamelToSnakeObject<T> {
+export function toSnakeCase<T extends object | string>(
+  obj: T
+): CamelToSnakeObject<T> {
   if (Array.isArray(obj)) {
     return obj.map(toSnakeCase) as CamelToSnakeObject<T>;
   }
@@ -39,5 +41,5 @@ export function toSnakeCase<T extends object>(obj: T): CamelToSnakeObject<T> {
     return result as CamelToSnakeObject<T>;
   }
 
-  return obj as CamelToSnakeObject<T>;
+  return camelToSnake(obj) as CamelToSnakeObject<T>;
 }

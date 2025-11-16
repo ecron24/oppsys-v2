@@ -45,7 +45,7 @@ const FormationPromptingModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
 );
 const RealEstateLeaseGenerator = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/real-estate-lease-generator")
 );
 
 // ✅ NOUVEAUX MODULES AJOUTÉS

@@ -60,6 +60,6 @@ export const deleteTemplateUseCase = buildUseCase()
 
     return {
       success: true,
-      data: undefined,
+      data: "ok",
     };
   });

@@ -79,7 +79,7 @@ export const ConfigYoutubeSchema = z.object({
 const LeaseTypeSchema = z.object({
   cost: z.number(),
   label: z.string(),
-  durations: z.array(z.string()),
+  durations: z.array(z.coerce.number()),
   userModes: z.array(z.string()),
   complexity: z.string().optional(),
   description: z.string(),
