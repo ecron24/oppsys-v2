@@ -1,6 +1,6 @@
 import { Button, Badge, P } from "@oppsys/ui";
 import { Clock, AlertCircle, Star } from "lucide-react";
-import type { Module, ViewMode } from "../types";
+import type { Module, ViewMode } from "@/components/modules/module-types";
 import { Card } from "@oppsys/ui/components/card";
 import { MODULE_CATEGORIES_MAPPING } from "../modules-config";
 

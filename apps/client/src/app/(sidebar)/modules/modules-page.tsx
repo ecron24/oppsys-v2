@@ -15,7 +15,7 @@ import { CompactModuleCard } from "./_components/compact-module-card";
 import { ViewToggle } from "./_components/view-toggle";
 import { CategoryFilter } from "./_components/category-filter";
 import { ModuleCard } from "./_components/module-card";
-import type { ViewMode, TabValue } from "@/app/(sidebar)/modules/types";
+import type { ViewMode, TabValue } from "@/components/modules/module-types";
 import { routes } from "@/routes";
 import { WithHeader } from "../_components/with-header";
 import { LinkButton } from "@/components/link-button";

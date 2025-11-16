@@ -23,7 +23,6 @@ export default function ModuleIdPage() {
     moduleId || "<default>"
   );
   const { user } = useAuth();
-  console.log("module", module);
 
   if (isLoading) {
     return <PageLoader text="Chargement du module..." />;

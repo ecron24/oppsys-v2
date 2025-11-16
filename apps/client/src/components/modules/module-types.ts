@@ -1,4 +1,4 @@
-import type { honoClient } from "@/lib/hono-client";
+import { honoClient } from "@/lib/hono-client";
 import type { InferRequestType, InferResponseType } from "hono";
 import type { LucideIcon } from "lucide-react";
 import { lazy } from "react";
@@ -25,6 +25,10 @@ export type Module = ModuleApi & ModuleMapping;
 export type ListModulesQuerySchema = InferRequestType<
   typeof honoClient.api.modules.$get
 >["query"];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const execModule = honoClient.api.modules[":id"].execute.$post;
+export type ExecuteModuleBody = InferRequestType<typeof execModule>["json"];
 
 export type ViewMode = "grid" | "list";
 

@@ -1,5 +1,5 @@
 import { Badge, H4, P } from "@oppsys/ui";
-import type { Module } from "../types";
+import type { Module } from "@/components/modules/module-types";
 
 interface CompactModuleCardProps {
   module: Module;

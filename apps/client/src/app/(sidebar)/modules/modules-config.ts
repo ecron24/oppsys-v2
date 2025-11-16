@@ -18,29 +18,58 @@ import {
 import type {
   ModuleMapping,
   CategoryMapping,
-} from "@/app/(sidebar)/modules/types";
+} from "@/components/modules/module-types";
 
-// Placeholder component for missing modules
-const PlaceholderModule = lazy(() => import("./placeholder-module"));
-
-const AIWriterModule = PlaceholderModule;
-const DocumentGeneratorModule = PlaceholderModule;
-const TranscriptionModule = PlaceholderModule;
-const SocialFactoryModule = PlaceholderModule;
-const ArticleWriterModule = PlaceholderModule;
-const YouTubeModule = PlaceholderModule;
-const FormationChatGPTModule = PlaceholderModule;
-const FormationPromptingModule = PlaceholderModule;
-const RealEstateLeaseGenerator = PlaceholderModule;
+const AIWriterModule = lazy(
+  () => import("@/components/modules/components/ai-writer-module")
+);
+const DocumentGeneratorModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const TranscriptionModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const SocialFactoryModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const ArticleWriterModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const YouTubeModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const FormationChatGPTModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const FormationPromptingModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const RealEstateLeaseGenerator = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
 
 // ✅ NOUVEAUX MODULES AJOUTÉS
-const CompetitorAnalysisModule = PlaceholderModule;
-const SEOAnalyzerModule = PlaceholderModule;
-const DataAnalyzerModule = PlaceholderModule;
-const EmailCampaignModule = PlaceholderModule;
-const ContentTranslatorModule = PlaceholderModule;
-const TalentAnalyzerModule = PlaceholderModule;
-const LeadGeneratorModule = PlaceholderModule;
+const CompetitorAnalysisModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const SEOAnalyzerModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const DataAnalyzerModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const EmailCampaignModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const ContentTranslatorModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const TalentAnalyzerModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
+const LeadGeneratorModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
 
 export const MODULES_CONFIG_MAPPING: Record<string, ModuleMapping> = {
   "ai-writer": {

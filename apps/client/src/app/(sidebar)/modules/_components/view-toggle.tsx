@@ -1,5 +1,5 @@
 import { Grid3x3, List } from "lucide-react";
-import type { ViewMode } from "../types";
+import type { ViewMode } from "@/components/modules/module-types";
 
 export const ViewToggle = ({ viewMode, setViewMode }: ViewToggleProps) => (
   <div className="flex bg-muted rounded-lg p-1">

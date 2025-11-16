@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { modulesService } from "../_service/modules-service";
+import { modulesService } from "@/components/modules/service/modules-service";
 import { queryKeys } from "@/components/tanstack-query/query-client";
 import { MODULES_CONFIG_MAPPING } from "../modules-config";
-import type { ModuleMapping } from "../types";
+import type { ModuleMapping } from "@/components/modules/module-types";
 import { Bot } from "lucide-react";
 import { lazy } from "react";
 
-const PlaceholderModule = lazy(() => import("../placeholder-module"));
+const PlaceholderModule = lazy(
+  () => import("@/components/modules/components/placeholder-module")
+);
 
 export function useModules() {
   const { data, error, isLoading } = useQuery({
