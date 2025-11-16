@@ -4,6 +4,7 @@ import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
 import { InsufficientCreditError } from "../domain/exception";
+import { toCamelCase } from "src/lib/to-camel-case";
 
 export const ExecuteModuleBodySchema = z.object({
   input: z.record(z.string(), z.any()),
@@ -285,7 +286,7 @@ export const executeModuleUseCase = buildUseCase()
 
     const updatedUserResult = await ctx.profileRepo.getByIdWithPlan(user.id);
     if (!updatedUserResult.success) return updatedUserResult;
-    const responseData = {
+    const responseData = toCamelCase({
       usage_id: createUsageResult.data.id,
       output: output,
       credits_used: module.creditCost,
@@ -296,7 +297,7 @@ export const executeModuleUseCase = buildUseCase()
       module_slug: module.slug,
       execution_time_ms: executionTime,
       total_time_ms: executionTime,
-    };
+    });
 
     return { success: true, data: responseData } as const;
   });

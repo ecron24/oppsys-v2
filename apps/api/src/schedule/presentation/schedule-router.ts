@@ -64,11 +64,15 @@ export const scheduleRouter = honoRouter((ctx) => {
     )
 
     // Get user tasks
-    .get("/user-tasks", async (c) => {
-      const user = getUserInContext(c);
-      const result = await getUserTasksUseCase(ctx, { userId: user.id });
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    })
+    .get(
+      "/user-tasks",
+      describeRoute({ description: "Get user tasks" }),
+      async (c) => {
+        const user = getUserInContext(c);
+        const result = await getUserTasksUseCase(ctx, { userId: user.id });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    )
 
     // Update a scheduled task
     .put(
@@ -94,17 +98,21 @@ export const scheduleRouter = honoRouter((ctx) => {
     )
 
     // Delete a scheduled task
-    .delete("/task/:taskId", async (c) => {
-      const { taskId } = c.req.param();
-      const user = getUserInContext(c);
+    .delete(
+      "/task/:taskId",
+      describeRoute({ description: "Delete a scheduled task" }),
+      async (c) => {
+        const { taskId } = c.req.param();
+        const user = getUserInContext(c);
 
-      const result = await deleteScheduledTaskUseCase(ctx, {
-        userId: user.id,
-        taskId,
-      });
+        const result = await deleteScheduledTaskUseCase(ctx, {
+          userId: user.id,
+          taskId,
+        });
 
-      return handleResultResponse(c, result, { oppSysContext: ctx });
-    });
+        return handleResultResponse(c, result, { oppSysContext: ctx });
+      }
+    );
 
   return router;
 });

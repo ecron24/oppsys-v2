@@ -29,6 +29,10 @@ export type ListModulesQuerySchema = InferRequestType<
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const execModule = honoClient.api.modules[":id"].execute.$post;
 export type ExecuteModuleBody = InferRequestType<typeof execModule>["json"];
+export type ExecuteModuleData = InferResponseType<
+  typeof execModule,
+  200
+>["data"];
 
 export type ViewMode = "grid" | "list";
 

@@ -4,9 +4,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "concurrently --names type,server -c gray,blue 'tsc --watch' 'tsx watch src/index.ts'",
+    "dev": "concurrently --names type,server -c gray,blue 'tsc --watch' 'tsx watch src/app.ts'",
     "build": "tsc && tsc-alias && tsc-esm-fix dist",
-    "start": "tsx dist/index.js",
+    "start": "tsx dist/app.js",
     "check-types": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts ."
   },

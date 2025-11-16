@@ -4,9 +4,9 @@ import type {
   ContentMetadata,
   GetContentQuery,
   ProcessContentDecisionParams,
-} from "../types";
+} from "../../app/(sidebar)/content/types";
 import { handleApiCall } from "@/lib/handle-api-call";
-import type { Period } from "../../dashboard/services/dashboard-service";
+import type { Period } from "../../app/(sidebar)/dashboard/services/dashboard-service";
 import { toSnakeCase } from "@/lib/to-snake-case";
 
 export class ContentService {

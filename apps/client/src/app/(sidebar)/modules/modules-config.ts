@@ -30,7 +30,7 @@ const TranscriptionModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
 );
 const SocialFactoryModule = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/social-factory-module")
 );
 const ArticleWriterModule = lazy(
   () => import("@/components/modules/components/placeholder-module")

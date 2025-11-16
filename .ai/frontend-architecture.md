@@ -80,3 +80,5 @@ When go to another page, use `ROUTES` constants from `apps/api/src/routes.ts`.
 - "tailwindcss": "^4.1.13"
 - "react-router": "^7.9.3",
 - "@tanstack/react-form": "^1.23.7"
+
+"react-router-dom" => "router-dom"

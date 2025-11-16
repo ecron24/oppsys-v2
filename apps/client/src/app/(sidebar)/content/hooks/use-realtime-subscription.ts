@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@oppsys/ui";
-import { contentService } from "../services/content-service";
+import { contentService } from "@/components/content/content-service";
 import type { Content } from "../types";
 import type { User } from "@/components/auth/auth-types";
 
