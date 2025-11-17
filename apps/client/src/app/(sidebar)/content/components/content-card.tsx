@@ -6,7 +6,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
-import type { Content } from "../types";
+import type { Content } from "../content-types";
 import { Badge, Button, H4, P } from "@oppsys/ui";
 import { Card } from "@oppsys/ui/components/card";
 import { CONTENT_TYPES } from "../utils/constants";
@@ -87,7 +87,7 @@ export const ContentCard = ({
           </Button>
         )}
 
-        <Button onClick={() => onDelete(content.id)} variant={"destructive"}>
+        <Button onClick={() => onDelete(content)} variant={"destructive"}>
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -98,7 +98,7 @@ export const ContentCard = ({
 type ContentCardProps = {
   content: Content;
   onView: (content: Content) => void;
-  onDelete: (contentId: string) => void;
+  onDelete: (content: Content) => void;
   onToggleFavorite: (contentId: string, isFavorite: boolean) => void;
   onSchedule?: (content: Content) => void;
   showScheduleButton?: boolean;

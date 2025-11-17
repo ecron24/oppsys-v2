@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import type { Content } from "../types";
+import type { Content } from "../content-types";
 import { scheludeService } from "@/components/schelude/schelude-service";
 
 export const useScheduleContent = () => {

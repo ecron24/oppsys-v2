@@ -15,7 +15,7 @@ import { Calendar, Crown } from "lucide-react";
 import { toast } from "@oppsys/ui";
 import { LoadingSpinner } from "@/components/loading";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
-import type { Content } from "../types";
+import type { Content } from "../content-types";
 import { LinkButton } from "@/components/link-button";
 
 export const SchedulingDialog = ({

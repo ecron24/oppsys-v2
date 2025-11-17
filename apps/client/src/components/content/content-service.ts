@@ -4,10 +4,11 @@ import type {
   ContentMetadata,
   GetContentQuery,
   ProcessContentDecisionParams,
-} from "../../app/(sidebar)/content/types";
+} from "../../app/(sidebar)/content/content-types";
 import { handleApiCall } from "@/lib/handle-api-call";
 import type { Period } from "../../app/(sidebar)/dashboard/services/dashboard-service";
 import { toSnakeCase } from "@/lib/to-snake-case";
+import type { User } from "../auth/auth-types";
 
 export class ContentService {
   async getUserContent(query: GetContentQuery = {}) {
@@ -33,12 +34,37 @@ export class ContentService {
     );
   }
 
-  async deleteContent(contentId: string) {
-    return handleApiCall(
+  async deleteContent(params: { content: Content; user?: User }) {
+    if (params.content?.status === "pending") {
+      const { resumeWebhookUrl } = params.content.metadata;
+
+      if (resumeWebhookUrl) {
+        try {
+          const payload = toSnakeCase({
+            approved: false,
+            content_id: params.content.id,
+            approver_id: params.user?.id,
+            feedback: "Supprimé par l'utilisateur",
+            declined_at: new Date().toISOString(),
+          });
+          await fetch(resumeWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        } catch (e) {
+          console.warn("⚠️ Erreur webhook (non bloquant):", e);
+        }
+      }
+    }
+
+    const apiResult = handleApiCall(
       await honoClient.api.content.generated[":id"].$delete({
-        param: { id: contentId },
+        param: { id: params.content.id },
       })
     );
+
+    return apiResult;
   }
 
   async updateContentStatus(
@@ -68,7 +94,7 @@ export class ContentService {
   }
 
   async processContentDecision({
-    userId,
+    user,
     contentId,
     approved,
     feedback = "",
@@ -98,34 +124,16 @@ export class ContentService {
 
     const resumeUrl = originalMetadata?.resumeWebhookUrl as string;
     if (resumeUrl) {
-      console.log("🚀 Tentative de reprise du workflow n8n via webhook...");
-
       const n8nPayload = toSnakeCase({
-        sessionId: userId,
-        chatInput: JSON.stringify({
-          approved: approved,
-          decision: approved ? "approved" : "declined",
-          feedback: feedback,
-          content_id: contentId,
-          decision_timestamp: new Date().toISOString(),
-          ...(originalMetadata.originalInput || {}),
-        }),
-        metadata: {
-          worker_result_id: userId,
-          client_id: originalMetadata?.client_email || "unknown@example.com",
-          system: {
-            module_id: originalMetadata?.moduleId,
-            module_name: originalMetadata?.moduleName || "Content Approval",
-            action: "approval_decision",
-            content_id: contentId,
-          },
-          approval_info: {
-            approved: approved,
-            status: approved ? "approved" : "declined",
-            feedback: feedback,
-            approver_id: userId,
-            timestamp: new Date().toISOString(),
-          },
+        approved,
+        content_id: contentId,
+        approver_id: user.id,
+        feedback: approved ? "Approuvé" : "Refusé",
+        approved_at: new Date().toISOString(),
+        user_info: {
+          email: user?.email,
+          name: user?.fullName,
+          plan: user?.planId,
         },
       });
       const response = await fetch(resumeUrl, {
@@ -140,8 +148,6 @@ export class ContentService {
           response.status,
           response.statusText
         );
-      } else {
-        console.log("✅ Webhook n8n appelé avec succès.");
       }
     }
 

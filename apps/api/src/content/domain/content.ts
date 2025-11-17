@@ -19,7 +19,17 @@ export const ContentSchema = z.object({
   url: nullableSchema(z.url()),
   filePath: StringNullableSchema,
   moduleSlug: z.string(),
-  metadata: ContentMetadataSchema,
+  metadata: z.preprocess((value) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  }, ContentMetadataSchema),
+
   htmlPreview: StringNullableSchema,
   tags: z.array(z.string()).optional(),
   isFavorite: z.boolean().optional(),

@@ -1,4 +1,4 @@
-import type { Content } from "../types";
+import type { Content } from "../content-types";
 import {
   Dialog,
   DialogHeader,

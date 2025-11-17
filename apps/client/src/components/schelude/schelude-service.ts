@@ -1,4 +1,4 @@
-import type { Content } from "@/app/(sidebar)/content/types";
+import type { Content } from "@/app/(sidebar)/content/content-types";
 import { handleApiCall } from "@/lib/handle-api-call";
 import { honoClient } from "@/lib/hono-client";
 

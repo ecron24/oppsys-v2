@@ -1,3 +1,4 @@
+import type { User } from "@/components/auth/auth-types";
 import type { honoClient } from "@/lib/hono-client";
 import type { InferRequestType, InferResponseType } from "hono";
 
@@ -26,7 +27,7 @@ export type Activity = InferResponseType<
 
 export interface ProcessContentDecisionParams {
   contentId: string;
-  userId: string;
+  user: User;
   approved: boolean;
   feedback?: string;
   originalMetadata?: ContentMetadata;

@@ -6,7 +6,7 @@ import {
   BarChart3,
   Folder,
 } from "lucide-react";
-import type { ContentType } from "../types";
+import type { ContentType } from "../content-types";
 
 export const CONTENT_TYPES: ContentType[] = [
   {

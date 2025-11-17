@@ -9,7 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useRecentActivity } from "../../dashboard/hooks/use-recent-activity";
-import type { Activity } from "../types";
+import type { Activity } from "../content-types";
 import { formatTimeAgo } from "@/lib/date-humanizer";
 import { H3, P } from "@oppsys/ui";
 import { LinkButton } from "@/components/link-button";

@@ -1,4 +1,4 @@
-import type { Content, ContentMetadata } from "../types";
+import type { Content, ContentMetadata } from "../content-types";
 
 export const getCorrectModuleSlug = (content: Content): string => {
   if (content.metadata?.targetModuleSlug) {
@@ -45,7 +45,7 @@ export const getCorrectModuleSlug = (content: Content): string => {
   }
 
   const typeMapping: Record<string, string> = {
-    article: "ai-writer",
+    article: "article-writer",
     document: "document-generator",
     video: "youtube-uploader",
     audio: "transcription",

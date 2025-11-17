@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@oppsys/ui";
 import { contentService } from "@/components/content/content-service";
-import type { Content } from "../types";
+import type { Content } from "../content-types";
 import type { User } from "@/components/auth/auth-types";
 
 export const useRealtimeSubscription = (

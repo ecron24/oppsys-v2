@@ -1,6 +1,6 @@
 import { contentService } from "@/components/content/content-service";
 import { toast } from "@oppsys/ui";
-import type { Content, ContentMetadata } from "../types";
+import type { Content, ContentMetadata } from "../content-types";
 import type { User } from "@/components/auth/auth-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/components/tanstack-query/query-client";
@@ -62,12 +62,12 @@ export const useContentState = (user: User | null) => {
   });
 
   const deleteContentMutation = useMutation({
-    mutationFn: async (contentId: string) => {
+    mutationFn: async (params: { content: Content; user?: User }) => {
       if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce contenu ?"))
         return;
-      const result = await contentService.deleteContent(contentId);
+      const result = await contentService.deleteContent(params);
       if (!result.success) throw new Error("Erreur lors de la suppression");
-      removeContentMutation.mutate(contentId);
+      removeContentMutation.mutate(params.content.id);
       toast.success("Contenu supprimé.");
     },
     onError: () => toast.error("Erreur lors de la suppression."),
@@ -75,21 +75,21 @@ export const useContentState = (user: User | null) => {
 
   const processDecisionMutation = useMutation({
     mutationFn: async ({
-      contentId,
-      userId,
+      content,
+      user,
       approved,
       feedback,
       originalMetadata,
     }: {
-      contentId: string;
-      userId: string;
+      content: Content;
+      user: User;
       approved: boolean;
       feedback?: string;
       originalMetadata?: ContentMetadata;
     }) => {
       const result = await contentService.processContentDecision({
-        contentId,
-        userId,
+        contentId: content.id,
+        user,
         approved,
         feedback,
         originalMetadata,
@@ -99,18 +99,18 @@ export const useContentState = (user: User | null) => {
 
       if (approved) {
         updateContentMutation.mutate({
-          contentId,
+          contentId: content.id,
           updates: result.data.content,
         });
-        toast.success("Contenu approuvé ! Publication en cours.", {
-          description: "Le workflow va reprendre automatiquement.",
+        toast.success("Article approuvé !", {
+          description: "Publication en cours...",
         });
         return result;
       }
 
-      await contentService.deleteContent(contentId);
-      deleteContentMutation.mutate(contentId);
-      toast.success("Contenu refusé et supprimé.");
+      await contentService.deleteContent({ content, user });
+      deleteContentMutation.mutate({ content, user });
+      toast.success("Article refusé et supprimé.");
       return result;
     },
     onError: (err) => {

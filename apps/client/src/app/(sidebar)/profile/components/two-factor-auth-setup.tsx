@@ -94,10 +94,10 @@ export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
   const resetSuccess = () => setSuccess(null);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-sm">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="rounded-lg bg-gradient-primary p-3">
+          <div className="bg-gradient-primary p-3 rounded-lg">
             <Shield className="h-5 w-5 text-white" />
           </div>
           <H4 className="text-lg font-semibold text-card-foreground">
@@ -116,24 +116,24 @@ export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
           <div className="flex items-center">
-            <AlertCircle className="mr-3 h-5 w-5 text-destructive" />
+            <AlertCircle className="h-5 w-5 text-destructive mr-3" />
             <div>
-              <P className="text-sm font-medium text-destructive">Erreur</P>
-              <P className="mt-1 text-sm text-destructive/80">{error}</P>
+              <p className="text-sm font-medium text-destructive">Erreur</p>
+              <p className="text-sm text-destructive/80 mt-1">{error}</p>
             </div>
           </div>
         </div>
       )}
 
       {success && (
-        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <div className="flex items-center">
-            <CheckCircle className="mr-3 h-5 w-5 text-green-600" />
+            <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
             <div>
-              <P className="text-sm font-medium text-green-800">Succès</P>
-              <P className="mt-1 text-sm text-green-700">{success}</P>
+              <p className="text-sm font-medium text-green-800">Succès</p>
+              <p className="text-sm text-green-700 mt-1">{success}</p>
             </div>
           </div>
         </div>
@@ -142,11 +142,11 @@ export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
       {is2FAEnabled ? (
         <div className="space-y-6">
           <div className="flex items-center space-x-4">
-            <div className="rounded-lg bg-green-100 p-3">
+            <div className="bg-green-100 p-3 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div className="flex-1">
-              <P className="font-medium text-card-foreground">
+              <P className="font-medium text-card-foreground mt-1">
                 Authentification à deux facteurs activée
               </P>
               <P className="mt-1 text-sm text-muted-foreground">
@@ -186,11 +186,11 @@ export const TwoFactorAuthSetup = ({ user }: TwoFactorAuthSetupProps) => {
                 </span>
               </P>
 
-              <div className="mb-4 flex items-center justify-center rounded-lg border border-border bg-white p-6">
+              <div className="bg-white border border-border rounded-lg p-6 flex items-center justify-center mb-4">
                 <img
                   src={qrCode}
                   alt="QR Code pour l'authentification à deux facteurs"
-                  className="max-h-[200px] max-w-[200px]"
+                  className="max-w-[200px] max-h-[200px]"
                 />
               </div>
 

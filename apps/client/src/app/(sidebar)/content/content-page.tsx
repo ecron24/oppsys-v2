@@ -12,7 +12,7 @@ import { ContentCard } from "./components/content-card";
 import { RecentActivityHorizontal } from "./components/recent-activity-horizontal";
 import { PaginationControls } from "./components/pagination-controls";
 import { SchedulingDialog } from "./components/scheduling-dialog";
-import type { Content, ContentMetadata } from "./types";
+import type { Content, ContentMetadata } from "./content-types";
 import { WithHeader } from "../_components/with-header";
 import { LinkButton } from "@/components/link-button";
 import { routes } from "@/routes";
@@ -65,6 +65,10 @@ export default function ContentPage() {
       contentId: string,
       isApproved: boolean
     ) => {
+      if (!user) {
+        toast.error("Utilisateur non trouvé");
+        return;
+      }
       if (processingDecisions.has(contentId)) {
         toast.warning("Une action est déjà en cours sur ce contenu");
         return;
@@ -94,8 +98,8 @@ export default function ContentPage() {
       } as ContentMetadata;
 
       await processDecisionMutation.mutateAsync({
-        contentId,
-        userId: user?.id || "",
+        content,
+        user,
         approved: isApproved,
         feedback: isApproved
           ? "Approuvé par l'utilisateur"
@@ -235,7 +239,12 @@ export default function ContentPage() {
                     key={content.id}
                     content={content}
                     onView={setSelectedContent}
-                    onDelete={deleteContentMutation.mutate}
+                    onDelete={(content) =>
+                      deleteContentMutation.mutate({
+                        content,
+                        user: user ?? undefined,
+                      })
+                    }
                     onToggleFavorite={(contentId, isFavorite) =>
                       toggleFavoriteMutation.mutate({ contentId, isFavorite })
                     }
@@ -268,12 +277,21 @@ export default function ContentPage() {
                 getCorrectModuleSlug(selectedContent) === "social-factory" &&
                 permissions.data?.scheduling.canSchedule
               }
-              onDelete={() => deleteContentMutation.mutate(selectedContent.id)}
+              onDelete={() =>
+                deleteContentMutation.mutate({
+                  content: selectedContent,
+                  user: user ?? undefined,
+                })
+              }
               onSchelude={() => {
                 setSchedulingContent(selectedContent);
                 setSelectedContent(null);
               }}
               onApproveAndPublish={async () => {
+                if (!user) {
+                  toast.error("Utilisateur non trouvé");
+                  return;
+                }
                 setApprovalLoading(true);
 
                 if (selectedContent.status === "pending") {
@@ -293,8 +311,8 @@ export default function ContentPage() {
                   };
 
                   processDecisionMutation.mutateAsync({
-                    contentId: selectedContent.id,
-                    userId: user?.id || "",
+                    content: selectedContent,
+                    user,
                     approved: true,
                     feedback: "Approuvé et publié par l'utilisateur",
                     originalMetadata: enrichedMetadata,
