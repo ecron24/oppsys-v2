@@ -34,6 +34,31 @@ export type ExecuteModuleData = InferResponseType<
   200
 >["data"];
 
+// Chat with module types
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const chatModule = honoClient.api.modules[":id"].chat.$post;
+export type ChatWithModuleBody = InferRequestType<typeof chatModule>["json"];
+export type ChatWithModuleData = InferResponseType<
+  typeof chatModule,
+  200
+>["data"];
+
+// Module usage history types
+export type ModuleUsageHistoryQuery = InferRequestType<
+  typeof honoClient.api.modules.usage.history.$get
+>["query"];
+export type ModuleUsageHistoryData = InferResponseType<
+  typeof honoClient.api.modules.usage.history.$get,
+  200
+>["data"];
+
 export type ViewMode = "grid" | "list";
 
 export type TabValue = "modules" | "formation";
+
+export type Message = {
+  type: "bot" | "user";
+  message: string;
+  data: unknown;
+  timestamp: Date;
+};

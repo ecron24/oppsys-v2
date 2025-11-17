@@ -3,6 +3,8 @@ import { honoClient } from "@/lib/hono-client";
 import type {
   ExecuteModuleBody,
   ListModulesQuerySchema,
+  ChatWithModuleBody,
+  ModuleUsageHistoryQuery,
 } from "../module-types";
 
 export const modulesService = {
@@ -17,6 +19,19 @@ export const modulesService = {
   executeModule: async (moduleId: string, payload: ExecuteModuleBody) => {
     return handleApiCall(
       await honoClient.api.modules[":id"].execute.$post({
+        param: { id: moduleId },
+        json: payload,
+      })
+    );
+  },
+  getUsageHistory: async (query: ModuleUsageHistoryQuery = {}) => {
+    return handleApiCall(
+      await honoClient.api.modules.usage.history.$get({ query })
+    );
+  },
+  chatWithModule: async (moduleId: string, payload: ChatWithModuleBody) => {
+    return handleApiCall(
+      await honoClient.api.modules[":id"].chat.$post({
         param: { id: moduleId },
         json: payload,
       })
