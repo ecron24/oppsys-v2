@@ -24,7 +24,7 @@ const AIWriterModule = lazy(
   () => import("@/components/modules/components/ai-writer-module")
 );
 const DocumentGeneratorModule = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/document-generator-module")
 );
 const TranscriptionModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
