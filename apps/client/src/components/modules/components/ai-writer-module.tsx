@@ -1,4 +1,11 @@
-import { useState, useRef, useMemo, type ChangeEvent } from "react";
+import {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+  type ChangeEvent,
+} from "react";
 import {
   toast,
   Card,
@@ -40,14 +47,19 @@ import {
   Crown,
   Settings,
   Calendar,
-  TrendingUp,
   BarChart3,
   Info,
   Plus,
   Camera,
-  Palette,
-  Hash,
+  Copy,
+  Download,
+  Send,
   type LucideIcon,
+  Brain,
+  MessageSquare,
+  XCircle,
+  ExternalLink,
+  Search,
 } from "lucide-react";
 import { useAuth } from "../../auth/hooks/use-auth";
 import { useCredits } from "@/hooks/use-credits";
@@ -57,9 +69,23 @@ import { modulesService } from "../service/modules-service";
 import { documentService } from "../../documents/document-service";
 import { LoadingSpinner } from "../../loading";
 import type { RagDocument } from "../../documents/document-types";
+import { chatService } from "../../chat/chat-service";
 
 type AiWriterModuleProps = {
   module: Module;
+};
+
+type ConversationMessage = {
+  type: "user" | "bot";
+  message: string;
+  data?: unknown;
+  timestamp: Date;
+};
+
+type GeneratedResult = {
+  content: string;
+  fromChat?: boolean;
+  sessionId?: string;
 };
 
 export default function AIWriterModule({ module }: AiWriterModuleProps) {
@@ -106,8 +132,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const [contentType, setContentType] = useState("article");
   const [tone, setTone] = useState("professional");
   const [length, setLength] = useState("medium");
-  const imageOption = "none";
-  const uploadedImage = null;
+  const [imageOption, setImageOption] = useState("none");
 
   // Options avancées
   const [targetAudience, setTargetAudience] = useState("");
@@ -123,10 +148,51 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const [ragDocuments, setRagDocuments] = useState<RagDocument[]>([]);
   const [uploadingRag, setUploadingRag] = useState(false);
   const [ragUploadProgress, setRagUploadProgress] = useState(0);
+  const [result, setResult] = useState<GeneratedResult | null>(null);
+
+  // SEO Tab States
+  const [seoKeywordResearch, setSeoKeywordResearch] = useState("");
+  const [seoLanguage, setSeoLanguage] = useState("fr");
+  const [seoVolume, setSeoVolume] = useState("medium");
+  const [generatedKeywords, setGeneratedKeywords] = useState<string[]>([]);
+  const [keywordLoading, setKeywordLoading] = useState(false);
+
+  // Media Tab States
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [imageStyle, setImageStyle] = useState("realistic");
+  const [imageCount, setImageCount] = useState(1);
+  const [generatingImage, setGeneratingImage] = useState(false);
+
+  // Schedule Tab States
+  const [schedulePost, setSchedulePost] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [publishPlatform, setPublishPlatform] = useState("blog");
+
+  // Chat States
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  // const [conversationContext, setConversationContext] = useState<
+  //   Record<string, unknown>
+  // >({});
+  const [isWaitingForN8n, setIsWaitingForN8n] = useState(false);
+  const [chatInitialized, setChatInitialized] = useState(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
+  const [currentStepChat, setCurrentStepChat] = useState(0);
+  const [conversationHistory, setConversationHistory] = useState<
+    ConversationMessage[]
+  >([]);
+  const [userInput, setUserInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeTab, setActiveTab] = useState("chat");
+  const [sessionInitialized, setSessionInitialized] = useState(false);
 
   //  ref
   const isSubmitting = useRef(false);
   const ragFileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const isSubmittingChat = useRef(false);
+  const lastSubmitTime = useRef(0);
+  const sessionCreationTime = useRef<number | null>(null);
 
   const currentCost = useMemo(() => {
     const baseType = contentTypesFromAPI[contentType];
@@ -185,25 +251,34 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       loading ||
       !prompt.trim() ||
       !contentType ||
-      !hasEnoughCredits(currentCost)
+      !hasEnoughCredits(currentCost) ||
+      !sessionId
     )
       return;
+
     setError(null);
     if (!validateForm()) return;
 
     isSubmitting.current = true;
     setLoading(true);
-    setCurrentStep("Lancement du processus...");
-    setProgress(50);
 
-    const moduleId = module?.slug || "ai-writer";
+    const moduleId = module.slug;
+    const isFromCompletedChat = currentStepChat === 999;
 
-    const apiPayload = {
-      input: {
-        prompt: prompt.trim(),
-        contentType,
-        tone,
-        length,
+    if (isFromCompletedChat) {
+      setCurrentStep("Génération du contenu avec l'IA...");
+      setProgress(40);
+
+      const generationMessage =
+        "Générer maintenant le contenu complet avec toutes les informations collectées";
+      const fullContext = {
+        content: {
+          prompt: prompt.trim(),
+          contentType,
+          tone,
+          length,
+          imageOption,
+        },
         options: {
           targetAudience: targetAudience.trim(),
           keywords: keywords.trim(),
@@ -215,31 +290,229 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             type: doc.type,
           })),
         },
-        imageConfig: {
-          option: imageOption,
-          hasUpload: !!uploadedImage,
+        seo: {
+          keywordResearch: seoKeywordResearch.trim(),
+          seoLanguage,
+          seoVolume,
+          generatedKeywords,
         },
-      },
-    };
+        media: {
+          imagePrompt: imagePrompt.trim(),
+          imageStyle,
+          imageCount,
+        },
+        schedule: {
+          schedulePost,
+          scheduledDate,
+          scheduledTime,
+          publishPlatform,
+        },
+        conversation: {
+          currentStep: currentStepChat,
+          isComplete: currentStepChat === 999,
+        },
+        metadata: {
+          sessionId,
+          timestamp: new Date().toISOString(),
+          moduleType: "ai-writer",
+          currentCost,
+        },
+      };
+      const response = await modulesService.chatWithModule(moduleId, {
+        sessionId,
+        message: generationMessage,
+        context: fullContext,
+      });
+      if (response.success) {
+        if (response.data.data?.isGenerating) {
+          setProgress(50);
+          setCurrentStep("Génération en cours en arrière-plan...");
+          addMessage("bot", response.data.message || "");
+          toast.success("Génération lancée !", {
+            description:
+              'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
+            duration: 5000,
+          });
+          setCurrentStepChat(998);
 
-    const response = await modulesService.executeModule(moduleId, apiPayload);
+          setLoading(false);
+          setProgress(0);
+          setCurrentStep("");
+          isSubmitting.current = false;
+          return {
+            success: true,
+          } as const;
+        }
+        setProgress(80);
+        if (response.data.message) {
+          addMessage("bot", response.data.message);
+          if (response.data.data?.content) {
+            const generatedContent = response.data.data?.content.toString();
+            setResult({
+              content: generatedContent,
+              fromChat: true,
+              sessionId: sessionId,
+            });
+
+            setProgress(100);
+            setCurrentStep("Contenu généré avec succès !");
+            const saveResponse = await modulesService.executeModule(moduleId, {
+              input: {
+                prompt: prompt.trim() || "Contenu généré par IA",
+                content: generatedContent,
+                contentType,
+                tone,
+                length,
+                targetAudience: targetAudience.trim(),
+                keywords: keywords.trim(),
+                imageOption,
+                seoOptimize,
+                includeCallToAction,
+                generatedVia: "chat",
+                sessionId: sessionId,
+                chatHistory: conversationHistory.slice(-5),
+                fullContext: fullContext,
+              },
+              saveOutput: true,
+            });
+            if (saveResponse.success) {
+              toast.success("Contenu généré et sauvegardé !", {
+                description: "Votre contenu est disponible dans 'Mon Contenu'",
+                action: {
+                  label: "Voir",
+                  onClick: () => navigate("/content"),
+                },
+              });
+            } else {
+              console.warn("⚠️ API n'a pas sauvegardé, affichage uniquement");
+              toast.success("Contenu généré !", {
+                description: "Contenu affiché ci-dessous",
+              });
+            }
+            setTimeout(() => {
+              setCurrentStepChat(0);
+              setConversationHistory([]);
+              setChatInitialized(false);
+              setShowWelcomeMessage(true);
+              setActiveTab("content");
+            }, 3000);
+          }
+          return {
+            success: true,
+          } as const;
+        }
+      }
+      console.error("Erreur du chat du module:", response);
+      addMessage(
+        "bot",
+        `❌ **Erreur de génération**
+  
+            Une erreur est survenue lors de la génération du contenu.
+  
+            **Solutions possibles :**
+            • Réessayez la génération
+            • Vérifiez vos crédits
+            • Contactez le support si le problème persiste`
+      );
+      return {
+        success: false,
+      } as const;
+    } else {
+      setCurrentStep("Préparation des données...");
+      setProgress(30);
+      const apiPayload = {
+        input: {
+          prompt: prompt.trim(),
+          contentType,
+          tone,
+          length,
+          options: {
+            targetAudience: targetAudience.trim(),
+            keywords: keywords.trim(),
+            seoOptimize,
+            includeCallToAction,
+            ragDocuments: ragDocuments.map((doc) => ({
+              name: doc.name,
+              path: doc.path,
+              type: doc.type,
+            })),
+          },
+          imageConfig: {
+            option: imageOption,
+            hasUpload: false,
+          },
+          seo: {
+            keywordResearch: seoKeywordResearch.trim(),
+            seoLanguage,
+            seoVolume,
+            generatedKeywords,
+          },
+          media: {
+            imagePrompt: imagePrompt.trim(),
+            imageStyle,
+            imageCount,
+          },
+          schedule: {
+            schedulePost,
+            scheduledDate,
+            scheduledTime,
+            publishPlatform,
+          },
+        },
+        contentType: "content",
+        saveOutput: true,
+        autoSave: true,
+        timeout: 120000,
+        metadata: {
+          contentType,
+          tone,
+          length,
+          keywords: keywords.trim(),
+          generatedVia: "form",
+          targetAudience: targetAudience.trim(),
+          features: {
+            seoOptimize,
+            includeCallToAction,
+            imageOption,
+          },
+        },
+      };
+      setCurrentStep("Communication avec l'IA...");
+      setProgress(60);
+      const response = await modulesService.executeModule(moduleId, apiPayload);
+      setLoading(false);
+      setProgress(0);
+      setCurrentStep("");
+      isSubmitting.current = false;
+
+      if (response.success && response.data) {
+        setProgress(100);
+        setCurrentStep("Processus terminé !");
+        toast.success("Contenu généré et sauvegardé !", {
+          description: "Votre contenu est disponible dans 'Mon Contenu'",
+          action: {
+            label: "Voir",
+            onClick: () => navigate("/content"),
+          },
+        });
+        setResult({
+          content: response.data.output.content?.toString() || "",
+          fromChat: false,
+          sessionId,
+        });
+        return {
+          success: true,
+        } as const;
+      }
+      console.error("Erreur d'exécution du module:", response);
+    }
+    setError("Erreur inconnue");
+    toast.error(`Échec: Une erreur est survenue.`);
+
     setLoading(false);
     setProgress(0);
     setCurrentStep("");
     isSubmitting.current = false;
-
-    if (response.success) {
-      setProgress(100);
-      setCurrentStep("Processus terminé !");
-      toast.success("Génération du contenu lancée !", {
-        description:
-          "Votre contenu sera bientôt prêt sur la page 'Mon Contenu'.",
-      });
-      return;
-    }
-    console.error("Erreur d'exécution du module:", error);
-    setError(response.error);
-    toast.error(`Échec: Une erreur est survenue.`);
   };
 
   const getIconForContentType = (key: string) => {
@@ -253,6 +526,387 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     };
     return ICONS[key] || Sparkles;
   };
+
+  const addMessage = useCallback(
+    (type: "user" | "bot", message: string, data?: unknown) => {
+      setConversationHistory((prev) => [
+        ...prev,
+        {
+          type,
+          message,
+          data,
+          timestamp: new Date(),
+        },
+      ]);
+    },
+    []
+  );
+
+  const displayWelcomeMessage = useCallback(() => {
+    const welcomeMessage = `👋 Bienvenue dans l'AI Writer !
+
+      Je suis votre assistant conversationnel et je vais vous aider à créer le contenu parfait.
+
+      Pour commencer, dites-moi simplement :
+      **Quel type de contenu souhaitez-vous créer ?**
+
+      Exemple : "Un email de bienvenue pour mes nouveaux clients" ou "Un article sur l'IA en marketing"
+
+      💡 Je vous poserai ensuite quelques questions pour affiner votre contenu. Aucun crédit ne sera consommé pendant notre conversation.`;
+
+    addMessage("bot", welcomeMessage);
+    setShowWelcomeMessage(false);
+  }, [addMessage]);
+
+  const handleKeywordResearch = useCallback(async () => {
+    if (!seoKeywordResearch.trim()) {
+      toast.error("Please enter a main keyword");
+      return;
+    }
+
+    if (!permissions.data?.isPremium) {
+      toast.error("Premium feature required");
+      return;
+    }
+
+    setKeywordLoading(true);
+    const response = await modulesService.executeModule(module.slug, {
+      input: {
+        action: "seo-research",
+        keyword: seoKeywordResearch.trim(),
+        language: seoLanguage,
+        volume: seoVolume,
+      },
+    });
+
+    setKeywordLoading(false);
+    if (response.success && response.data?.output.data?.keywords) {
+      const keywords = response.data.output.data.keywords as string[];
+      setGeneratedKeywords(keywords);
+      toast.success(`${keywords.length} keywords found!`);
+      return;
+    }
+    console.error("Keyword research error:", response);
+    toast.error("Error during keyword research");
+  }, [
+    seoKeywordResearch,
+    seoLanguage,
+    seoVolume,
+    permissions.data?.isPremium,
+    module.slug,
+  ]);
+
+  const handleGenerateImage = useCallback(async () => {
+    if (!imagePrompt.trim()) {
+      toast.error("Please describe the image to generate");
+      return;
+    }
+
+    if (!permissions.data?.isPremium) {
+      toast.error("Premium feature required");
+      return;
+    }
+
+    setGeneratingImage(true);
+    const response = await modulesService.executeModule(module.slug, {
+      input: {
+        action: "generate-image",
+        prompt: imagePrompt.trim(),
+        style: imageStyle,
+        count: imageCount,
+      },
+    });
+
+    setGeneratingImage(false);
+    if (response.success) {
+      setImageOption("generate");
+      toast.success("Images generated successfully!");
+      return;
+    }
+    console.error("Image generation error:", response);
+    toast.error("Error during image generation");
+  }, [
+    imagePrompt,
+    imageStyle,
+    imageCount,
+    permissions.data?.isPremium,
+    module.slug,
+  ]);
+
+  const handleChatSubmit = async () => {
+    if (!userInput.trim() || isWaitingForN8n || !sessionId) return;
+
+    const now = Date.now();
+
+    if (isSubmittingChat.current) {
+      console.warn("⏸️ Submission ignored (already in progress)");
+      return;
+    }
+
+    if (now - lastSubmitTime.current < 2000) {
+      console.warn("⏸️ Submission ignored (too fast)");
+      toast.warning("Please wait before sending another message");
+      return;
+    }
+
+    isSubmittingChat.current = true;
+    lastSubmitTime.current = now;
+
+    const currentMessage = userInput.trim();
+    addMessage("user", currentMessage);
+    setUserInput("");
+
+    setIsWaitingForN8n(true);
+    setIsTyping(true);
+    const cleanContext = {
+      content: {
+        prompt: prompt.trim(),
+        contentType,
+        tone,
+        length,
+        imageOption,
+      },
+      options: {
+        targetAudience: targetAudience.trim(),
+        keywords: keywords.trim(),
+        seoOptimize,
+        includeCallToAction,
+      },
+      seo: {
+        keywordResearch: seoKeywordResearch.trim(),
+        seoLanguage,
+        seoVolume,
+        generatedKeywords,
+      },
+      media: {
+        imagePrompt: imagePrompt.trim(),
+        imageStyle,
+        imageCount,
+      },
+      schedule: {
+        schedulePost,
+        scheduledDate,
+        scheduledTime,
+        publishPlatform,
+      },
+      conversation: {
+        currentStep: currentStepChat,
+        isComplete: currentStepChat === 999,
+      },
+      metadata: {
+        sessionId,
+        timestamp: new Date().toISOString(),
+        moduleType: "ai-writer",
+        currentCost,
+      },
+    };
+
+    const response = await modulesService.chatWithModule(module.slug, {
+      sessionId,
+      message: currentMessage,
+      context: cleanContext,
+    });
+
+    setIsWaitingForN8n(false);
+    setIsTyping(false);
+    setTimeout(() => {
+      isSubmittingChat.current = false;
+    }, 500);
+    if (response.success) {
+      if (
+        response.data.data?.sessionId &&
+        response.data.data?.sessionId !== sessionId
+      ) {
+        setSessionId(response.data.data.sessionId as string);
+      }
+      if (response.data?.message) {
+        addMessage("bot", response.data.message);
+
+        // if (response.data?.context) {
+        //   setConversationContext(response.data.context);
+        // }
+
+        if (response.data?.data && typeof response.data.data === "object") {
+          const data = response.data.data;
+          if (data?.content && typeof data.content === "object") {
+            const content = data.content as Record<string, unknown>;
+            if (typeof content.prompt === "string" && content.prompt.trim()) {
+              setPrompt(content.prompt.trim());
+            }
+            if (
+              typeof content.tone === "string" &&
+              tonesFromAPI.find((t) => t.value === content.tone)
+            ) {
+              setTone(content.tone);
+            }
+            if (
+              typeof content.contentType === "string" &&
+              contentTypesFromAPI[content.contentType]
+            ) {
+              setContentType(content.contentType);
+            }
+            if (
+              typeof content.length === "string" &&
+              lengthsFromAPI.find((l) => l.value === content.length)
+            ) {
+              setLength(content.length);
+            }
+            if (
+              typeof content.imageOption === "string" &&
+              imageOptionsFromAPI.find((o) => o.value === content.imageOption)
+            ) {
+              setImageOption(content.imageOption);
+            }
+          }
+        }
+
+        if (response.data.options) {
+          if (response.data.options.targetAudience?.toString().trim())
+            setTargetAudience(
+              response.data.options.targetAudience.toString().trim()
+            );
+          if (response.data.options.keywords?.toString().trim())
+            setKeywords(response.data.options.keywords.toString().trim());
+          if (response.data.options.seoOptimize !== undefined)
+            setSeoOptimize(Boolean(response.data.options.seoOptimize));
+          if (response.data.options.includeCallToAction !== undefined)
+            setIncludeCallToAction(
+              Boolean(response.data.options.includeCallToAction)
+            );
+        }
+
+        if (typeof response.data?.nextStep === "number") {
+          setCurrentStepChat(response.data.nextStep);
+        }
+
+        if (response.data?.isComplete) {
+          setCurrentStepChat(999);
+        }
+
+        if (!chatInitialized) {
+          setChatInitialized(true);
+        }
+        return;
+      }
+    }
+    console.error("❌ Chat error:", response);
+    addMessage(
+      "bot",
+      `❌ **Erreur de connexion**\n\nImpossible de communiquer avec l'assistant IA.\n\n`
+    );
+  };
+
+  // Initialize session on mount
+  useEffect(() => {
+    if (authUser?.id && !sessionId && !sessionInitialized) {
+      async function effect() {
+        const response = await chatService.createOrGetSession({
+          moduleSlug: module.slug,
+        });
+        if (response.success && response.data?.id) {
+          setSessionId(response.data.id);
+          sessionCreationTime.current = Date.now();
+          return;
+        }
+        console.error("❌ Session initialization error:", response);
+        setSessionInitialized(false);
+      }
+      effect();
+    }
+  }, [authUser?.id, sessionId, sessionInitialized, module.slug]);
+
+  // Display welcome message
+  useEffect(() => {
+    if (sessionId && showWelcomeMessage && conversationHistory.length === 0) {
+      displayWelcomeMessage();
+    }
+  }, [
+    sessionId,
+    showWelcomeMessage,
+    conversationHistory.length,
+    displayWelcomeMessage,
+  ]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversationHistory, isTyping]);
+
+  const handleCopy = async () => {
+    if (!result?.content) return;
+    try {
+      await navigator.clipboard.writeText(result.content);
+      toast.success("Content copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy", err);
+      toast.error("Failed to copy content");
+    }
+  };
+
+  const handleDownload = () => {
+    if (!result?.content) return;
+    const element = document.createElement("a");
+    const file = new Blob([result.content], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = `content-${Date.now()}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const renderChatMessage = useCallback(
+    (msg: ConversationMessage, index: number) => {
+      const isBot = msg.type === "bot";
+      const messageId = `${msg.type}-${msg.timestamp.getTime()}-${index}`;
+
+      const formatMessage = (text: string) => {
+        if (!text) return "";
+        text = text.replace(/^\* (.+)$/gm, "• $1");
+        text = text.replace(/^- (.+)$/gm, "• $1");
+        text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        text = text.replace(
+          /\[([^\]]+)\]\(([^)]+)\)/g,
+          '<a href="$2" target="_blank">$1</a>'
+        );
+        text = text.replace(/\n\n/g, "<br/><br/>");
+        text = text.replace(/\n/g, "<br/>");
+        return text;
+      };
+
+      return (
+        <div
+          key={messageId}
+          className={`flex ${isBot ? "justify-start" : "justify-end"} mb-4`}
+        >
+          <div
+            className={`max-w-[85%] p-4 rounded-lg border shadow-sm ${
+              isBot
+                ? "bg-blue-50 border-blue-200 text-blue-900"
+                : "bg-green-50 border-green-200 text-green-900"
+            }`}
+          >
+            <div className="flex items-start space-x-3">
+              {isBot && (
+                <Brain className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div
+                  className="text-sm leading-relaxed"
+                  dangerouslySetInnerHTML={{
+                    __html: formatMessage(msg.message),
+                  }}
+                />
+                <span className="text-xs opacity-60 mt-2 block">
+                  {msg.timestamp.toLocaleTimeString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    },
+    []
+  );
 
   const handleRagUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -331,36 +985,86 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <CardTitle>{module?.name || "AI Writer"}</CardTitle>
-            {permissions.data?.isPremium && (
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <CardTitle>{module?.name || "AI Writer"}</CardTitle>
+              {permissions.data?.isPremium && (
+                <Badge
+                  variant="secondary"
+                  className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700"
+                >
+                  <Crown className="h-3 w-3 mr-1" />
+                  PREMIUM
+                </Badge>
+              )}
               <Badge
                 variant="secondary"
-                className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700"
+                className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700"
               >
-                <Crown className="h-3 w-3 mr-1" />
-                {permissions.data?.currentPlan.toUpperCase()}
+                <Brain className="h-3 w-3 mr-1" />
+                IA
               </Badge>
-            )}
+              <Badge
+                variant="secondary"
+                className="bg-gradient-to-r from-green-100 to-green-200 text-green-700"
+              >
+                <MessageSquare className="h-3 w-3 mr-1" />
+                Chat
+              </Badge>
+            </div>
           </div>
+
           <div className="flex items-center space-x-2">
             <Badge variant="secondary">Solde: {formatBalance()}</Badge>
-            {currentCost > 0 && (
-              <Badge
-                variant={
-                  hasEnoughCredits(currentCost) ? "default" : "destructive"
-                }
-              >
-                Coût: {currentCost} crédits
-              </Badge>
-            )}
+            <Badge variant="outline">Coût estimé: {currentCost} crédits</Badge>
           </div>
         </div>
-        <CardDescription>
-          {module?.description ||
-            "Générez du contenu de qualité professionnelle avec l'intelligence artificielle"}
-        </CardDescription>
+
+        <CardDescription>{module?.description}</CardDescription>
+
+        <div className="flex items-center space-x-2 text-sm">
+          <div className="flex items-center space-x-1">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isWaitingForN8n
+                  ? "bg-orange-500 animate-pulse"
+                  : chatInitialized
+                    ? "bg-green-500"
+                    : "bg-blue-500"
+              }`}
+            ></div>
+            <span
+              className={`${
+                isWaitingForN8n
+                  ? "text-orange-600"
+                  : chatInitialized
+                    ? "text-green-600"
+                    : "text-blue-600"
+              }`}
+            >
+              {isWaitingForN8n
+                ? "Communication ..."
+                : chatInitialized
+                  ? "Connecté"
+                  : "Prêt (En attente)"}
+            </span>
+          </div>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">
+            Session: {sessionId?.slice(-8)}
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">
+            Plan: {authUser?.plans?.name || "free"}
+          </span>
+          {module.endpoint && (
+            <>
+              <span className="text-muted-foreground">•</span>
+              <span className="text-green-600">✅ Configuré</span>
+            </>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -381,10 +1085,19 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
           </Alert>
         )}
 
-        <Tabs defaultValue="content" className="w-full">
+        <Tabs
+          defaultValue="content"
+          className="w-full"
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
           <TabsList
-            className={`grid w-full ${permissions.data?.isFree ? "grid-cols-5" : "grid-cols-4"}`}
+            className={`grid w-full ${permissions.data?.isFree ? "grid-cols-6" : "grid-cols-5"}`}
           >
+            <TabsTrigger value="chat">
+              <Brain className="h-4 w-4 mr-2" />
+              Assistant IA
+            </TabsTrigger>
             <TabsTrigger value="content">Contenu</TabsTrigger>
             <TabsTrigger value="media">Médias</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
@@ -394,6 +1107,173 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             )}
           </TabsList>
 
+          {/* ONGLET CHAT */}
+          <TabsContent value="chat" className="space-y-4">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 text-sm space-y-2">
+              <div className="flex items-center space-x-2">
+                <Brain className="h-5 w-5 text-blue-600" />
+                <span className="font-semibold text-blue-900">
+                  Assistant Conversationnel Intelligent
+                </span>
+              </div>
+              <p className="text-blue-800">
+                Je suis une IA qui pose des{" "}
+                <strong>questions intelligentes</strong> pour créer le contenu
+                parfait pour vous. Dites-moi simplement votre besoin et je vous
+                guide ! 💡
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div
+                  className={`flex items-center space-x-1 ${prompt.trim() ? "text-green-700" : "text-gray-500"}`}
+                >
+                  {prompt.trim() ? (
+                    <CheckCircle className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  <span>Description</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${keywords.trim() ? "text-green-700" : "text-gray-500"}`}
+                >
+                  {keywords.trim() ? (
+                    <CheckCircle className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  <span>Mots-clés</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${targetAudience.trim() ? "text-green-700" : "text-gray-500"}`}
+                >
+                  {targetAudience.trim() ? (
+                    <CheckCircle className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  <span>Audience</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${contentType ? "text-green-700" : "text-gray-500"}`}
+                >
+                  {contentType ? (
+                    <CheckCircle className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  <span>Type</span>
+                </div>
+              </div>
+              <div className="text-xs text-blue-600 bg-blue-100 px-3 py-1.5 rounded">
+                💡 Les crédits ne seront utilisés qu'après validation finale de
+                votre configuration
+              </div>
+            </div>
+
+            <div className="border rounded-lg min-h-[400px] max-h-[600px] overflow-y-auto p-4 bg-gradient-to-b from-blue-50/30 to-white">
+              <div className="space-y-4">
+                {conversationHistory.map((msg, index) =>
+                  renderChatMessage(msg, index)
+                )}
+
+                {isTyping && (
+                  <div className="flex justify-start mb-4">
+                    <div className="bg-gray-100 border border-gray-200 rounded-lg p-3 max-w-[80%]">
+                      <div className="flex items-center space-x-2">
+                        <Brain className="h-5 w-5 text-gray-600" />
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div
+                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={chatEndRef} />
+              </div>
+            </div>
+
+            {currentStepChat === 999 && (
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-semibold mb-2 text-green-800 flex items-center">
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    🎉 Configuration complète ! Contenu prêt à générer
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Type:</span>{" "}
+                      {currentContentType?.label}
+                    </div>
+                    <div>
+                      <span className="font-medium">Ton:</span>{" "}
+                      {currentTone?.label}
+                    </div>
+                    <div>
+                      <span className="font-medium">Longueur:</span>{" "}
+                      {currentLength?.label}
+                    </div>
+                    <div>
+                      <span className="font-medium">Coût:</span> {currentCost}{" "}
+                      crédits
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading || !hasEnoughCredits(currentCost)}
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                  size="lg"
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
+                      <LoadingSpinner />
+                      <span>Génération en cours...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="h-4 w-4" />
+                      <span>🚀 Générer le contenu ({currentCost} crédits)</span>
+                    </div>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            <div className="flex space-x-2">
+              <Input
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Décrivez votre contenu ou posez une question..."
+                onKeyPress={(e) =>
+                  e.key === "Enter" && !e.shiftKey && handleChatSubmit()
+                }
+                disabled={loading || isWaitingForN8n}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleChatSubmit}
+                disabled={!userInput.trim() || loading || isWaitingForN8n}
+              >
+                {isWaitingForN8n ? (
+                  <LoadingSpinner />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* ONGLET CONTENT - SIMPLIFIÉ (Garde juste l'essentiel) */}
           <TabsContent value="content" className="space-y-6">
             <div className="space-y-3">
               <Label>Type de contenu</Label>
@@ -403,7 +1283,11 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                   return (
                     <div
                       key={key}
-                      className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${contentType === key ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}
+                      className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                        contentType === key
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50"
+                      }`}
                       onClick={() => setContentType(key)}
                     >
                       <div className="space-y-2">
@@ -490,9 +1374,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="targetAudience">
-                    Audience cible (optionnel)
-                  </Label>
+                  <Label htmlFor="targetAudience">Audience cible</Label>
                   <Input
                     id="targetAudience"
                     value={targetAudience}
@@ -502,7 +1384,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="keywords">Mots-clés (optionnel)</Label>
+                  <Label htmlFor="keywords">Mots-clés</Label>
                   <Input
                     id="keywords"
                     value={keywords}
@@ -512,6 +1394,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                   />
                 </div>
               </div>
+
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <Checkbox
@@ -589,6 +1472,67 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                 </div>
               )}
             </Button>
+
+            {result && (
+              <div className="space-y-4 border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <Label>Contenu généré avec succès</Label>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" onClick={handleCopy}>
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copier
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownload}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Télécharger
+                    </Button>
+                  </div>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4 border">
+                  <div className="bg-white p-4 rounded border max-h-96 overflow-y-auto">
+                    <pre className="whitespace-pre-wrap text-sm">
+                      {result.content}
+                    </pre>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setResult(null)}
+                  size="sm"
+                >
+                  Fermer
+                </Button>
+              </div>
+            )}
+
+            {result && result.fromChat && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">
+                      Contenu sauvegardé avec succès !
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/content")}
+                    className="border-green-300 text-green-700 hover:bg-green-100"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Voir dans Mon Contenu
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="media" className="space-y-4">
@@ -605,18 +1549,110 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                       Premium Activé
                     </Badge>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button className="bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200 text-amber-800">
-                      <Camera className="h-4 w-4 mr-2" />
-                      Générer Image IA
-                    </Button>
-                    <Button className="bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200 text-amber-800">
-                      <Palette className="h-4 w-4 mr-2" />
-                      Bibliothèque Stock
-                    </Button>
+
+                  {/* ✅ GÉNÉRATION D'IMAGE IA */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="h-5 w-5 text-amber-500" />
+                      <Label className="font-medium">
+                        Génération d'images par IA
+                      </Label>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="imagePrompt">
+                          Description de l'image
+                        </Label>
+                        <Textarea
+                          id="imagePrompt"
+                          value={imagePrompt}
+                          onChange={(e) => setImagePrompt(e.target.value)}
+                          placeholder="Ex: Une illustration moderne d'un ordinateur portable avec des graphiques abstraits..."
+                          className="min-h-[80px]"
+                          disabled={generatingImage}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Style d'image</Label>
+                          <Select
+                            value={imageStyle}
+                            onValueChange={setImageStyle}
+                            disabled={generatingImage}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="realistic">
+                                Réaliste
+                              </SelectItem>
+                              <SelectItem value="artistic">
+                                Artistique
+                              </SelectItem>
+                              <SelectItem value="minimalist">
+                                Minimaliste
+                              </SelectItem>
+                              <SelectItem value="abstract">Abstrait</SelectItem>
+                              <SelectItem value="cartoon">Cartoon</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Nombre d'images</Label>
+                          <Select
+                            value={imageCount.toString()}
+                            onValueChange={(val) =>
+                              setImageCount(parseInt(val))
+                            }
+                            disabled={generatingImage}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 image</SelectItem>
+                              <SelectItem value="2">2 images</SelectItem>
+                              <SelectItem value="3">3 images</SelectItem>
+                              <SelectItem value="4">4 images</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleGenerateImage}
+                        disabled={!imagePrompt.trim() || generatingImage}
+                        className="w-full bg-gradient-to-r from-amber-500 to-amber-600"
+                      >
+                        {generatingImage ? (
+                          <div className="flex items-center space-x-2">
+                            <LoadingSpinner />
+                            <span>Génération en cours...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <Camera className="h-4 w-4" />
+                            <span>Générer l'image (10 crédits)</span>
+                          </div>
+                        )}
+                      </Button>
+                    </div>
+
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        💡 L'image sera générée par notre IA et ajoutée
+                        automatiquement à votre contenu.
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 </div>
 
+                {/* ✅ DOCUMENTS RAG */}
                 <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -729,28 +1765,138 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             )}
           </TabsContent>
 
+          {/* ONGLET SEO FONCTIONNEL */}
           <TabsContent value="seo" className="space-y-4">
             {permissions.data?.isPremium ? (
-              <div className="p-4 bg-muted/30 rounded-lg border space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Outils SEO avancés</Label>
-                  <Badge
-                    variant="secondary"
-                    className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 text-xs"
-                  >
-                    <Crown className="h-3 w-3 mr-1" />
-                    Premium Activé
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-800">
-                    <Hash className="h-4 w-4 mr-2" />
-                    Recherche Mots-clés IA
-                  </Button>
-                  <Button className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-800">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Score SEO Temps Réel
-                  </Button>
+              <div className="space-y-6">
+                <div className="p-4 bg-muted/30 rounded-lg border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center space-x-2">
+                      <Search className="h-4 w-4 text-green-600" />
+                      <span>Recherche de mots-clés IA</span>
+                    </Label>
+                    <Badge
+                      variant="secondary"
+                      className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 text-xs"
+                    >
+                      <Crown className="h-3 w-3 mr-1" />
+                      Premium Activé
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="seoKeywordResearch">
+                        Mot-clé principal
+                      </Label>
+                      <Input
+                        id="seoKeywordResearch"
+                        value={seoKeywordResearch}
+                        onChange={(e) => setSeoKeywordResearch(e.target.value)}
+                        placeholder="Ex: marketing digital"
+                        disabled={keywordLoading}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Langue</Label>
+                        <Select
+                          value={seoLanguage}
+                          onValueChange={setSeoLanguage}
+                          disabled={keywordLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                            <SelectItem value="en">🇺🇸 English</SelectItem>
+                            <SelectItem value="es">🇪🇸 Español</SelectItem>
+                            <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Volume de recherche</Label>
+                        <Select
+                          value={seoVolume}
+                          onValueChange={setSeoVolume}
+                          disabled={keywordLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Faible (0-1K)</SelectItem>
+                            <SelectItem value="medium">
+                              Moyen (1K-10K)
+                            </SelectItem>
+                            <SelectItem value="high">Élevé (10K+)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleKeywordResearch}
+                      disabled={!seoKeywordResearch.trim() || keywordLoading}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600"
+                    >
+                      {keywordLoading ? (
+                        <div className="flex items-center space-x-2">
+                          <LoadingSpinner />
+                          <span>Recherche en cours...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <Search className="h-4 w-4" />
+                          <span>Rechercher des suggestions</span>
+                        </div>
+                      )}
+                    </Button>
+
+                    {generatedKeywords.length > 0 && (
+                      <div className="space-y-2 pt-3 border-t">
+                        <Label className="text-sm font-medium">
+                          Mots-clés suggérés ({generatedKeywords.length})
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {generatedKeywords.map((keyword, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="cursor-pointer hover:bg-primary/10"
+                              onClick={() => {
+                                if (!keywords.includes(keyword)) {
+                                  setKeywords(
+                                    keywords
+                                      ? `${keywords}, ${keyword}`
+                                      : keyword
+                                  );
+                                  toast.success(
+                                    `"${keyword}" ajouté aux mots-clés`
+                                  );
+                                }
+                              }}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              {keyword}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      💡 Les mots-clés seront analysés par notre IA et les
+                      meilleurs seront suggérés automatiquement.
+                    </AlertDescription>
+                  </Alert>
                 </div>
               </div>
             ) : (
@@ -778,27 +1924,118 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             )}
           </TabsContent>
 
+          {/* ONGLET SCHEDULE FONCTIONNEL */}
           <TabsContent value="schedule" className="space-y-4">
             {permissions.data?.isPremium ? (
-              <div className="p-4 bg-muted/30 rounded-lg border space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Planification de contenu</Label>
-                  <Badge
-                    variant="secondary"
-                    className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 text-xs"
-                  >
-                    <Crown className="h-3 w-3 mr-1" />
-                    Premium Activé
-                  </Badge>
+              <div className="space-y-6">
+                <div className="p-4 bg-muted/30 rounded-lg border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="schedulePost"
+                        checked={schedulePost}
+                        onCheckedChange={(checked) =>
+                          setSchedulePost(checked == true)
+                        }
+                      />
+                      <Label htmlFor="schedulePost">
+                        Planifier la publication
+                      </Label>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 text-xs"
+                    >
+                      <Crown className="h-3 w-3 mr-1" />
+                      Premium Activé
+                    </Badge>
+                  </div>
+
+                  {schedulePost && (
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="scheduledDate">
+                            Date de publication
+                          </Label>
+                          <Input
+                            id="scheduledDate"
+                            type="date"
+                            value={scheduledDate}
+                            onChange={(e) => setScheduledDate(e.target.value)}
+                            min={new Date().toISOString().split("T")[0]}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="scheduledTime">
+                            Heure de publication
+                          </Label>
+                          <Input
+                            id="scheduledTime"
+                            type="time"
+                            value={scheduledTime}
+                            onChange={(e) => setScheduledTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Plateforme de publication</Label>
+                        <Select
+                          value={publishPlatform}
+                          onValueChange={setPublishPlatform}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="blog">
+                              Blog / Site Web
+                            </SelectItem>
+                            <SelectItem value="wordpress">WordPress</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="linkedin">
+                              LinkedIn Articles
+                            </SelectItem>
+                            <SelectItem value="notion">Notion</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {scheduledDate && scheduledTime && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm text-blue-800">
+                              Publication prévue le{" "}
+                              {new Date(
+                                `${scheduledDate}T${scheduledTime}`
+                              ).toLocaleString()}{" "}
+                              sur {publishPlatform}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          💡 Le contenu sera généré puis automatiquement publié
+                          à la date et l'heure choisies.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-800">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Calendrier Éditorial
-                  </Button>
-                  <Button className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-800">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Publication Auto
+
+                <div className="flex justify-between items-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/calendar")}
+                    className="flex items-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Voir le calendrier
                   </Button>
                 </div>
               </div>
@@ -863,7 +2100,12 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                 Vous avez besoin de {currentCost} crédits, mais n'en avez que{" "}
                 {currentBalance}.
               </p>
-              <Button variant="outline" size="sm" className="mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={handleNavigateToBilling}
+              >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Recharger le compte
               </Button>

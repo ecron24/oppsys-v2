@@ -67,7 +67,7 @@ export const chatWithModuleUseCase = buildUseCase()
 
     // Create usage record
     const usageData = {
-      userdId: user.id,
+      userId: user.id,
       moduleId: module.id,
       moduleSlug: module.slug,
       creditsUsed: module.creditCost,
@@ -138,7 +138,7 @@ export const chatWithModuleUseCase = buildUseCase()
         executionResult.data?.next_step ||
         executionResult.data?.nextStep ||
         null,
-      options: executionResult.data?.options || [],
+      options: (executionResult.data?.options || {}) as Record<string, unknown>,
       type: executionResult.data?.type || "text",
       context: executionResult.data?.context || {},
       isComplete:
