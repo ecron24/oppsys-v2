@@ -53,57 +53,14 @@ import {
   X,
 } from "lucide-react";
 import type { Module } from "../module-types";
-import { modulesService } from "../service/modules-service";
-import { documentsService } from "../service/documents-service";
 import type { LucideIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
+import type { RagDocument } from "@/components/documents/document-types";
+import { modulesService } from "../service/modules-service";
+import { documentService } from "@/components/documents/document-service";
 
 type DocumentGeneratorModuleProps = {
   module: Module;
-};
-
-type ModuleConfig = {
-  types?: Record<string, DocumentType>;
-  outputFormats?: OutputFormat[];
-  documentStyles?: Record<string, DocumentStyle>;
-  supportedLanguages?: Language[];
-  premiumFeatures?: string[];
-};
-
-type DocumentType = {
-  label: string;
-  description: string;
-  cost: number;
-  complexity: string;
-  legalAdvice?: boolean;
-  templates?: string[];
-};
-
-type OutputFormat = {
-  value: string;
-  label: string;
-  icon: string;
-  premium?: boolean;
-};
-
-type DocumentStyle = {
-  label: string;
-  color: string;
-};
-
-type Language = {
-  value: string;
-  label: string;
-  flag: string;
-};
-
-type RagDocument = {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  path: string;
-  uploadedAt: string;
 };
 
 type RagUploadUrlRequest = {
@@ -114,34 +71,6 @@ type RagUploadUrlRequest = {
     | "application/msword"
     | "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   fileSize: number;
-};
-
-type ApiPayload = {
-  input: {
-    documentType: string;
-    template: string;
-    title: string;
-    description: string;
-    content: string;
-    language: string;
-    outputFormat: string;
-    documentStyle: string;
-    companyInfo: { name: string; address: string; email: string };
-    clientInfo: { name: string; address: string };
-    projectInfo: { reference: string; additionalNotes: string };
-    formatting: {
-      includeHeader: boolean;
-      includeFooter: boolean;
-      includeSignature: boolean;
-      includeDateStamp: boolean;
-      includePageNumbers: boolean;
-      includeTOC: boolean;
-    };
-    customClauses: string;
-    ragDocuments: { name: string; path: string; type: string }[];
-  };
-  save_output: boolean;
-  timeout: number;
 };
 
 const ICONS: Record<string, LucideIcon> = {
@@ -164,23 +93,41 @@ export default function DocumentGeneratorModule({
 
   // CONFIGURATION
   const documentTypesFromAPI = useMemo(
-    () => (module?.config as ModuleConfig)?.types || {},
+    () =>
+      (module.config && "types" in module.config && module?.config?.types) ||
+      {},
     [module?.config]
   );
   const outputFormatsFromAPI = useMemo(
-    () => (module?.config as ModuleConfig)?.outputFormats || [],
+    () =>
+      (module.config &&
+        "outputFormats" in module.config &&
+        module?.config?.outputFormats) ||
+      [],
     [module?.config]
   );
   const documentStylesFromAPI = useMemo(
-    () => (module?.config as ModuleConfig)?.documentStyles || {},
+    () =>
+      (module.config &&
+        "documentStyles" in module.config &&
+        module?.config?.documentStyles) ||
+      {},
     [module?.config]
   );
   const supportedLanguagesFromAPI = useMemo(
-    () => (module?.config as ModuleConfig)?.supportedLanguages || [],
+    () =>
+      (module.config &&
+        "supportedLanguages" in module.config &&
+        module?.config?.supportedLanguages) ||
+      [],
     [module?.config]
   );
   const premiumFeaturesFromAPI = useMemo(
-    () => (module?.config as ModuleConfig)?.premiumFeatures || [],
+    () =>
+      (module.config &&
+        "premiumFeatures" in module.config &&
+        module?.config?.premiumFeatures) ||
+      [],
     [module?.config]
   );
 
@@ -259,7 +206,11 @@ export default function DocumentGeneratorModule({
       toast.error("Contenu requis.");
       return false;
     }
-    if (currentDocumentType?.legalAdvice && !companyName.trim()) {
+    if (
+      "legalAdvice" in currentDocumentType &&
+      currentDocumentType?.legalAdvice &&
+      !companyName.trim()
+    ) {
       toast.error("Informations entreprise requises");
       return false;
     }
@@ -278,7 +229,7 @@ export default function DocumentGeneratorModule({
 
     const moduleSlug = module?.slug || "document-generator";
 
-    const apiPayload: ApiPayload = {
+    const apiPayload = {
       input: {
         documentType,
         template,
@@ -389,7 +340,7 @@ export default function DocumentGeneratorModule({
 
       try {
         // Créer URL d'upload
-        const response = await documentsService.getRagUploadUrl({
+        const response = await documentService.generateRagUploadUrl({
           fileName: file.name,
           fileType: file.type as RagUploadUrlRequest["fileType"],
           fileSize: file.size,
@@ -559,7 +510,8 @@ export default function DocumentGeneratorModule({
               </div>
             </div>
 
-            {currentDocumentType?.templates &&
+            {"templates" in currentDocumentType &&
+              currentDocumentType?.templates &&
               currentDocumentType.templates.length > 0 && (
                 <div className="space-y-2">
                   <Label>Template (Fonctionnalité de base)</Label>
@@ -705,46 +657,47 @@ export default function DocumentGeneratorModule({
               </div>
             </div>
 
-            {currentDocumentType?.legalAdvice && (
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                <h4 className="font-medium flex items-center space-x-2">
-                  <Building className="h-4 w-4" />
-                  <span>Informations entreprise (Requis)</span>
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Nom de l'entreprise *</Label>
-                    <Input
-                      id="companyName"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="Votre Entreprise SARL"
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="companyAddress">Adresse entreprise</Label>
-                    <Input
-                      id="companyAddress"
-                      value={companyAddress}
-                      onChange={(e) => setCompanyAddress(e.target.value)}
-                      placeholder="123 Rue de l'Entreprise, 75001 Paris"
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="projectReference">Référence projet</Label>
-                    <Input
-                      id="projectReference"
-                      value={projectReference}
-                      onChange={(e) => setProjectReference(e.target.value)}
-                      placeholder="REF-2024-001"
-                      disabled={loading}
-                    />
+            {"legalAdvice" in currentDocumentType &&
+              currentDocumentType?.legalAdvice && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-medium flex items-center space-x-2">
+                    <Building className="h-4 w-4" />
+                    <span>Informations entreprise (Requis)</span>
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="companyName">Nom de l'entreprise *</Label>
+                      <Input
+                        id="companyName"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="Votre Entreprise SARL"
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="companyAddress">Adresse entreprise</Label>
+                      <Input
+                        id="companyAddress"
+                        value={companyAddress}
+                        onChange={(e) => setCompanyAddress(e.target.value)}
+                        placeholder="123 Rue de l'Entreprise, 75001 Paris"
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="projectReference">Référence projet</Label>
+                      <Input
+                        id="projectReference"
+                        value={projectReference}
+                        onChange={(e) => setProjectReference(e.target.value)}
+                        placeholder="REF-2024-001"
+                        disabled={loading}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div className="space-y-4">
               <h4 className="font-medium">Options de formatage</h4>

@@ -36,7 +36,7 @@ const ArticleWriterModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
 );
 const YouTubeModule = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/youtube-module")
 );
 const FormationChatGPTModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
