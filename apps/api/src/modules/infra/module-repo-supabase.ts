@@ -62,7 +62,7 @@ export class ModuleRepoSupabase implements ModuleRepo {
         throw error;
       }
 
-      const modules = data.map(toCamelCase);
+      const modules = data.map(toCamelCase) as Module[];
 
       return {
         success: true,

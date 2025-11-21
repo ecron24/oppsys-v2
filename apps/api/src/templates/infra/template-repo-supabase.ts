@@ -16,6 +16,7 @@ import {
 } from "../domain/template";
 import { toCamelCase } from "src/lib/to-camel-case";
 import type { Logger } from "src/logger/domain/logger";
+import { camelToSnake } from "src/lib/to-snake-case";
 
 export class TemplateRepoSupabase implements TemplateRepo {
   constructor(
@@ -104,7 +105,7 @@ export class TemplateRepoSupabase implements TemplateRepo {
           name: input.name,
           file_path: input.filePath,
           file_size: input.fileSize,
-          lease_type: input.leaseType,
+          lease_type: camelToSnake(input.leaseType),
           category: input.category || "real_estate",
           is_public: input.isPublic || false,
         })
@@ -135,7 +136,7 @@ export class TemplateRepoSupabase implements TemplateRepo {
       const updateData: Record<string, string | boolean> = {};
       if (input.name !== undefined) updateData.name = input.name;
       if (input.leaseType !== undefined)
-        updateData.lease_type = input.leaseType;
+        updateData.lease_type = camelToSnake(input.leaseType);
       if (input.category !== undefined) updateData.category = input.category;
       if (input.isPublic !== undefined) updateData.is_public = input.isPublic;
 

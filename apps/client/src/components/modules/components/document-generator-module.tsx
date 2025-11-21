@@ -58,6 +58,12 @@ import type { ChangeEvent } from "react";
 import type { RagDocument } from "@/components/documents/document-types";
 import { modulesService } from "../service/modules-service";
 import { documentService } from "@/components/documents/document-service";
+import { MODULES_IDS } from "@oppsys/api/client";
+
+type Config = Extract<
+  Module["config"],
+  { configType: typeof MODULES_IDS.DOCUMENT_GENERATOR }
+>;
 
 type DocumentGeneratorModuleProps = {
   module: Module;
@@ -92,35 +98,22 @@ export default function DocumentGeneratorModule({
   const navigate = useNavigate();
 
   // CONFIGURATION
-  const documentTypesFromAPI = useMemo(
-    () =>
-      (module.config && "types" in module.config && module?.config?.types) ||
-      {},
-    [module?.config]
+  const config = useMemo(
+    () => (module.config || {}) as Config,
+    [module.config]
   );
+  const documentTypesFromAPI = useMemo(() => config?.types || {}, [config]);
   const outputFormatsFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "outputFormats" in module.config &&
-        module?.config?.outputFormats) ||
-      [],
-    [module?.config]
+    () => config?.outputFormats || [],
+    [config]
   );
   const documentStylesFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "documentStyles" in module.config &&
-        module?.config?.documentStyles) ||
-      {},
-    [module?.config]
+    () => config?.documentStyles || {},
+    [config]
   );
   const supportedLanguagesFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "supportedLanguages" in module.config &&
-        module?.config?.supportedLanguages) ||
-      [],
-    [module?.config]
+    () => config?.supportedLanguages || [],
+    [config]
   );
   const premiumFeaturesFromAPI = useMemo(
     () =>

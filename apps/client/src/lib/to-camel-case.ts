@@ -35,5 +35,5 @@ export function toCamelCase<T extends object>(obj: T): SnakeToCamelObject<T> {
     return result as SnakeToCamelObject<T>;
   }
 
-  return obj as SnakeToCamelObject<T>;
+  return snakeToCamel(obj) as SnakeToCamelObject<T>;
 }

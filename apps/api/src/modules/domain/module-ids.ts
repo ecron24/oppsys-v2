@@ -1,0 +1,18 @@
+export const MODULES_IDS = {
+  AI_WRITER: "ai-writer",
+  SOCIAL_FACTORY: "social-factory",
+  DOCUMENT_GENERATOR: "document-generator",
+  YOUTUBE_UPLOADER: "youtube-uploader",
+  TRANSCRIPTION: "transcription",
+  ARTICLE_WRITER: "article-writer",
+  FORMATION_CHATGPT: "formation-chatgpt",
+  FORMATION_PROMPTING: "formation-prompting",
+  REAL_ESTATE_LEASE_GENERATOR: "real-estate-lease-generator",
+  COMPETITOR_ANALYSIS: "competitor-analysis",
+  SEO_ANALYZER: "seo-analyzer",
+  DATA_ANALYZER: "data-analyzer",
+  EMAIL_CAMPAIGN: "email-campaign",
+  CONTENT_TRANSLATOR: "content-translator",
+  LEAD_GENERATOR: "lead-generator",
+  TALENT_ANALYZER: "talent-analyzer",
+} as const;

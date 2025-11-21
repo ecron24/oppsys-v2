@@ -80,6 +80,12 @@ import type { ExecuteModuleData, Module } from "../module-types";
 import type { RagDocument } from "../../documents/document-types";
 import type { LucideIcon } from "lucide-react";
 import { contentService } from "@/components/content/content-service.ts";
+import { MODULES_IDS } from "@oppsys/api/client";
+
+type Config = Extract<
+  Module["config"],
+  { configType: typeof MODULES_IDS.SOCIAL_FACTORY }
+>;
 
 type Template = {
   id: string;
@@ -116,40 +122,20 @@ export default function SocialFactoryModule({
   const location = useLocation();
 
   // CONFIGURATION VIA L'API
-  const networksFromAPI = useMemo(
-    () =>
-      module?.config && "networks" in module.config
-        ? module.config.networks
-        : {},
-    [module?.config]
+  const config = useMemo(
+    () => (module.config || {}) as Config,
+    [module.config]
   );
-  const postTypesFromAPI = useMemo(
-    () =>
-      module?.config && "postTypes" in module.config
-        ? module.config.postTypes
-        : {},
-    [module?.config]
-  );
+  const networksFromAPI = useMemo(() => config.networks || {}, [config]);
+  const postTypesFromAPI = useMemo(() => config.postTypes || {}, [config]);
   const contentStylesFromAPI = useMemo(
-    () =>
-      module?.config && "contentStyles" in module.config
-        ? module.config.contentStyles
-        : {},
-    [module?.config]
+    () => config.contentStyles || {},
+    [config]
   );
-  const objectivesFromAPI = useMemo(
-    () =>
-      module?.config && "objectives" in module.config
-        ? module.config.objectives
-        : {},
-    [module?.config]
-  );
+  const objectivesFromAPI = useMemo(() => config.objectives || {}, [config]);
   const ctaTypesFromAPI = useMemo(
-    () =>
-      (module?.config && "ctaTypes" in module.config
-        ? module.config.ctaTypes
-        : []) as { value: string; label: string }[],
-    [module?.config]
+    () => [] as { value: string; label: string }[],
+    []
   );
   const premiumFeaturesFromAPI = useMemo(
     () =>

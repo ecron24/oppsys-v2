@@ -53,6 +53,12 @@ import {
 import type { Module } from "../module-types";
 import type { LucideIcon } from "lucide-react";
 import { modulesService } from "../service/modules-service";
+import { MODULES_IDS } from "@oppsys/api/client";
+
+type Config = Extract<
+  Module["config"],
+  { configType: typeof MODULES_IDS.YOUTUBE_UPLOADER }
+>;
 
 type YouTubeModuleProps = {
   module: Module;
@@ -99,37 +105,19 @@ export default function YouTubeModule({ module }: YouTubeModuleProps) {
   const navigate = useNavigate();
 
   // CONFIGURATION VIA L'API
-  const videoTypesFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "videoTypes" in module.config &&
-        module?.config?.videoTypes) ||
-      {},
-    [module?.config]
+  const config = useMemo(
+    () => (module.config || {}) as Config,
+    [module.config]
   );
+  const videoTypesFromAPI = useMemo(() => config?.videoTypes || {}, [config]);
   const privacyOptionsFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "privacyOptions" in module.config &&
-        module?.config?.privacyOptions) ||
-      [],
-    [module?.config]
+    () => config?.privacyOptions || [],
+    [config]
   );
-  const categoriesFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "categories" in module.config &&
-        module?.config?.categories) ||
-      [],
-    [module?.config]
-  );
+  const categoriesFromAPI = useMemo(() => config?.categories || [], [config]);
   const premiumFeaturesFromAPI = useMemo(
-    () =>
-      (module.config &&
-        "premiumFeatures" in module.config &&
-        module?.config?.premiumFeatures) ||
-      [],
-    [module?.config]
+    () => config?.premiumFeatures || [],
+    [config]
   );
 
   // ÉTATS LOCAUX

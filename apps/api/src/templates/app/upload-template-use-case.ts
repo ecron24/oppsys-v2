@@ -3,11 +3,12 @@ import z from "zod";
 import { fileMiddleware } from "./template-utils";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { uploadFile, removeFile } from "@oppsys/supabase";
+import { camelToSnake } from "src/lib/to-snake-case";
 
 export const UploadTemplateBody = z.object({
   leaseType: z.enum([
-    "residential_free",
-    "residential_pro",
+    "residentialFree",
+    "residentialPro",
     "furnished",
     "commercial",
     "professional",
@@ -62,7 +63,7 @@ export const uploadTemplateUseCase = buildUseCase()
       name: file.name,
       filePath,
       fileSize: file.size,
-      leaseType,
+      leaseType: camelToSnake(leaseType),
       category: category || "real_estate",
       isPublic: isPublic || false,
     });

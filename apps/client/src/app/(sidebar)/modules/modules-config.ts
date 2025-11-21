@@ -19,6 +19,7 @@ import type {
   ModuleMapping,
   CategoryMapping,
 } from "@/components/modules/module-types";
+import { MODULES_IDS } from "@oppsys/api/client";
 
 const AIWriterModule = lazy(
   () => import("@/components/modules/components/ai-writer-module")
@@ -27,7 +28,7 @@ const DocumentGeneratorModule = lazy(
   () => import("@/components/modules/components/document-generator-module")
 );
 const TranscriptionModule = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/transcription-module")
 );
 const SocialFactoryModule = lazy(
   () => import("@/components/modules/components/social-factory-module")
@@ -72,90 +73,90 @@ const LeadGeneratorModule = lazy(
 );
 
 export const MODULES_CONFIG_MAPPING: Record<string, ModuleMapping> = {
-  "ai-writer": {
+  [MODULES_IDS.AI_WRITER]: {
     icon: Sparkles,
     component: AIWriterModule,
     featured: true,
   },
-  "social-factory": {
+  [MODULES_IDS.SOCIAL_FACTORY]: {
     icon: Share2,
     component: SocialFactoryModule,
     featured: true,
   },
-  "document-generator": {
+  [MODULES_IDS.DOCUMENT_GENERATOR]: {
     icon: FileText,
     component: DocumentGeneratorModule,
     featured: true,
   },
-  "youtube-uploader": {
+  [MODULES_IDS.YOUTUBE_UPLOADER]: {
     icon: Youtube,
     component: YouTubeModule,
     featured: true,
   },
-  transcription: {
+  [MODULES_IDS.TRANSCRIPTION]: {
     icon: Mic,
     component: TranscriptionModule,
     featured: true,
   },
-  "article-writer": {
+  [MODULES_IDS.ARTICLE_WRITER]: {
     icon: FileText,
     component: ArticleWriterModule,
     featured: true,
     estimatedTime: "10-25 min",
   },
-  "formation-chatgpt": {
+  [MODULES_IDS.FORMATION_CHATGPT]: {
     icon: GraduationCap,
     component: FormationChatGPTModule,
     featured: true,
   },
-  "formation-prompting": {
+  [MODULES_IDS.FORMATION_PROMPTING]: {
     icon: Settings,
     component: FormationPromptingModule,
     featured: true,
   },
-  "real-estate-lease-generator": {
+  [MODULES_IDS.REAL_ESTATE_LEASE_GENERATOR]: {
     icon: FileText,
     component: RealEstateLeaseGenerator,
     featured: true,
   },
-  "competitor-analysis": {
+  [MODULES_IDS.COMPETITOR_ANALYSIS]: {
     icon: BarChart3,
     component: CompetitorAnalysisModule,
     featured: true,
     estimatedTime: "15-40 min",
   },
-  "seo-analyzer": {
+  [MODULES_IDS.SEO_ANALYZER]: {
     icon: TrendingUp,
     component: SEOAnalyzerModule,
     featured: true,
     isNew: true,
     estimatedTime: "15-50 min",
   },
-  "data-analyzer": {
+  [MODULES_IDS.DATA_ANALYZER]: {
     icon: Brain,
     component: DataAnalyzerModule,
     featured: true,
     estimatedTime: "10-30 min",
   },
-  "email-campaign": {
+  [MODULES_IDS.EMAIL_CAMPAIGN]: {
     icon: Mail,
     component: EmailCampaignModule,
     featured: true,
     estimatedTime: "10-30 min",
   },
-  "content-translator": {
+  [MODULES_IDS.CONTENT_TRANSLATOR]: {
     icon: Languages,
     component: ContentTranslatorModule,
     featured: true,
     estimatedTime: "5-30 min",
   },
-  "lead-generator": {
+  [MODULES_IDS.LEAD_GENERATOR]: {
     icon: Target,
     component: LeadGeneratorModule,
     featured: true,
     estimatedTime: "10-25 min",
   },
-  "talent-analyzer": {
+  [MODULES_IDS.TALENT_ANALYZER]: {
     icon: Users,
     component: TalentAnalyzerModule,
     featured: true,

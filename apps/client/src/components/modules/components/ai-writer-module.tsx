@@ -70,6 +70,7 @@ import { documentService } from "../../documents/document-service";
 import { LoadingSpinner } from "../../loading";
 import type { RagDocument } from "../../documents/document-types";
 import { chatService } from "../../chat/chat-service";
+import { MODULES_IDS } from "@oppsys/api/client";
 
 type AiWriterModuleProps = {
   module: Module;
@@ -88,44 +89,34 @@ type GeneratedResult = {
   sessionId?: string;
 };
 
+type Config = Extract<
+  Module["config"],
+  { configType: typeof MODULES_IDS.AI_WRITER }
+>;
+
 export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const { user: authUser } = useAuth();
   const { balance, hasEnoughCredits, formatBalance } = useCredits();
   const permissions = usePremiumFeatures();
   const navigate = useNavigate();
 
+  const config = useMemo(
+    () => (module.config || {}) as Config,
+    [module.config]
+  );
   const contentTypesFromAPI = useMemo(
-    () =>
-      module?.config && "contentTypes" in module.config
-        ? module?.config?.contentTypes
-        : {},
-    [module?.config]
+    () => config?.contentTypes || {},
+    [config]
   );
-  const tonesFromAPI = useMemo(
-    () =>
-      module?.config && "tones" in module.config ? module?.config?.tones : [],
-    [module?.config]
-  );
-  const lengthsFromAPI = useMemo(
-    () =>
-      module?.config && "lengths" in module.config
-        ? module?.config?.lengths
-        : [],
-    [module?.config]
-  );
+  const tonesFromAPI = useMemo(() => config?.tones || [], [config]);
+  const lengthsFromAPI = useMemo(() => config?.lengths || [], [config]);
   const imageOptionsFromAPI = useMemo(
-    () =>
-      module?.config && "contentTypes" in module.config
-        ? module?.config?.imageOptions
-        : [],
-    [module?.config]
+    () => config?.imageOptions || [],
+    [config]
   );
   const premiumFeaturesFromAPI = useMemo(
-    () =>
-      module?.config && "premiumFeatures" in module.config
-        ? module.config.premiumFeatures || []
-        : [],
-    [module?.config]
+    () => config.premiumFeatures || [],
+    [config]
   );
 
   const [prompt, setPrompt] = useState("");

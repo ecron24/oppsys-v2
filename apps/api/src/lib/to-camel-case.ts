@@ -10,7 +10,7 @@ type SnakeToCamelObject<T> = {
     : T[K];
 };
 
-function snakeToCamel(str: string): string {
+export function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 

@@ -10,6 +10,16 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts ."
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/clients.js",
+      "types": "./dist/clients.d.ts"
+    }
+  },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
     "@hono/standard-validator": "^0.1.5",

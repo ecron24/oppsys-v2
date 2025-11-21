@@ -4,6 +4,7 @@ import {
   BooleanNullableSchema,
   UuidSchema,
 } from "src/common/common-schema";
+import { snakeToCamel } from "src/lib/to-camel-case";
 import z from "zod";
 
 export const RealEstateTemplateSchema = z.object({
@@ -26,7 +27,7 @@ export const CreateTemplateInputSchema = z.object({
   name: z.string(),
   filePath: z.string(),
   fileSize: z.number(),
-  leaseType: z.string(),
+  leaseType: z.string().transform((val) => snakeToCamel(val)),
   category: z.string().optional(),
   isPublic: z.boolean().optional(),
 });

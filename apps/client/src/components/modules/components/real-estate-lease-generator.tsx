@@ -60,6 +60,12 @@ import type {
   Template,
 } from "@/components/templates/templates-type";
 import { toSnakeCase } from "@/lib/to-snake-case";
+import { MODULES_IDS } from "@oppsys/api/client";
+
+type Config = Extract<
+  Module["config"],
+  { configType: typeof MODULES_IDS.REAL_ESTATE_LEASE_GENERATOR }
+>;
 
 type RealEstateLeaseGeneratorProps = {
   module: Module;
@@ -98,31 +104,23 @@ export default function RealEstateLeaseGenerator({
   }, [module]);
 
   // Configuration API - utilise maintenant la config hybride
+  const config = useMemo(
+    () => (module.config || {}) as Config,
+    [module.config]
+  );
   const availableCountries = fullModuleConfig?.config?.availableCountries || [];
   const outputFormatsFromAPI = useMemo(
-    () =>
-      "outputFormats" in fullModuleConfig.config
-        ? fullModuleConfig?.config?.outputFormats
-        : [],
-    [fullModuleConfig.config]
+    () => config?.outputFormats || [],
+    [config]
   );
   const emailOptionsFromAPI = useMemo(
-    () =>
-      fullModuleConfig?.config && "emailOptions" in fullModuleConfig.config
-        ? fullModuleConfig.config.emailOptions
-        : {},
-    [fullModuleConfig.config]
+    () => config.emailOptions || {},
+    [config]
   );
-  const leaseTypes = useMemo(
-    () =>
-      "leaseTypes" in fullModuleConfig.config
-        ? fullModuleConfig?.config?.leaseTypes
-        : {},
-    [fullModuleConfig.config]
-  );
+  const leaseTypes = useMemo(() => config?.leaseTypes || {}, [config]);
 
   // ÉTATS
-  const [leaseType, setLeaseType] = useState<LeaseType>("residential_free");
+  const [leaseType, setLeaseType] = useState<LeaseType>("residentialFree");
   const [title, setTitle] = useState<string>("");
   const [selectedCountry, setSelectedCountry] = useState<string>("FR");
   const [propertyAddress, setPropertyAddress] = useState<string>("");
@@ -201,7 +199,7 @@ export default function RealEstateLeaseGenerator({
 
   // ✅ FILTRAGE DES TYPES DE BAUX avec gestion permissions
   const availableLeaseTypes = useMemo(() => {
-    if (!leaseTypes?.leaseTypes) {
+    if (!leaseTypes) {
       return [];
     }
 
