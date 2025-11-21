@@ -39,6 +39,8 @@ import {
 } from "@oppsys/ui/components/input-group";
 import { useState } from "react";
 import { LinkButton } from "./link-button";
+import { useSocialConnections } from "./social/hooks/use-social-connections";
+import { SocialStatusList } from "./social/components/social-status-indicator";
 
 const navItems = [
   {
@@ -144,6 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const { connections } = useSocialConnections();
 
   const filteredNavItems =
     searchQuery.trim() === ""
@@ -360,17 +363,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
 
                 <P className="text-xs text-muted-foreground mb-3">
-                  {/* {socialConnections.length > 0
-                ? `${socialConnections.filter((c) => c.is_valid).length}/${socialConnections.length} réseaux connectés`
-                : "Connectez vos réseaux sociaux"} */}
-                  Connectez vos réseaux sociaux
+                  {connections.length > 0
+                    ? `${connections.filter((c) => c.isValid).length}/${connections.length} réseaux connectés`
+                    : "Connectez vos réseaux sociaux"}
                 </P>
-                {/* 
-            <SocialStatusList
-              connections={socialConnections}
-              variant="dot"
-              className="mb-3"
-            /> */}
+
+                <SocialStatusList
+                  connections={connections}
+                  variant="dot"
+                  className="mb-3"
+                />
 
                 <LinkButton
                   to={routes.profile.index()}
@@ -383,10 +385,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   }}
                   className="button-primary w-full block text-center text-xs py-2"
                 >
-                  {/* {socialConnections.filter((c) => c.is_valid).length > 0
-                ? "Gérer les connexions"
-                : "Connecter les réseaux"} */}
-                  Connecter les réseaux
+                  {connections.filter((c) => c.isValid).length > 0
+                    ? "Gérer les connexions"
+                    : "Connecter les réseaux"}
                 </LinkButton>
               </div>
             </div>

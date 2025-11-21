@@ -1,6 +1,6 @@
 import { handleApiCall } from "@/lib/handle-api-call";
 import { honoClient } from "@/lib/hono-client";
-import type { Platform } from "./social-types";
+import type { Platform } from "../social-types";
 
 export const socialService = {
   async initAuth(platform: Platform, redirectUri?: string) {
@@ -12,11 +12,7 @@ export const socialService = {
         },
       })
     );
-
-    if (result.success) {
-      return result.data.authUrl as string;
-    }
-    throw new Error(result.error || "Failed to initiate OAuth");
+    return result;
   },
 
   async getConnections() {

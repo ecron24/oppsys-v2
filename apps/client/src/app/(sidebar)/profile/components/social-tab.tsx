@@ -9,7 +9,7 @@ import {
   RefreshCw,
   Share2,
 } from "lucide-react";
-import { SocialAuthButtons } from "./social-auth-button";
+import { SocialAuthButtons } from "@/components/social/components/social-auth-button";
 
 export const SocialTab = () => {
   const {

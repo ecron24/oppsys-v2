@@ -1,13 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "@oppsys/ui";
-import { socialService } from "@/components/social/social-service";
-import { queryKeys } from "@/components/tanstack-query/query-client";
+import { socialService } from "@/components/social/service/social-service";
+import {
+  queryClient,
+  queryKeys,
+} from "@/components/tanstack-query/query-client";
 import type { Platform } from "@/components/social/social-types";
 import { unwrap } from "@oppsys/types";
 
 export const useSocialConnections = () => {
-  const queryClient = useQueryClient();
-
   const {
     data: connections = [],
     isLoading: connectionsLoading,
@@ -24,7 +25,7 @@ export const useSocialConnections = () => {
 
   const connectMutation = useMutation({
     mutationFn: async (platform: Platform) => {
-      const authUrl = await socialService.initAuth(platform);
+      const { authUrl } = unwrap(await socialService.initAuth(platform));
 
       // Open popup OAuth
       const popup = window.open(
@@ -65,6 +66,9 @@ export const useSocialConnections = () => {
           }
         }, 1000);
       });
+    },
+    onError(_, variables) {
+      toast.error(`Impossible de connecter ${variables}`);
     },
   });
 

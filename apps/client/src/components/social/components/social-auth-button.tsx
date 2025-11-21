@@ -1,4 +1,3 @@
-// components/social/SocialAuthButton.jsx
 import { useState } from "react";
 import { Button } from "@oppsys/ui";
 import {
