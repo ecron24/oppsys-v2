@@ -303,4 +303,22 @@ export const authService = {
       status: 200,
     } as const;
   },
+
+  async exchangeCodeForSession(code: string) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error("[exchangeCodeForSession]: ", error);
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: data.session ? toCamelCase(data.session) : null,
+      status: 200,
+    } as const;
+  },
 };

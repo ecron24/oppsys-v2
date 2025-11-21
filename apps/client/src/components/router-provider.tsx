@@ -5,6 +5,7 @@ import { routes } from "@/routes";
 import { GuestRoute } from "./guard/guest-route";
 import { lazy } from "react";
 import ModuleIdPage from "@/app/(sidebar)/modules/[id]/module-id-page";
+import AuthCallbackPage from "@/app/(auth)/auth/callback/auth-callback-page";
 
 const ProfilePage = lazy(() => import("@/app/(sidebar)/profile/profile-page"));
 const DashboardPage = lazy(
@@ -66,6 +67,14 @@ const router = createBrowserRouter([
     element: (
       <GuestRoute>
         <OtpPage />
+      </GuestRoute>
+    ),
+  },
+  {
+    path: routes.auth.callback(),
+    element: (
+      <GuestRoute>
+        <AuthCallbackPage />
       </GuestRoute>
     ),
   },

@@ -30,6 +30,7 @@ export const routes = {
     login: () => "/login",
     register: () => "/register",
     otp: () => "/otp",
+    callback: () => "/auth/callback",
   },
   completeProfile: {
     index: () => "/complete-profile",
