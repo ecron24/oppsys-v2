@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../tanstack-query/query-client";
 import { plansService } from "./plans-service";
 import { Crown, Star, type LucideIcon } from "lucide-react";
+import { unwrap } from "@oppsys/types";
 
 type PLAN_CONFIG = {
   color: string;
@@ -43,9 +44,7 @@ export function usePlans() {
   const { data, error, isLoading } = useQuery({
     queryKey: queryKeys.plans.list,
     queryFn: async () => {
-      const response = await plansService.getPlans();
-      if (!response.success) throw new Error(response.error);
-      return response.data;
+      return unwrap(await plansService.getPlans());
     },
   });
 

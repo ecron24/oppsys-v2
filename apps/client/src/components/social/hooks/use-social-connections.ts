@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@oppsys/ui";
-import { socialService } from "../services/social-service";
-import type { Platform } from "../profile-types";
+import { socialService } from "@/components/social/social-service";
 import { queryKeys } from "@/components/tanstack-query/query-client";
+import type { Platform } from "@/components/social/social-types";
+import { unwrap } from "@oppsys/types";
 
 export const useSocialConnections = () => {
   const queryClient = useQueryClient();
@@ -13,12 +14,12 @@ export const useSocialConnections = () => {
     refetch: refetchConnections,
   } = useQuery({
     queryKey: queryKeys.social.socialConnections,
-    queryFn: () => socialService.getConnections(),
+    queryFn: async () => unwrap(await socialService.getConnections()),
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: queryKeys.social.socialStats,
-    queryFn: () => socialService.getStats(),
+    queryFn: async () => unwrap(await socialService.getStats()),
   });
 
   const connectMutation = useMutation({

@@ -1,10 +1,4 @@
-import type { honoClient } from "@/lib/hono-client";
-import type { InferRequestType } from "hono";
 import { z } from "zod";
-
-export type Platform = InferRequestType<
-  typeof honoClient.api.social.init.$post
->["json"]["platform"];
 
 export const GeneralFormSchema = z.object({
   fullName: z.string().min(1, "Le nom complet est requis"),
@@ -35,28 +29,3 @@ export const NotificationSettingsSchema = z.object({
 });
 
 export type NotificationSettings = z.infer<typeof NotificationSettingsSchema>;
-
-export interface SocialConnection {
-  id: string;
-  userId: string;
-  platform: Platform;
-  accessToken: string;
-  refreshToken: string | null;
-  expiresAt: string | null;
-  scopes: string[] | null;
-  platformUserId: string | null;
-  platformUsername: string | null;
-  isValid: boolean | null;
-  lastUsed: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
-
-export interface SocialStats {
-  valid: number;
-  invalid: number;
-  expiringSoon: number;
-  total: number;
-}
-
-export type ProfilePageProps = Record<string, never>;

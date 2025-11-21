@@ -1,6 +1,6 @@
 import { handleApiCall } from "@/lib/handle-api-call";
 import { honoClient } from "@/lib/hono-client";
-import type { Platform, SocialConnection, SocialStats } from "../profile-types";
+import type { Platform } from "./social-types";
 
 export const socialService = {
   async initAuth(platform: Platform, redirectUri?: string) {
@@ -20,22 +20,17 @@ export const socialService = {
   },
 
   async getConnections() {
-    const result = await handleApiCall(
+    return await handleApiCall(
       await honoClient.api.social.connections.$get({ query: {} })
     );
-
-    if (result.success) {
-      return result.data as SocialConnection[];
-    }
-    throw new Error(result.error || "Failed to fetch connections");
   },
 
-  async getStats(): Promise<SocialStats> {
+  async getStats() {
     const connections = await this.getConnections();
-
-    const valid = connections.filter((c) => c.isValid).length;
-    const invalid = connections.filter((c) => !c.isValid).length;
-    const expiringSoon = connections.filter((c) => {
+    if (!connections.success) return connections;
+    const valid = connections.data.filter((c) => c.isValid).length;
+    const invalid = connections.data.filter((c) => !c.isValid).length;
+    const expiringSoon = connections.data.filter((c) => {
       if (!c.expiresAt || !c.isValid) return false;
       const expirationTime = new Date(c.expiresAt).getTime();
       const now = Date.now();
@@ -44,11 +39,14 @@ export const socialService = {
     }).length;
 
     return {
-      valid,
-      invalid,
-      expiringSoon,
-      total: connections.length,
-    };
+      success: true,
+      data: {
+        valid,
+        invalid,
+        expiringSoon,
+        total: connections.data.length,
+      },
+    } as const;
   },
 
   async disconnect(platform: Platform) {

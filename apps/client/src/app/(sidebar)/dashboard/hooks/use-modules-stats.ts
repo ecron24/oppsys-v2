@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService, type Period } from "../services/dashboard-service";
 import { queryKeys } from "@/components/tanstack-query/query-client";
+import { unwrap } from "@oppsys/types";
 
 export function useModulesStats(period: Period = "month") {
   const {
@@ -10,10 +11,9 @@ export function useModulesStats(period: Period = "month") {
   } = useQuery<ModuleStat[]>({
     queryKey: queryKeys.dashboard.modulesStats(period),
     queryFn: async () => {
-      const response = await dashboardService.getModulesStats(period);
-      if (!response.success) throw new Error(response.error);
+      const response = unwrap(await dashboardService.getModulesStats(period));
 
-      return response.data.data.map((stat) => ({
+      return response.data.map((stat) => ({
         name: stat.moduleName || "",
         slug: stat.moduleSlug || "",
         uses: stat.totalUsage || 0,

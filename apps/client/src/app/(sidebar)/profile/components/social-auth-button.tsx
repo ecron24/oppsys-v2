@@ -13,7 +13,10 @@ import {
   ExternalLink,
   AlertCircle,
 } from "lucide-react";
-import type { Platform, SocialConnection } from "../profile-types";
+import type {
+  Platform,
+  SocialConnection,
+} from "@/components/social/social-types";
 
 // Configuration des plateformes
 const PLATFORM_CONFIG = {

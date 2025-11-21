@@ -5,6 +5,7 @@ import { MODULES_CONFIG_MAPPING } from "../modules-config";
 import type { ModuleMapping } from "@/components/modules/module-types";
 import { Bot } from "lucide-react";
 import { lazy } from "react";
+import { unwrap } from "@oppsys/types";
 
 const PlaceholderModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
@@ -14,9 +15,8 @@ export function useModules() {
   const { data, error, isLoading } = useQuery({
     queryKey: queryKeys.modules.list,
     queryFn: async () => {
-      const response = await modulesService.getAll();
-      if (!response.success) throw new Error(response.error);
-      return response.data;
+      const data = unwrap(await modulesService.getAll());
+      return data;
     },
   });
 

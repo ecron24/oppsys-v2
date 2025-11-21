@@ -4,6 +4,7 @@ import type { Content, ContentMetadata } from "../content-types";
 import type { User } from "@/components/auth/auth-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/components/tanstack-query/query-client";
+import { unwrap } from "@oppsys/types";
 // import { mockContents } from "./mock-data";
 
 export const useContentState = (user: User | null) => {
@@ -54,8 +55,10 @@ export const useContentState = (user: User | null) => {
       contentId: string;
       isFavorite: boolean;
     }) => {
-      const result = await contentService.toggleFavorite(contentId, isFavorite);
-      if (!result.success) throw new Error("Erreur lors de la mise à jour");
+      unwrap(
+        await contentService.toggleFavorite(contentId, isFavorite),
+        "Erreur lors de la mise à jour"
+      );
       updateContentMutation.mutate({ contentId, updates: { isFavorite } });
     },
     onError: () => toast.error("Erreur lors de la mise à jour des favoris."),
@@ -65,8 +68,10 @@ export const useContentState = (user: User | null) => {
     mutationFn: async (params: { content: Content; user?: User }) => {
       if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce contenu ?"))
         return;
-      const result = await contentService.deleteContent(params);
-      if (!result.success) throw new Error("Erreur lors de la suppression");
+      unwrap(
+        await contentService.deleteContent(params),
+        "Erreur lors de la suppression"
+      );
       removeContentMutation.mutate(params.content.id);
       toast.success("Contenu supprimé.");
     },
@@ -87,31 +92,31 @@ export const useContentState = (user: User | null) => {
       feedback?: string;
       originalMetadata?: ContentMetadata;
     }) => {
-      const result = await contentService.processContentDecision({
-        contentId: content.id,
-        user,
-        approved,
-        feedback,
-        originalMetadata,
-      });
-
-      if (!result.success) throw new Error(result.error);
+      const data = unwrap(
+        await contentService.processContentDecision({
+          contentId: content.id,
+          user,
+          approved,
+          feedback,
+          originalMetadata,
+        })
+      );
 
       if (approved) {
         updateContentMutation.mutate({
           contentId: content.id,
-          updates: result.data.content,
+          updates: data.content,
         });
         toast.success("Article approuvé !", {
           description: "Publication en cours...",
         });
-        return result;
+        return data;
       }
 
       await contentService.deleteContent({ content, user });
       deleteContentMutation.mutate({ content, user });
       toast.success("Article refusé et supprimé.");
-      return result;
+      return data;
     },
     onError: (err) => {
       if (err.message.includes("Timeout") || err.message.includes("422")) {
