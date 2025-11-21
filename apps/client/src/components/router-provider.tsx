@@ -5,7 +5,6 @@ import { routes } from "@/routes";
 import { GuestRoute } from "./guard/guest-route";
 import { lazy } from "react";
 import ModuleIdPage from "@/app/(sidebar)/modules/[id]/module-id-page";
-import AuthCallbackPage from "@/app/(auth)/auth/callback/auth-callback-page";
 
 const ProfilePage = lazy(() => import("@/app/(sidebar)/profile/profile-page"));
 const DashboardPage = lazy(
@@ -22,6 +21,12 @@ const SearchPage = lazy(() => import("@/app/search/search-page"));
 const SidebarLayout = lazy(() => import("@/app/(sidebar)/sidebar-layout"));
 const CompleteProfilePage = lazy(
   () => import("@/app/(sidebar)/complete-profile/complete-profile-page")
+);
+const AuthCallbackPage = lazy(
+  () => import("@/app/(auth)/auth/callback/auth-callback-page")
+);
+const GoogleDataPolicyPage = lazy(
+  () => import("@/app/privacy/google-data-policy-page")
 );
 
 const router = createBrowserRouter([
@@ -77,6 +82,10 @@ const router = createBrowserRouter([
         <AuthCallbackPage />
       </GuestRoute>
     ),
+  },
+  {
+    path: routes.privacy.googleDataPolicy(),
+    element: <GoogleDataPolicyPage />,
   },
   {
     path: routes.search.index(),

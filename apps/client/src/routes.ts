@@ -35,4 +35,7 @@ export const routes = {
   completeProfile: {
     index: () => "/complete-profile",
   },
+  privacy: {
+    googleDataPolicy: () => "/google-data-policy",
+  },
 };
