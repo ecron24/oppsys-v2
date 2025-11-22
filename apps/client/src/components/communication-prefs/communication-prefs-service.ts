@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
-import { toCamelCase } from "@/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 import type { CommunicationPrefs } from "./communication-prefs-types";
-import { toSnakeCase } from "@/lib/to-snake-case";
+import { toSnakeCase } from "@oppsys/shared";
 
 export const communicationPrefsService = {
   async getByClientId(clientId: string) {

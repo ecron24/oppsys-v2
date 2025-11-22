@@ -6,8 +6,7 @@ import type {
 } from "../domain/notification-repo";
 import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
-import { toSnakeCase } from "src/lib/to-snake-case";
-
+import { toSnakeCase } from "@oppsys/shared";
 export class NotificationRepoSupabase implements NotificationRepo {
   constructor(
     private supabase: OppSysSupabaseClient,

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
 import { InsufficientCreditError } from "../domain/exception";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 
 export const ExecuteModuleBodySchema = z.object({
   input: z.record(z.string(), z.any()),

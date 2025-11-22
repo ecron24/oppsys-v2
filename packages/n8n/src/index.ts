@@ -6,7 +6,7 @@ import {
 import type { N8nInput, N8nModule, N8nResult } from "./n8n-type";
 import { determineTriggerType } from "./trigger-type";
 import { buildChatInput, extractMessageFromN8n } from "./utilis";
-import { toSnakeCase } from "./to-snake-case";
+import { toSnakeCase } from "@oppsys/shared";
 
 const logger = createLogger();
 

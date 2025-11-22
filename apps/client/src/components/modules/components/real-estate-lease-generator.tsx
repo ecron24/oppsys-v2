@@ -59,7 +59,7 @@ import type {
   LeaseType,
   Template,
 } from "@/components/templates/templates-type";
-import { toSnakeCase } from "@/lib/to-snake-case";
+import { camelToSnake } from "@oppsys/shared";
 import { MODULES_IDS } from "@oppsys/api/client";
 
 type Config = Extract<
@@ -653,7 +653,7 @@ export default function RealEstateLeaseGenerator({
                           : "border-border hover:border-blue-500/50"
                       }`}
                       onClick={() =>
-                        setLeaseType(toSnakeCase(key) as LeaseType)
+                        setLeaseType(camelToSnake(key) as LeaseType)
                       }
                     >
                       <div className="space-y-2">

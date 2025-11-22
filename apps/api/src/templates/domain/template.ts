@@ -4,7 +4,7 @@ import {
   BooleanNullableSchema,
   UuidSchema,
 } from "src/common/common-schema";
-import { snakeToCamel } from "src/lib/to-camel-case";
+import { snakeToCamel } from "@oppsys/shared";
 import z from "zod";
 
 export const RealEstateTemplateSchema = z.object({

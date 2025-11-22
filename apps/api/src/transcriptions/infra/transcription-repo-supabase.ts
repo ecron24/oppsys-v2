@@ -12,8 +12,8 @@ import {
 } from "../domain/transcription";
 import type { Logger } from "src/logger/domain/logger";
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
-import { toSnakeCase } from "src/lib/to-snake-case";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toSnakeCase } from "@oppsys/shared";
+import { toCamelCase } from "@oppsys/shared";
 import { tryCatch } from "src/lib/try-catch";
 
 export class TranscriptionRepoSupabase implements TranscriptionRepo {

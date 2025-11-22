@@ -16,8 +16,8 @@ import {
   type ProfileWithPlan,
   type UpdateProfile,
 } from "src/profile/domain/profile";
-import { toCamelCase } from "src/lib/to-camel-case";
-import { toSnakeCase } from "src/lib/to-snake-case";
+import { toCamelCase } from "@oppsys/shared";
+import { toSnakeCase } from "@oppsys/shared";
 import type { Logger } from "src/logger/domain/logger";
 
 export class ProfileRepoSupabase implements ProfileRepo {

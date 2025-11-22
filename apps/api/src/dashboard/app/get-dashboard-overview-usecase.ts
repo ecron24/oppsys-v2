@@ -1,7 +1,7 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { z } from "zod";
 import type { OppSysContext } from "src/get-context";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 import { PeriodSchema } from "../domain/dashboard";
 import { generateDailyUsageChart, periodToDate } from "./dashboard-utils";
 

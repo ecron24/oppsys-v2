@@ -16,10 +16,9 @@ import {
 } from "../domain/scheduled-task";
 import { tryCatch } from "src/lib/try-catch";
 import type { Json } from "@oppsys/supabase";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 import type { Logger } from "src/logger/domain/logger";
-import { toSnakeCase } from "src/lib/to-snake-case";
-
+import { toSnakeCase } from "@oppsys/shared";
 export class ScheduledTaskRepoSupabase implements ScheduledTaskRepo {
   constructor(
     private supabase: OppSysSupabaseClient,

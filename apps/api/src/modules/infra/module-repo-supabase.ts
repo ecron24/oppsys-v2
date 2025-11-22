@@ -15,12 +15,11 @@ import type {
 } from "../domain/module-repo";
 import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 import z from "zod";
 import type { ListModulesQuery } from "../app/get-modules-use-case";
 import type { ModuleUsageHistoryQuery } from "../app/get-module-usage-history-use-case";
-import { toSnakeCase } from "src/lib/to-snake-case";
-
+import { toSnakeCase } from "@oppsys/shared";
 export class ModuleRepoSupabase implements ModuleRepo {
   constructor(
     private supabase: OppSysSupabaseClient,

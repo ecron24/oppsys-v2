@@ -20,9 +20,8 @@ import {
 } from "../domain/youtube-upload";
 import { tryCatch } from "src/lib/try-catch";
 import type { Logger } from "src/logger/domain/logger";
-import { toCamelCase } from "src/lib/to-camel-case";
-import { toSnakeCase } from "src/lib/to-snake-case";
-
+import { toCamelCase } from "@oppsys/shared";
+import { toSnakeCase } from "@oppsys/shared";
 export class YouTubeRepoSupabase implements YouTubeRepo {
   constructor(
     private supabase: OppSysSupabaseClient,

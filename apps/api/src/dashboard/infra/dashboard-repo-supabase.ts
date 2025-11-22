@@ -7,7 +7,7 @@ import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import type { Logger } from "src/logger/domain/logger";
 import { tryCatch } from "src/lib/try-catch";
 import type { ContentStats, Credit } from "../domain/dashboard";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 
 export class DashboardRepoSupabase implements DashboardRepo {
   constructor(

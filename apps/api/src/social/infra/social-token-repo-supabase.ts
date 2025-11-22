@@ -10,8 +10,8 @@ import {
 import type { Logger } from "src/logger/domain/logger";
 import { SocialTokenSchema, type SocialToken } from "../domain/social-token";
 import { tryCatch } from "src/lib/try-catch";
-import { toSnakeCase } from "src/lib/to-snake-case";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toSnakeCase } from "@oppsys/shared";
+import { toCamelCase } from "@oppsys/shared";
 import type { SocialPlatform } from "../domain/social-connection";
 
 export class SocialTokenRepoSupabase implements SocialTokenRepo {

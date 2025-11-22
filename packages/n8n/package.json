@@ -16,6 +16,7 @@
   "dependencies": {
     "@oppsys/supabase": "workspace:*",
     "@oppsys/logger": "workspace:*",
+    "@oppsys/shared": "workspace:*",
     "zod": "catalog:"
   }
 }

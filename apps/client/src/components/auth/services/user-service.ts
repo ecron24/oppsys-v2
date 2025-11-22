@@ -1,7 +1,7 @@
 import { handleApiCall } from "@/lib/handle-api-call";
 import { honoClient } from "@/lib/hono-client";
 import type { User } from "../auth-types";
-import { toSnakeCase } from "@/lib/to-snake-case";
+import { toSnakeCase } from "@oppsys/shared";
 
 export const userService = {
   async getMe() {

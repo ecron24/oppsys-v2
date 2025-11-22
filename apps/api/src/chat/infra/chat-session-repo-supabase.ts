@@ -9,9 +9,8 @@ import { ChatSessionSchema, type ChatSession } from "../domain/chat-session";
 import type { Logger } from "src/logger/domain/logger";
 import type { Json, OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
-import { toCamelCase } from "src/lib/to-camel-case";
-import { toSnakeCase } from "src/lib/to-snake-case";
-
+import { toCamelCase } from "@oppsys/shared";
+import { toSnakeCase } from "@oppsys/shared";
 export class ChatSessionRepoSupabase implements ChatSessionRepo {
   constructor(
     private supabase: OppSysSupabaseClient,

@@ -21,8 +21,8 @@ import {
   type ContentApproval,
   type SearchFilters,
 } from "../domain/content";
-import { toSnakeCase } from "src/lib/to-snake-case";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toSnakeCase } from "@oppsys/shared";
+import { toCamelCase } from "@oppsys/shared";
 import z from "zod";
 import type { GetAllContentQuery } from "../app/get-all-content-use-case";
 

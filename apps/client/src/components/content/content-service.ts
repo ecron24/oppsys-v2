@@ -7,7 +7,7 @@ import type {
 } from "../../app/(sidebar)/content/content-types";
 import { handleApiCall } from "@/lib/handle-api-call";
 import type { Period } from "../../app/(sidebar)/dashboard/services/dashboard-service";
-import { toSnakeCase } from "@/lib/to-snake-case";
+import { toSnakeCase } from "@oppsys/shared";
 import type { User } from "../auth/auth-types";
 
 export class ContentService {

@@ -9,8 +9,8 @@ import type {
 } from "../domain/formation-repo";
 import type { Formation, FormationAccess } from "../domain/formation";
 import { tryCatch } from "src/lib/try-catch";
-import { toSnakeCase } from "src/lib/to-snake-case";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toSnakeCase } from "@oppsys/shared";
+import { toCamelCase } from "@oppsys/shared";
 
 export class FormationRepoSupabase implements FormationRepo {
   constructor(

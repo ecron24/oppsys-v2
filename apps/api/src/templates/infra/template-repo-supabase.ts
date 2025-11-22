@@ -14,9 +14,9 @@ import {
   type RealEstateTemplate,
   type UpdateTemplateInput,
 } from "../domain/template";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 import type { Logger } from "src/logger/domain/logger";
-import { camelToSnake } from "src/lib/to-snake-case";
+import { camelToSnake } from "@oppsys/shared";
 
 export class TemplateRepoSupabase implements TemplateRepo {
   constructor(

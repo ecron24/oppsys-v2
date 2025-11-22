@@ -7,7 +7,7 @@ import type {
 import type { OppSysSupabaseClient } from "@oppsys/supabase";
 import { tryCatch } from "src/lib/try-catch";
 import { PlanHistorySchema, PlanSchema, type Plan } from "src/plan/domain/plan";
-import { toCamelCase } from "src/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 import z from "zod";
 import type { Logger } from "src/logger/domain/logger";
 

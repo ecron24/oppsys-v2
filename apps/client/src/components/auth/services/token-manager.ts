@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { authService } from "./auth-service";
-import { toCamelCase } from "@/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 
 export const tokenManager = {
   getToken: async () => {

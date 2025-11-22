@@ -245,6 +245,9 @@ importers:
       '@oppsys/logger':
         specifier: workspace:*
         version: link:../logger
+      '@oppsys/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@oppsys/supabase':
         specifier: workspace:*
         version: link:../supabase

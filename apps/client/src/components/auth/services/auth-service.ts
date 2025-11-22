@@ -11,7 +11,7 @@ import type {
   MFAChallengeParams,
   MFAUnenrollParams,
 } from "@oppsys/supabase";
-import { toCamelCase } from "@/lib/to-camel-case";
+import { toCamelCase } from "@oppsys/shared";
 
 export const authService = {
   async signInWithPassword(params: { email: string; password: string }) {
