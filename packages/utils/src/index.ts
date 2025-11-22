@@ -29,32 +29,6 @@ export type ApiResponseError<TStatusError = number> = {
   status: TStatusError;
 };
 
-export function throwOnError<
-  TData,
-  TError = Error,
-  TKind = string,
-  TStatusSuccess = number,
-  TStatusError = number,
->(
-  result:
-    | Result<TData, TError, TKind>
-    | ApiResponse<TData, TStatusSuccess, TStatusError>
-): asserts result is
-  | ResultSuccess<TData>
-  | ApiResponseSuccess<TData, TStatusSuccess> {
-  if (!result.success) {
-    if ("details" in result && result.details) {
-      throw new Error(`${result.error}: ${result.details}`);
-    }
-    if ("error" in result) {
-      throw result.error instanceof Error
-        ? result.error
-        : new Error(String(result.error));
-    }
-    throw new Error("Unknown error");
-  }
-}
-
 export function unwrap<TData>(
   res:
     | Result<TData, any, any>

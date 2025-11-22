@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/types";
+import type { Result } from "@oppsys/utils";
 import { tryCatch } from "src/lib/try-catch";
 import type {
   SocialProvider,

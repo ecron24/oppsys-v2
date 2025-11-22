@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/types";
+import type { Result } from "@oppsys/utils";
 import type { CreditCheckResult } from "src/modules/domain/module";
 import type { Profile, ProfileWithPlan, UpdateProfile } from "./profile";
 

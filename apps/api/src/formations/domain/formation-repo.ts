@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/types";
+import type { Result } from "@oppsys/utils";
 import type { Formation, FormationAccess } from "./formation";
 
 export type GetFormationByIdResult = Result<

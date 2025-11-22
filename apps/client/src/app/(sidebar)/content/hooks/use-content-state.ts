@@ -4,7 +4,7 @@ import type { Content, ContentMetadata } from "../content-types";
 import type { User } from "@/components/auth/auth-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/components/tanstack-query/query-client";
-import { unwrap } from "@oppsys/types";
+import { unwrap } from "@oppsys/utils";
 // import { mockContents } from "./mock-data";
 
 export const useContentState = (user: User | null) => {

@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/types";
+import type { Result } from "@oppsys/utils";
 import type { YouTubeUpload, YouTubeStats } from "./youtube-upload";
 
 export type CreateVideoUploadUrlResult = Result<

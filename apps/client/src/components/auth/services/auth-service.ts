@@ -1,7 +1,7 @@
 import { handleApiCall } from "@/lib/handle-api-call";
 import { supabase } from "@/lib/supabase";
 import { honoClient } from "@/lib/hono-client";
-import type { ApiResponse } from "@oppsys/types";
+import type { ApiResponse } from "@oppsys/utils";
 import type {
   AuthChangeEvent,
   AuthSession,

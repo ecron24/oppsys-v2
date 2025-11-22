@@ -6,7 +6,7 @@ import {
   queryKeys,
 } from "@/components/tanstack-query/query-client";
 import type { Platform } from "@/components/social/social-types";
-import { unwrap } from "@oppsys/types";
+import { unwrap } from "@oppsys/utils";
 
 export const useSocialConnections = () => {
   const {

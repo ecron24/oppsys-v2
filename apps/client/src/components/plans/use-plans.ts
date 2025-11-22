@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../tanstack-query/query-client";
 import { plansService } from "./plans-service";
 import { Crown, Star, type LucideIcon } from "lucide-react";
-import { unwrap } from "@oppsys/types";
+import { unwrap } from "@oppsys/utils";
 
 type PLAN_CONFIG = {
   color: string;

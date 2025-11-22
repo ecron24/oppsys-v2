@@ -15,7 +15,7 @@ export const ModuleSchema = z.object({
   description: nullableSchema(z.string()),
   type: z.enum(["n8n", "ai"]),
   creditCost: z.number(),
-  endpoint: z.url(),
+  endpoint: z.string(),
   n8nTriggerType: nullableSchema(z.enum(["CHAT", "STANDARD"])),
   config: nullableSchema(ConfigSchema),
   isActive: z.boolean(),

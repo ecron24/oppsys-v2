@@ -5,7 +5,7 @@ import { MODULES_CONFIG_MAPPING } from "../modules-config";
 import type { ModuleMapping } from "@/components/modules/module-types";
 import { Bot } from "lucide-react";
 import { lazy } from "react";
-import { unwrap } from "@oppsys/types";
+import { unwrap } from "@oppsys/utils";
 
 const PlaceholderModule = lazy(
   () => import("@/components/modules/components/placeholder-module")

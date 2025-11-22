@@ -1,5 +1,5 @@
 import type { ClientResponse } from "hono/client";
-import { type ApiResponse } from "@oppsys/types";
+import { type ApiResponse } from "@oppsys/utils";
 
 export async function handleApiCall<
   TData = unknown,

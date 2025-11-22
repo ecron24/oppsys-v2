@@ -1,4 +1,4 @@
-import type { ResultError } from "@oppsys/types";
+import type { ResultError } from "@oppsys/utils";
 
 export async function tryCatch<
   TData,

@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/types";
+import type { Result } from "@oppsys/utils";
 import * as crypto from "crypto";
 import { tryCatch } from "src/lib/try-catch";
 import type { SocialProviderTokenData } from "./providers/social-provider";

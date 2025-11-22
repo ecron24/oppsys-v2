@@ -28,7 +28,7 @@
     "@oppsys/logger": "workspace:*",
     "@oppsys/n8n": "workspace:*",
     "@oppsys/supabase": "workspace:*",
-    "@oppsys/types": "workspace:*",
+    "@oppsys/utils": "workspace:*",
     "dotenv": "^17.2.3",
     "form-data": "^4.0.4",
     "hono": "catalog:",

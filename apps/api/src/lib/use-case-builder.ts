@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/types";
+import type { Result } from "@oppsys/utils";
 import type { OppSysContext } from "src/get-context";
 import { z } from "zod";
 import type { ZodType } from "zod";
