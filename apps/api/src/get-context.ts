@@ -17,9 +17,10 @@ import { TranscriptionRepoSupabase } from "./transcriptions/infra/transcription-
 import { FormationRepoSupabase } from "./formations/infra/formation-repo-supabase";
 import { TemplateRepoSupabase } from "./templates/infra/template-repo-supabase";
 import { YouTubeRepoSupabase } from "./youtube/infra/youtube-repo-supabase";
+import type { Logger } from "./logger/domain/logger";
 
 export function getContext() {
-  const logger = new LoggerWinston();
+  const logger: Logger = new LoggerWinston();
   const chatSessionRepo = new ChatSessionRepoSupabase(supabase, logger);
   const socialTokenRepo = new SocialTokenRepoSupabase(supabase, logger);
   const socialTokenManager = new SocialTokenManager(socialTokenRepo, logger);

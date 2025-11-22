@@ -8,7 +8,10 @@
     "build": "tsc && tsc-alias && tsc-esm-fix dist",
     "start": "tsx dist/app.js",
     "check-types": "tsc --noEmit",
-    "lint": "eslint --ext .js,.ts ."
+    "lint": "eslint --ext .js,.ts .",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest --watch"
   },
   "exports": {
     ".": {
@@ -27,15 +30,15 @@
     "@hono/zod-validator": "^0.7.3",
     "@oppsys/logger": "workspace:*",
     "@oppsys/n8n": "workspace:*",
-    "@oppsys/supabase": "workspace:*",
     "@oppsys/shared": "workspace:*",
+    "@oppsys/supabase": "workspace:*",
     "dotenv": "^17.2.3",
     "form-data": "^4.0.4",
     "hono": "catalog:",
     "hono-openapi": "^1.1.0",
     "hono-rate-limiter": "^0.4.2",
-    "winston": "^3.18.2",
     "tsx": "^4.7.1",
+    "winston": "^3.18.2",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -47,6 +50,7 @@
     "tsc-alias": "^1.8.16",
     "tsc-esm-fix": "^3.1.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.45.0"
+    "typescript-eslint": "^8.45.0",
+    "vitest": "^4.0.13"
   }
 }
