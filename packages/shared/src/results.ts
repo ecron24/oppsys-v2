@@ -56,22 +56,22 @@ export function unwrap<TData>(
   }
 
   // ResultError (error: TError)
-  const maybeErr = (res as ResultError).error;
+  const maybeErr = res.error;
   if (maybeErr instanceof Error) throw customError ?? maybeErr;
   if (typeof maybeErr === "string") throw customError ?? new Error(maybeErr);
 
   // fallback: sérialiser l'objet d'erreur si possible
+  let payloadErrorStr = "";
   try {
-    throw (
-      customError ??
-      new Error(
-        JSON.stringify(maybeErr) || `Request failed (kind=${(res as any).kind})`
-      )
-    );
+    payloadErrorStr = JSON.stringify(maybeErr);
   } catch {
-    throw (
-      customError ??
-      new Error(`Request failed (kind=${(res as any).kind ?? "unknown"})`)
-    );
+    //
   }
+
+  throw (
+    customError ??
+    new Error(
+      `Request failed (kind=${(res as any).kind || "unknown"}) ${payloadErrorStr.length > 0 ? `::${payloadErrorStr}` : ""}`
+    )
+  );
 }
