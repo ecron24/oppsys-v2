@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import type { Notification } from "./notification";
 
 export type CreateNotificationResult = Result<void, Error, "UNKNOWN_ERROR">;

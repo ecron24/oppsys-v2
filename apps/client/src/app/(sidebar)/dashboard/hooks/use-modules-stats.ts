@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService, type Period } from "../services/dashboard-service";
 import { queryKeys } from "@/components/tanstack-query/query-client";
-import { unwrap } from "@oppsys/utils";
+import { unwrap } from "@oppsys/shared";
 
 export function useModulesStats(period: Period = "month") {
   const {

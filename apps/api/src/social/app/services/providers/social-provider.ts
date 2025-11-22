@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 
 export interface SocialProviderTokenData {
   accessToken: string;

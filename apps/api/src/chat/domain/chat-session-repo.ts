@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import type { ChatSession } from "./chat-session";
 
 export type CreateOrGetChatSessionResult = Result<

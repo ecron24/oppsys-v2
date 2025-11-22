@@ -13,7 +13,7 @@
   "dependencies": {
     "@oppsys/api": "workspace:*",
     "@oppsys/supabase": "workspace:*",
-    "@oppsys/utils": "workspace:*",
+    "@oppsys/shared": "workspace:*",
     "@oppsys/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/react-form": "catalog:",

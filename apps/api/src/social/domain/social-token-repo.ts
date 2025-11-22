@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import type { SocialToken } from "./social-token";
 import type { SocialPlatform } from "./social-connection";
 

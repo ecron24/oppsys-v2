@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import z, { ZodError } from "zod";
 import { AuthError } from "@oppsys/supabase";
 import type { OppSysContext } from "src/get-context";

@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import * as crypto from "crypto";
 import FormData from "form-data";
 import { tryCatch } from "src/lib/try-catch";

@@ -1,4 +1,4 @@
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import type { Session, User } from "./user";
 
 export type SignUpResult = Result<

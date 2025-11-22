@@ -1,5 +1,5 @@
 import type { ContentStats, Credit } from "./dashboard";
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 
 export type GetCreditsResult = Result<Credit[], Error, "UNKNOWN_ERROR">;
 export type GetDashboardContentStatsResult = Result<

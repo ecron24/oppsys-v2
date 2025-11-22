@@ -35,7 +35,7 @@ If the function return is an error, the return format is:
 There is custom type to built them by :
 
 ```ts
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 // example
 type GetModulesResult = Result<Module[], Error, "UNKNOWN_ERROR">;
 ```

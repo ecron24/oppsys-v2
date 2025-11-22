@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import { SocialTokenManager } from "./social-token-manager";
 import type { UserProfile } from "./social-type";
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 import type { SocialProviderTokenData } from "./providers/social-provider";
 import type {
   ScopeLevel,

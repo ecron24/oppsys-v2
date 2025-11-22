@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { ZodType } from "zod";
 import { ZodError } from "zod";
 import type { FnContext } from "./fn-context";
-import type { Result } from "@oppsys/utils";
+import type { Result } from "@oppsys/shared";
 
 type DefaultErrorKind = "VALIDATION_ERROR" | "INTERNAL_ERROR" | "SCHEMA_ERROR";
 

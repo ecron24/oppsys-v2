@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { dashboardService, type Period } from "../services/dashboard-service";
 import type { DashboardOverviewData } from "../type";
 import { queryKeys } from "@/components/tanstack-query/query-client";
-import { unwrap } from "@oppsys/utils";
+import { unwrap } from "@oppsys/shared";
 
 export function useDashboardOverview(period: Period = "month") {
   const {
