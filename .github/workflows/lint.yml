@@ -37,7 +37,9 @@ jobs:
 
       - name: Build, typecheck and lint
         run: |
+          cd apps/api
           npm run build
+          cd ../..
           npm run check-types
           npm run lint
 
