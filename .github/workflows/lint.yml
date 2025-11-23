@@ -35,14 +35,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build projects
-        run: npm run build
-
-      - name: Check types
-        run: npm run check-types
-
-      - name: Lint
-        run: npm run lint
+      - name: Build, typecheck and lint
+        run: |
+          pnpm build
+          pnpm check-types
+          pnpm lint
 
       # Optional: Add steps for coverage reporting
       # - name: Generate Vitest Coverage Report
