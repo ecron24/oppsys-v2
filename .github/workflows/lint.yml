@@ -37,6 +37,6 @@ jobs:
 
       - name: Build, typecheck and lint
         run: |
-          npm run build
-          npm run check-types
-          npm run lint
+          pnpm turbo build
+          pnpm turbo check-types
+          pnpm turbo lint
