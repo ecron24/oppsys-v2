@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "concurrently --names type,server -c gray,blue 'tsc --watch' 'tsx watch src/app.ts'",
-    "build": "tsc && tsc-alias && tsc-esm-fix dist",
+    "build": "tsup",
     "start": "tsx dist/app.js",
     "check-types": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts .",
@@ -49,6 +49,7 @@
     "eslint": "^9.36.0",
     "tsc-alias": "^1.8.16",
     "tsc-esm-fix": "^3.1.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.45.0",
     "vitest": "^4.0.13"
