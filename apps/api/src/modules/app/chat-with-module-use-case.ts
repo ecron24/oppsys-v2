@@ -77,8 +77,8 @@ export const chatWithModuleUseCase = buildUseCase()
       used_at: new Date().toISOString(),
       metadata: {
         type: "chat",
-        user_email: user.id,
-        session_id: user.email,
+        user_email: user.email,
+        session_id: body.sessionId,
       },
     };
 
