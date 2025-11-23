@@ -17,11 +17,11 @@
       "cache": false
     },
     "test": {
-      "dependsOn": ["^test"]
-    },
-    "test:watch": {
       "cache": false,
       "persistent": true
+    },
+    "test:run": {
+      "dependsOn": ["^test:run"]
     }
   }
 }

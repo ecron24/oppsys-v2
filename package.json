@@ -10,7 +10,7 @@
     "typegen": "pnpm turbo typegen",
     "build": "pnpm turbo build",
     "test": "pnpm turbo test",
-    "test:watch": "pnpm turbo test:watch",
+    "test:run": "pnpm turbo test:run",
     "format": "prettier . --write",
     "prepare": "husky"
   },
