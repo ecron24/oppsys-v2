@@ -37,11 +37,7 @@ jobs:
 
       - name: Build, typecheck and lint
         run: |
-          npm run build
-          ls -la apps/api/dist
-          ls -la apps/client/node_modules/@oppsys
-          npm run check-types
-          npm run lint
+          pnpm turbo build check-types lint
 
       # Optional: Add steps for coverage reporting
       # - name: Generate Vitest Coverage Report
