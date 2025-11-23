@@ -33,11 +33,13 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build, typecheck and lint
         run: |
-          pnpm turbo build check-types lint
+          npm run build
+          npm run check-types
+          npm run lint
 
       # Optional: Add steps for coverage reporting
       # - name: Generate Vitest Coverage Report
