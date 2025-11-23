@@ -37,12 +37,6 @@ jobs:
 
       - name: Build, typecheck and lint
         run: |
-          pnpm build
-          pnpm check-types
-          pnpm lint
-
-      # Optional: Add steps for coverage reporting
-      # - name: Generate Vitest Coverage Report
-      #   uses: vitest-dev/vitest-coverage-report-action@v1 # Or a similar action
-      #   with:
-      #     # ... coverage action configuration ...
+          npm run build
+          npm run check-types
+          npm run lint
