@@ -94,6 +94,18 @@ type Config = Extract<
   { configType: typeof MODULES_IDS.AI_WRITER }
 >;
 
+const welcomeMessage = `👋 Bienvenue dans l'AI Writer !
+
+Je suis votre assistant conversationnel et je vais vous aider à créer le contenu parfait.
+
+Pour commencer, dites-moi simplement :
+**Quel type de contenu souhaitez-vous créer ?**
+
+Exemple : "Un email de bienvenue pour mes nouveaux clients" ou "Un article sur l'IA en marketing"
+
+Je vous poserai ensuite quelques questions pour affiner votre contenu. Aucun crédit ne sera consommé pendant notre conversation.
+`;
+
 export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const { user: authUser } = useAuth();
   const { balance, hasEnoughCredits, formatBalance } = useCredits();
@@ -167,11 +179,10 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   // >({});
   const [isWaitingForN8n, setIsWaitingForN8n] = useState(false);
   const [chatInitialized, setChatInitialized] = useState(false);
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const [currentStepChat, setCurrentStepChat] = useState(0);
   const [conversationHistory, setConversationHistory] = useState<
     ConversationMessage[]
-  >([]);
+  >([{ message: welcomeMessage, timestamp: new Date(), type: "bot" }]);
   const [userInput, setUserInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
@@ -315,7 +326,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
         context: fullContext,
       });
       if (response.success) {
-        if (response.data.data?.isGenerating) {
+        if (response.data.data.data?.isGenerating) {
           setProgress(50);
           setCurrentStep("Génération en cours en arrière-plan...");
           addMessage("bot", response.data.message || "");
@@ -382,9 +393,10 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             }
             setTimeout(() => {
               setCurrentStepChat(0);
-              setConversationHistory([]);
+              setConversationHistory([
+                { message: welcomeMessage, timestamp: new Date(), type: "bot" },
+              ]);
               setChatInitialized(false);
-              setShowWelcomeMessage(true);
               setActiveTab("content");
             }, 3000);
           }
@@ -533,22 +545,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     []
   );
 
-  const displayWelcomeMessage = useCallback(() => {
-    const welcomeMessage = `👋 Bienvenue dans l'AI Writer !
-
-      Je suis votre assistant conversationnel et je vais vous aider à créer le contenu parfait.
-
-      Pour commencer, dites-moi simplement :
-      **Quel type de contenu souhaitez-vous créer ?**
-
-      Exemple : "Un email de bienvenue pour mes nouveaux clients" ou "Un article sur l'IA en marketing"
-
-      💡 Je vous poserai ensuite quelques questions pour affiner votre contenu. Aucun crédit ne sera consommé pendant notre conversation.`;
-
-    addMessage("bot", welcomeMessage);
-    setShowWelcomeMessage(false);
-  }, [addMessage]);
-
   const handleKeywordResearch = useCallback(async () => {
     if (!seoKeywordResearch.trim()) {
       toast.error("Please enter a main keyword");
@@ -627,16 +623,14 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const handleChatSubmit = async () => {
     if (!userInput.trim() || isWaitingForN8n || !sessionId) return;
 
-    const now = Date.now();
-
     if (isSubmittingChat.current) {
-      console.warn("⏸️ Submission ignored (already in progress)");
+      toast.warning("Soumission ignorée (déjà en cours)");
       return;
     }
 
+    const now = Date.now();
     if (now - lastSubmitTime.current < 2000) {
-      console.warn("⏸️ Submission ignored (too fast)");
-      toast.warning("Please wait before sending another message");
+      toast.warning("Veuillez patienter avant d'envoyer un autre message");
       return;
     }
 
@@ -705,10 +699,10 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     }, 500);
     if (response.success) {
       if (
-        response.data.data?.sessionId &&
-        response.data.data?.sessionId !== sessionId
+        response.data.data.data?.sessionId &&
+        response.data.data?.data.sessionId !== sessionId
       ) {
-        setSessionId(response.data.data.sessionId as string);
+        setSessionId(response.data.data.data.sessionId.toString());
       }
       if (response.data?.message) {
         addMessage("bot", response.data.message);
@@ -717,54 +711,60 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
         //   setConversationContext(response.data.context);
         // }
 
-        if (response.data?.data && typeof response.data.data === "object") {
-          const data = response.data.data;
-          if (data?.content && typeof data.content === "object") {
-            const content = data.content as Record<string, unknown>;
-            if (typeof content.prompt === "string" && content.prompt.trim()) {
-              setPrompt(content.prompt.trim());
-            }
-            if (
-              typeof content.tone === "string" &&
-              tonesFromAPI.find((t) => t.value === content.tone)
-            ) {
-              setTone(content.tone);
-            }
-            if (
-              typeof content.contentType === "string" &&
-              contentTypesFromAPI[content.contentType]
-            ) {
-              setContentType(content.contentType);
-            }
-            if (
-              typeof content.length === "string" &&
-              lengthsFromAPI.find((l) => l.value === content.length)
-            ) {
-              setLength(content.length);
-            }
-            if (
-              typeof content.imageOption === "string" &&
-              imageOptionsFromAPI.find((o) => o.value === content.imageOption)
-            ) {
-              setImageOption(content.imageOption);
-            }
+        const context = response.data.context as Record<string, unknown>;
+        if (context?.content && typeof context.content === "object") {
+          const content = context.content as Record<string, unknown>;
+          if (typeof content.prompt === "string" && content.prompt.trim()) {
+            setPrompt(content.prompt.trim());
+          }
+          if (
+            typeof content.tone === "string" &&
+            tonesFromAPI.find((t) => t.value === content.tone)
+          ) {
+            setTone(content.tone);
+          }
+          if (
+            typeof content.contentType === "string" &&
+            contentTypesFromAPI[content.contentType]
+          ) {
+            setContentType(content.contentType);
+          }
+          if (
+            typeof content.length === "string" &&
+            lengthsFromAPI.find((l) => l.value === content.length)
+          ) {
+            setLength(content.length);
+          }
+          if (
+            typeof content.imageOption === "string" &&
+            imageOptionsFromAPI.find((o) => o.value === content.imageOption)
+          ) {
+            setImageOption(content.imageOption);
           }
         }
 
-        if (response.data.options) {
-          if (response.data.options.targetAudience?.toString().trim())
-            setTargetAudience(
-              response.data.options.targetAudience.toString().trim()
-            );
-          if (response.data.options.keywords?.toString().trim())
-            setKeywords(response.data.options.keywords.toString().trim());
-          if (response.data.options.seoOptimize !== undefined)
-            setSeoOptimize(Boolean(response.data.options.seoOptimize));
-          if (response.data.options.includeCallToAction !== undefined)
-            setIncludeCallToAction(
-              Boolean(response.data.options.includeCallToAction)
-            );
+        const options = context.options as Record<string, unknown>;
+        if (options) {
+          if (options.targetAudience?.toString().trim())
+            setTargetAudience(options.targetAudience.toString().trim());
+          if (options.keywords?.toString().trim())
+            setKeywords(options.keywords.toString().trim());
+          if (options.seoOptimize !== undefined)
+            setSeoOptimize(Boolean(options.seoOptimize));
+          if (options.includeCallToAction !== undefined)
+            setIncludeCallToAction(Boolean(options.includeCallToAction));
         }
+
+        // const seo = context.seo as Record<string, string>;
+        // if (seo) {
+        //   if (seo.targetKeywords?.trim())
+        //     setTargetKeywords(seo.targetKeywords.trim());
+        //   if (seo.audience?.trim()) setAudience(seo.audience.trim());
+        //   if (seo.customOutline?.trim())
+        //     setCustomOutline(seo.customOutline.trim());
+        //   if (seo.seoOptimize !== undefined)
+        //     setSeoOptimize(Boolean(seo.seoOptimize));
+        // }
 
         if (typeof response.data?.nextStep === "number") {
           setCurrentStepChat(response.data.nextStep);
@@ -805,18 +805,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       effect();
     }
   }, [authUser?.id, sessionId, sessionInitialized, module.slug]);
-
-  // Display welcome message
-  useEffect(() => {
-    if (sessionId && showWelcomeMessage && conversationHistory.length === 0) {
-      displayWelcomeMessage();
-    }
-  }, [
-    sessionId,
-    showWelcomeMessage,
-    conversationHistory.length,
-    displayWelcomeMessage,
-  ]);
 
   // Auto-scroll to bottom
   useEffect(() => {

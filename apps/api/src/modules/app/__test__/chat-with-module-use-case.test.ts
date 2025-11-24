@@ -696,7 +696,7 @@ describe("chatWithModuleUseCase", () => {
     });
 
     expect(res.success).toBe(true);
-    if (res.success) expect(res.data.data).toEqual({ foo: "bar" });
+    if (res.success) expect(res.data.data.data).toEqual({ foo: "bar" });
   });
 
   it("returns success even if moduleRepo.updateUsage returns success:false after successful execution", async () => {
