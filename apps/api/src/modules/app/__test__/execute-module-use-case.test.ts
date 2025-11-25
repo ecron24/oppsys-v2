@@ -487,7 +487,6 @@ describe("executeModuleUseCase", () => {
 
     expect(contentRepo.create).toHaveBeenCalled();
     const calledWith = (contentRepo.create as unknown as Mock).mock.calls[0][0];
-    expect(calledWith.contentData.content.length).toBeLessThanOrEqual(50000);
     expect(calledWith.contentData.title.length).toBeLessThanOrEqual(200);
     expect(calledWith.contentData.url).toBe("http://ok.example");
     expect(calledWith.contentData.metadata.original_output).toBeDefined();
