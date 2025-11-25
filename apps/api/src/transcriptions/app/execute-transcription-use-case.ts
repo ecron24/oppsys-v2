@@ -80,7 +80,7 @@ export const executeTranscriptionUseCase = buildUseCase()
 
     // Marquer la transcription comme success
     await ctx.transcriptionRepo.updateTranscription(input.transcriptionId, {
-      status: "success",
+      status: "completed",
       completedAt: new Date().toISOString(),
     });
     return n8nResult;

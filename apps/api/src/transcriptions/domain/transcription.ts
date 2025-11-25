@@ -1,5 +1,26 @@
 import z from "zod";
 
+export const TranscriptionOutputFormatSchema = z.enum([
+  "text",
+  "srt",
+  "vtt",
+  "json",
+]);
+
+export const TranscriptionQualitySchema = z.enum([
+  "basic",
+  "standard",
+  "premium",
+]);
+
+export const TranscriptionStatusSchema = z.enum([
+  "pending",
+  "uploading",
+  "processing",
+  "completed",
+  "failed",
+]);
+
 export const TranscriptionSchema = z.object({
   id: z.string(),
   userId: z.string().nullable(),
@@ -11,8 +32,8 @@ export const TranscriptionSchema = z.object({
   fileUrl: z.string().nullable(),
   transcriptionType: z.string(),
   language: z.string().nullable(),
-  quality: z.string().nullable(),
-  outputFormat: z.string().nullable(),
+  quality: TranscriptionQualitySchema.nullable(),
+  outputFormat: TranscriptionOutputFormatSchema.nullable(),
   speakerDiarization: z.boolean().nullable(),
   removeFillers: z.boolean().nullable(),
   addPunctuation: z.boolean().nullable(),
@@ -20,7 +41,7 @@ export const TranscriptionSchema = z.object({
   generateSummary: z.boolean().nullable(),
   customInstructions: z.string().nullable(),
   publishToContent: z.boolean().nullable(),
-  status: z.string().nullable(),
+  status: TranscriptionStatusSchema.nullable(),
   transcriptText: z.string().nullable(),
   summaryText: z.string().nullable(),
   speakers: z.any().nullable(),

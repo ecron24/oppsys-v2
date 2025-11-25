@@ -10,7 +10,10 @@ import {
   RefreshCw,
   RotateCcw,
 } from "lucide-react";
-import type { CommunicationPrefs as CommunicationPrefsType } from "@/components/communication-prefs/communication-prefs-types";
+import {
+  communicationPrefsSchema,
+  type CommunicationPrefs as CommunicationPrefsType,
+} from "@/components/communication-prefs/communication-prefs-types";
 import { communicationPrefsService } from "@/components/communication-prefs/communication-prefs-service";
 
 export const CommunicationPrefs = ({ clientId }: CommunicationPrefsProps) => {
@@ -34,7 +37,10 @@ export const CommunicationPrefs = ({ clientId }: CommunicationPrefsProps) => {
         setProductUpdates(result.data.productUpdates || false);
         setSecurityAlerts(result.data.securityAlerts !== false);
         setUsageReports(result.data.usageReports || false);
-        setInitialPrefs(result.data);
+        const data = communicationPrefsSchema.safeParse(result.data).data;
+        if (data) {
+          setInitialPrefs(data);
+        }
       }
       setLoading(false);
     };

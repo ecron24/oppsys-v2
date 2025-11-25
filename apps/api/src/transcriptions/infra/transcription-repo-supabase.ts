@@ -43,7 +43,7 @@ export class TranscriptionRepoSupabase implements TranscriptionRepo {
         } as const;
       }
 
-      const mapped = toCamelCase(data) satisfies Transcription;
+      const mapped = toCamelCase(data) as Transcription;
       return {
         success: true,
         data: TranscriptionSchema.parse(mapped),
@@ -79,7 +79,7 @@ export class TranscriptionRepoSupabase implements TranscriptionRepo {
         } as const;
       }
 
-      const mapped = toCamelCase(data) satisfies Transcription;
+      const mapped = toCamelCase(data) as Transcription;
       return {
         success: true,
         data: TranscriptionSchema.parse(mapped),
@@ -173,7 +173,7 @@ export class TranscriptionRepoSupabase implements TranscriptionRepo {
         } as const;
       }
 
-      const mapped = toCamelCase(data) satisfies Transcription;
+      const mapped = toCamelCase(data) as Transcription;
       return {
         success: true,
         data: TranscriptionSchema.parse(mapped),

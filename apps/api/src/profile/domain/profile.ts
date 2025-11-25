@@ -7,6 +7,8 @@ import {
 import { PlanSchema } from "src/plan/domain/plan";
 import z from "zod";
 
+export const ProfileRoleSchema = z.enum(["client", "admin", "staff"]);
+
 export const ProfileSchema = z.object({
   confirmedAt: StringNullableSchema,
   createdAt: StringNullableSchema,
@@ -23,7 +25,7 @@ export const ProfileSchema = z.object({
   phoneConfirmedAt: StringNullableSchema,
   planId: StringNullableSchema,
   renewalDate: StringNullableSchema,
-  role: StringNullableSchema,
+  role: nullableSchema(ProfileRoleSchema),
   socialSessions: nullableSchema(z.any()),
   stripeCustomerId: StringNullableSchema,
   stripeSubscriptionId: StringNullableSchema,
