@@ -188,7 +188,6 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
     // Sources de contenu (ordre prioritaire)
     const htmlContent =
       metadata.content ||
-      content.content ||
       (metadata.display &&
         typeof metadata.display == "object" &&
         "content" in metadata.display &&
@@ -347,11 +346,7 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
   }
 
   // Pour les posts de réseaux sociaux
-  if (
-    content.type === "social-post" ||
-    content.type === "social_post" ||
-    moduleSlug === "social-factory"
-  ) {
+  if (content.type === "social-post" || moduleSlug === "social-factory") {
     const {
       postContent,
       hashtags,

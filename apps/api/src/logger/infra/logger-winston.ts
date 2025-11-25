@@ -15,7 +15,7 @@ export class LoggerWinston implements Logger {
         name: error.name,
         message: error.message,
         cause: error.cause,
-        // stack: error.stack,
+        stack: error.stack,
       },
       metadata
     );

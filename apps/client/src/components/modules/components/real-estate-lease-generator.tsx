@@ -377,7 +377,7 @@ export default function RealEstateLeaseGenerator({
     setProgress(20);
 
     // ✅ UTILISER Le slug DE LA BDD
-    const moduleSlug = fullModuleConfig?.slug || "real-estate-lease-generator";
+    const moduleSlug = fullModuleConfig.slug;
 
     if (!moduleSlug) {
       setError("Configuration du module incomplète");
@@ -648,8 +648,8 @@ export default function RealEstateLeaseGenerator({
                     <div
                       key={key}
                       className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
-                        leaseType === key
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
+                        camelToSnake(leaseType) === camelToSnake(key)
+                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 dark:border-blue-400 dark:bg-blue-900/20 dark:ring-blue-400/30"
                           : "border-border hover:border-blue-500/50"
                       }`}
                       onClick={() =>
@@ -662,10 +662,7 @@ export default function RealEstateLeaseGenerator({
                             {lease.label}
                           </span>
                           {lease.cost === 0 && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-green-100"
-                            >
+                            <Badge variant="success" className="text-xs">
                               Gratuit
                             </Badge>
                           )}
@@ -708,7 +705,7 @@ export default function RealEstateLeaseGenerator({
                             key={template.id}
                             className={`border rounded-lg p-3 cursor-pointer transition-all ${
                               selectedTemplate === template.id
-                                ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
+                                ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 dark:border-blue-400 dark:bg-blue-900/20 dark:ring-blue-400/30"
                                 : "border-border hover:border-blue-500/50"
                             }`}
                             onClick={() => setSelectedTemplate(template.id)}

@@ -5,6 +5,7 @@ import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
 import { InsufficientCreditError } from "../domain/exception";
 import { toCamelCase } from "@oppsys/shared";
+import { ContentTypeSchema } from "src/content/domain/content";
 
 export const ExecuteModuleBodySchema = z.object({
   input: z.record(z.string(), z.any()),
@@ -139,6 +140,10 @@ export const executeModuleUseCase = buildUseCase()
       name: module.name,
       slug: module.slug,
       endpoint: module.endpoint,
+      // endpoint:
+      //   "https://n8n.oppsys.io/webhook/b918023a-dd7c-47ec-b8f4-dcd076e8a466",
+      // endpoint:
+      //   "https://n8n.oppsys.io/webhook/bfea41bf-fb6d-40f2-8cd4-3194bea1899c/chat",
       n8n_trigger_type: "CHAT" as const,
     };
 
@@ -243,7 +248,7 @@ export const executeModuleUseCase = buildUseCase()
         `Contenu généré par ${module.name}`) as string;
 
       // Détection intelligente du type
-      const type = (output?.type ||
+      const rawtype = (output?.type ||
         output?.content_type ||
         (module.name.toLowerCase().includes("article")
           ? "article"
@@ -253,7 +258,8 @@ export const executeModuleUseCase = buildUseCase()
               ? "video"
               : module.name.toLowerCase().includes("document")
                 ? "document"
-                : "content")) as string;
+                : "other")) as string;
+      const type = ContentTypeSchema.safeParse(rawtype).data || "other";
 
       // Métadonnées enrichies
       const metadata = {
@@ -265,23 +271,25 @@ export const executeModuleUseCase = buildUseCase()
         word_count: content ? content.split(/\s+/).length : 0,
         has_url: !!(output?.url || output?.link),
         generation_source: "api",
+        content: content,
         ...output?.metadata,
         original_output: output,
       };
       const url = (output?.url || output?.link) as string | undefined;
-      await ctx.contentRepo.create({
-        userId: user.id,
-        contentData: {
-          moduleId: module.id,
-          moduleSlug: module.slug,
-          title: title?.substring(0, 200),
-          type,
-          content: content?.substring(0, 50000), // Limite à 50k caractères
-          status: "draft",
-          metadata,
-          url,
-        },
-      });
+      if (content) {
+        await ctx.contentRepo.create({
+          userId: user.id,
+          contentData: {
+            moduleId: module.id,
+            moduleSlug: module.slug,
+            title: title?.substring(0, 200),
+            type,
+            status: "draft",
+            metadata,
+            url,
+          },
+        });
+      }
     }
 
     const updatedUserResult = await ctx.profileRepo.getByIdWithPlan(user.id);

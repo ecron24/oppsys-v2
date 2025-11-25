@@ -218,7 +218,8 @@ export class ContentRepoSupabase implements ContentRepo {
         typeof params.query.limit === "number" &&
         typeof params.query.page === "number"
       ) {
-        const offset = (params.query.page - 1) * params.query.limit;
+        const page = Math.max(0, params.query.page - 1);
+        const offset = page * params.query.limit;
         query = query.range(offset, offset + params.query.limit - 1);
       }
 

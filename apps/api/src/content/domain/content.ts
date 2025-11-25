@@ -8,14 +8,31 @@ import {
 import { ModuleSchema } from "src/modules/domain/module";
 import { ContentMetadataSchema } from "./content-metadata";
 
+export const ContentTypeSchema = z.enum([
+  "other",
+  "article",
+  "video",
+  "image",
+  "audio",
+  "data",
+  "social-post",
+]);
+
+export const ContentStatusSchema = z.enum([
+  "draft",
+  "pending",
+  "approved",
+  "declined",
+  "published",
+]);
+
 export const ContentSchema = z.object({
   id: UuidSchema,
   userId: UuidSchema,
   moduleId: nullableSchema(UuidSchema),
-  type: z.string(),
+  type: ContentTypeSchema,
   // TODO: check if I'm type: z.enum(["article", "video", "audio", "image", "data", "social-post"]),
   title: z.string(),
-  content: StringNullableSchema,
   url: nullableSchema(z.url()),
   filePath: StringNullableSchema,
   moduleSlug: z.string(),
@@ -33,7 +50,7 @@ export const ContentSchema = z.object({
   htmlPreview: StringNullableSchema,
   tags: z.array(z.string()).optional(),
   isFavorite: z.boolean().optional(),
-  status: z.string().optional(),
+  status: ContentStatusSchema.optional(),
   createdAt: IsoDatetime,
   updatedAt: nullableSchema(IsoDatetime),
   modules: nullableSchema(

@@ -52,7 +52,7 @@ export const handleYouTubeCallbackUseCase = buildUseCase()
         moduleId: upload.moduleId,
         moduleSlug: "youtube-uploader",
         title: upload.title,
-        type: "video",
+        type: "video" as const,
         content: upload.description,
         url: upload.youtubeVideoUrl,
         filePath: upload.videoFilePath,
@@ -71,7 +71,7 @@ export const handleYouTubeCallbackUseCase = buildUseCase()
           commentCount: upload.commentCount,
           publishedAt: upload.publishedAt,
         },
-        status: "completed",
+        status: "published" as const,
         isFavorite: false,
       };
       await ctx.contentRepo.create({ userId: input.user.id, contentData });

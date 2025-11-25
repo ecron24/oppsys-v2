@@ -72,7 +72,7 @@ export const handleTranscriptionCallbackUseCase = buildUseCase()
           hasSummary: !!result.summary,
           hasTimestamps: !!result.segments,
         },
-        status: "completed",
+        status: "published" as const,
         isFavorite: false,
       };
       const contentResult = await ctx.contentRepo.create({

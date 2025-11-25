@@ -43,7 +43,7 @@ export const RecentActivityHorizontal = () => {
     return {
       title: activity.title || "Contenu",
       description:
-        activity.contentType === "social_post"
+        activity.contentType === "social-post"
           ? "Post social"
           : activity.contentType || "Contenu",
       icon: FileText,

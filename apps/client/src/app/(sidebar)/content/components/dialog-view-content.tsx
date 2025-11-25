@@ -145,8 +145,7 @@ export function DialogViewContent({
               </TooltipButton>
             )}
 
-            {(content.type === "social-post" ||
-              content.type === "social_post") &&
+            {content.type === "social-post" &&
               (content.status === "pending" ||
                 content.status === "approved") && (
                 <TooltipButton

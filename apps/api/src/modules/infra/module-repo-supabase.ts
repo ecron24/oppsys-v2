@@ -50,7 +50,8 @@ export class ModuleRepoSupabase implements ModuleRepo {
       q = q.order(query.sort, { ascending: query.order === "asc" });
 
       if (typeof query.limit === "number" && typeof query.page === "number") {
-        const offset = (query.page - 1) * query.limit;
+        const page = Math.max(0, query.page - 1);
+        const offset = page * query.limit;
         q = q.range(offset, offset + query.limit - 1);
       }
 

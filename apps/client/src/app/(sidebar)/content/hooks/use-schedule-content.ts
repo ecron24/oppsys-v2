@@ -26,7 +26,7 @@ export const useScheduleContent = () => {
       return {
         success: true as const,
         data: {
-          status: "scheduled" as const,
+          status: "pending" as const,
           scheduledAt: executionTime,
         },
       } as const;

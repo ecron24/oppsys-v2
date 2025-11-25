@@ -17,7 +17,7 @@ export const getCorrectModuleSlug = (content: Content): string => {
   if (title.includes("linkedin")) return "linkedin-article";
   if (title.includes("twitter") || title.includes("x ")) return "x-twitter";
 
-  if (content.type === "social_post" || content.type === "social-post") {
+  if (content.type === "social-post") {
     if (content.metadata) {
       const metadata = content.metadata as ContentMetadata;
       const networks = metadata.networks || metadata.selectedNetworks;
@@ -109,7 +109,7 @@ export const extractPostContent = (
       source: "metadata.generated_content.content",
       value: metadata.generatedContent?.content,
     },
-    { source: "content.content", value: content.content },
+    // { source: "content.content", value: content.content },
     { source: "content.html_preview", value: content.htmlPreview },
     // { source: "content.preview", value: content.preview },
     { source: "metadata.output.post", value: metadata.output?.post },

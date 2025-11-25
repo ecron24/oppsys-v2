@@ -8,12 +8,14 @@ export type Content = InferResponseType<
 >["data"]["data"][number];
 
 export type ContentMetadata = Content["metadata"];
+export type ContentType = Content["type"];
+export type ContentStatus = Content["status"];
 
 export type GetContentQuery = InferRequestType<
   typeof honoClient.api.content.generated.$get
 >["query"];
 
-export interface ContentType {
+export interface ContentTypeData {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;

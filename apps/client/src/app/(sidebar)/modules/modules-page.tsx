@@ -214,7 +214,7 @@ export default function ModulesPage() {
               <div id="all-modules">
                 {iaModules.length === 0 ? (
                   <>
-                    {isLoading ? (
+                    {isLoading && modules.length == 0 ? (
                       <div
                         className={
                           viewMode === "grid"

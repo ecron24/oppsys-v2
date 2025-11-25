@@ -6,9 +6,9 @@ import {
   BarChart3,
   Folder,
 } from "lucide-react";
-import type { ContentType } from "../content-types";
+import type { ContentTypeData } from "../content-types";
 
-export const CONTENT_TYPES: ContentType[] = [
+export const CONTENT_TYPES: ContentTypeData[] = [
   {
     id: "all",
     label: "Tout le contenu",

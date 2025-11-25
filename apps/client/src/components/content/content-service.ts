@@ -2,6 +2,7 @@ import { honoClient } from "@/lib/hono-client";
 import type {
   Content,
   ContentMetadata,
+  ContentStatus,
   GetContentQuery,
   ProcessContentDecisionParams,
 } from "../../app/(sidebar)/content/content-types";
@@ -69,7 +70,7 @@ export class ContentService {
 
   async updateContentStatus(
     contentId: string,
-    status: string,
+    status: ContentStatus,
     metadata: ContentMetadata = {}
   ) {
     return handleApiCall(

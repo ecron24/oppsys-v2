@@ -31,6 +31,7 @@ export function LoginForm() {
         email: value.email,
         password: value.password,
       });
+      // FIXME: it didn't navigate
       if (result.success) {
         navigate(routes.dashboard.index());
       }

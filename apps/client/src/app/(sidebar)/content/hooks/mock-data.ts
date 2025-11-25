@@ -22,7 +22,7 @@ export const mockContents: Content[] = [
   {
     id: "c2",
     userId: "u1",
-    type: "blog-post",
+    type: "article",
     title: "Comment améliorer sa présence sur LinkedIn",
     moduleSlug: "content-writer",
     metadata: {
@@ -38,7 +38,7 @@ export const mockContents: Content[] = [
   {
     id: "c3",
     userId: "u2",
-    type: "lease-contract",
+    type: "data",
     title: "Contrat de Location - Appartement Centre Ville",
     moduleSlug: "real-estate-lease",
     metadata: {
@@ -58,7 +58,7 @@ export const mockContents: Content[] = [
   {
     id: "c4",
     userId: "u3",
-    type: "email-template",
+    type: "other",
     title: "Relance Client Devis",
     moduleSlug: "email-generator",
     metadata: {
@@ -69,12 +69,12 @@ export const mockContents: Content[] = [
       },
     },
     createdAt: "2025-01-13T07:44:00Z",
-    status: "sent",
+    status: "published",
   },
   {
     id: "c5",
     userId: "u1",
-    type: "ai-workflow",
+    type: "article",
     title: "Workflow Génération Carousel Instagram",
     moduleSlug: "n8n-carousel-creator",
     metadata: {
@@ -85,12 +85,12 @@ export const mockContents: Content[] = [
       selectedNetworks: ["instagram"],
     },
     createdAt: "2025-01-14T11:22:00Z",
-    status: "processing",
+    status: "pending",
   },
   {
     id: "c6",
     userId: "u4",
-    type: "ads-copy",
+    type: "audio",
     title: "Copy Publicitaire Facebook - Offre Black Friday",
     moduleSlug: "ads-copy-generator",
     metadata: {
