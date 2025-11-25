@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { logger as honoLogger } from "hono/logger";
 import { apiRouter } from "./api-router";
 import { createLogger } from "@oppsys/logger";
 import { timeout } from "hono/timeout";
@@ -28,6 +29,13 @@ app.use(async (c, next) => {
 });
 
 app.use(secureHeaders());
+app.use(
+  honoLogger((message, ...rest) => {
+    void message;
+    void rest;
+    // logger.debug(message, ...rest);
+  })
+);
 app.use(
   cors({
     origin: env.CORS_ORIGINS.split(",").map((origin) => origin.trim()),

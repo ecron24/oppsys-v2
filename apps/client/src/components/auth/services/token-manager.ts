@@ -1,12 +1,31 @@
-import { supabase } from "@/lib/supabase";
 import { authService } from "./auth-service";
-import { toCamelCase } from "@oppsys/shared";
 
-export const tokenManager = {
-  getToken: async () => {
-    // it doesn't make request into supabase, so yeah great
-    // it is called for each request
-    const sessionResult = await authService.getSession();
+type SessionResult = Awaited<ReturnType<typeof authService.getSession>>;
+type SessionPromise = Awaited<typeof authService.getSession>;
+type RefreshSessionPromise = Awaited<typeof authService.refreshSession>;
+
+class TokenManager {
+  private sessionResult: SessionResult | null = null;
+  private getSessionPromise: SessionPromise | null = null;
+  private refreshPromise: RefreshSessionPromise | null = null;
+
+  private async fetchSessionOnce() {
+    if (this.getSessionPromise) return this.getSessionPromise;
+    this.getSessionPromise = authService.getSession;
+    return this.getSessionPromise;
+  }
+
+  private async fetchRefreshOnce() {
+    if (this.refreshPromise) return this.refreshPromise;
+    this.refreshPromise = authService.refreshSession;
+    return this.refreshPromise;
+  }
+
+  async getToken() {
+    if (this.sessionResult) return this.sessionResult;
+
+    const sessionPromiseCache = await this.fetchSessionOnce();
+    const sessionResult = await sessionPromiseCache();
 
     if (!sessionResult.success) return sessionResult;
     if (!sessionResult.data?.accessToken)
@@ -16,6 +35,8 @@ export const tokenManager = {
         status: 404,
       } as const;
 
+    this.sessionResult = sessionResult;
+
     //  Vérifier si le token n'est pas expiré
     if (sessionResult.data.expiresAt) {
       const expirationTime = sessionResult.data.expiresAt * 1000; // Convertir en millisecondes
@@ -24,7 +45,8 @@ export const tokenManager = {
 
       if (currentTime >= expirationTime - bufferTime) {
         console.warn("⚠️ Token expiré ou proche de l'expiration");
-        const refreshResult = await tokenManager.refreshToken();
+        const refreshSessionCache = await tokenManager.refreshToken();
+        const refreshResult = await refreshSessionCache();
         if (!refreshResult) return refreshResult;
         if (!refreshResult.data?.accessToken)
           return {
@@ -32,6 +54,8 @@ export const tokenManager = {
             error: "No access token found",
             status: 404,
           } as const;
+
+        this.sessionResult = refreshResult;
         return refreshResult;
       }
     }
@@ -43,33 +67,30 @@ export const tokenManager = {
         expiresAt: sessionResult.data.expiresAt,
       },
     } as const;
-  },
-  refreshToken: async () => {
-    const { data, error } = await supabase.auth.refreshSession();
-    if (error) {
-      console.error("[refreshToken]: ", error);
+  }
+
+  async refreshToken() {
+    const res = await this.fetchRefreshOnce();
+    return res;
+  }
+
+  async tokenInHeader() {
+    const records: Record<string, string> = {};
+    const tokenResult = await this.getToken();
+    if (tokenResult?.success && tokenResult.data?.accessToken) {
       return {
-        success: false,
-        error: error.name,
-        details: error.message,
-        status: 500,
-      } as const;
-    }
-    return {
-      success: true,
-      data: data.session ? toCamelCase(data.session) : null,
-      status: 200,
-    } as const;
-  },
-  tokenInHeader: async () => {
-    let records: Record<string, string> = {};
-    const tokenREsult = await tokenManager.getToken();
-    if (tokenREsult.success && tokenREsult.data) {
-      records = {
         ...records,
-        Authorization: `Bearer ${tokenREsult.data.accessToken}`,
+        Authorization: `Bearer ${tokenResult.data.accessToken}`,
       };
     }
     return records;
-  },
-};
+  }
+
+  clearCache() {
+    this.sessionResult = null;
+    this.getSessionPromise = null;
+    this.refreshPromise = null;
+  }
+}
+
+export const tokenManager = new TokenManager();

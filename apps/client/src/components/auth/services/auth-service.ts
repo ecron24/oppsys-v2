@@ -304,6 +304,24 @@ export const authService = {
     } as const;
   },
 
+  refreshSession: async () => {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error("[refreshToken]: ", error);
+      return {
+        success: false,
+        error: error.name,
+        details: error.message,
+        status: 500,
+      } as const;
+    }
+    return {
+      success: true,
+      data: data.session ? toCamelCase(data.session) : null,
+      status: 200,
+    } as const;
+  },
+
   async exchangeCodeForSession(code: string) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {

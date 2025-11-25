@@ -1,0 +1,80 @@
+{
+  "session_id": "e83da8ad-9a98-4cb4-bde0-79cac8b3d4a1",
+  "payload": {
+    "message": "helllo",
+    "context": {
+      "content": {
+        "prompt": "",
+        "contentType": "article",
+        "tone": "professional",
+        "length": "medium",
+        "imageOption": "none"
+      },
+      "options": {
+        "targetAudience": "",
+        "keywords": "",
+        "seoOptimize": false,
+        "includeCallToAction": false
+      },
+      "seo": {
+        "keywordResearch": "",
+        "seoLanguage": "fr",
+        "seoVolume": "medium",
+        "generatedKeywords": []
+      },
+      "media": {
+        "imagePrompt": "",
+        "imageStyle": "realistic",
+        "imageCount": 1
+      },
+      "schedule": {
+        "schedulePost": false,
+        "scheduledDate": "",
+        "scheduledTime": "",
+        "publishPlatform": "blog"
+      },
+      "conversation": {
+        "currentStep": 0,
+        "isComplete": false
+      },
+      "metadata": {
+        "sessionId": "e83da8ad-9a98-4cb4-bde0-79cac8b3d4a1",
+        "timestamp": "2025-11-25T12:57:51.222Z",
+        "moduleType": "ai-writer",
+        "currentCost": 15
+      }
+    },
+    "module_slug": "ai-writer",
+    "module_name": "Rédacteur IA",
+    "module_id": "807cbb24-7772-42d3-ada1-afcaba517b7c",
+    "moduleType": "ai-writer",
+    "timestamp": "2025-11-25T12:57:52.899Z"
+  },
+  "metadata": {
+    "worker_result_id": "e83da8ad-9a98-4cb4-bde0-79cac8b3d4a1",
+    "client_id": "hheryfitiavana@gmail.com",
+    "module": {
+      "id": "807cbb24-7772-42d3-ada1-afcaba517b7c",
+      "name": "Rédacteur IA",
+      "slug": "ai-writer"
+    }
+  },
+  "auth": {
+    "user_id": "d8df9d5b-c473-45ce-b200-283fa8c3f85f",
+    "email": "hheryfitiavana@gmail.com",
+    "plan": "premium",
+    "credit_balance": 8120,
+    "status": "active",
+    "full_name": "",
+    "role": "client",
+    "is_premium": true,
+    "account_created": "2025-09-26T14:22:17.844768+00:00",
+    "session_timestamp": "2025-11-25T12:57:53.546Z",
+    "module_info": {
+      "id": "807cbb24-7772-42d3-ada1-afcaba517b7c",
+      "name": "Rédacteur IA",
+      "slug": "ai-writer",
+      "trigger_type": "CHAT"
+    }
+  }
+}

@@ -18,11 +18,11 @@ export const queryKeys = {
     performanceStats: ["dashboard", "performanceStats"],
   },
   modules: {
-    list: ["modules", "list"],
+    list: ["modules"],
     id: (id: string) => ["modules", id],
   },
   plans: {
-    list: ["plans", "list"],
+    list: ["plans"],
   },
   social: {
     socialConnections: ["social", "social-connections"],
