@@ -8,13 +8,14 @@ import type { User } from "../auth-types";
 import { routes } from "@/routes";
 
 export const useAuthOperations = () => {
-  const { setUser } = useAuth();
+  const { setUser, refetchUser } = useAuth();
 
   const signIn = useMutation({
     mutationFn: (params: { email: string; password: string }) =>
       authService.signInWithPassword(params),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.success) {
+        await refetchUser();
         toast.success("Connexion réussie");
         return;
       }
@@ -31,8 +32,9 @@ export const useAuthOperations = () => {
       password: string;
       fullName?: string;
     }) => authService.signUp(params),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.success) {
+        await refetchUser();
         toast.success("Inscription réussie", {
           description: "Vérifiez votre email pour confirmer votre compte",
         });
@@ -44,8 +46,9 @@ export const useAuthOperations = () => {
 
   const signOut = useMutation({
     mutationFn: () => authService.signOut(),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.success) {
+        await refetchUser();
         toast.success("Déconnexion réussie");
         return;
       }

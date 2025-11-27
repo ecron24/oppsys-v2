@@ -13,12 +13,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     staleTime: Infinity, // no refetch as long as session is valid
   });
 
-  const { data: userResponse, isLoading: userLoading } = useQuery({
+  const {
+    data: userResponse,
+    isLoading: userLoading,
+    refetch: refetchUser,
+  } = useQuery({
     queryKey: queryKeys.auth.user,
     queryFn: async () => {
       const response = await userService.getMe();
       if (!response.success) {
-        await authService.signOut();
         return null;
       }
       return response.data;
@@ -55,8 +58,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser: (u: User | null) => {
         queryClient.setQueryData([queryKeys.auth.user], u);
       },
+      refetchUser: async () => {
+        const resp = await refetchUser();
+        const userFetched: User | null = resp.data ?? null;
+        return userFetched;
+      },
     }),
-    [user, loading]
+    [user, loading, refetchUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

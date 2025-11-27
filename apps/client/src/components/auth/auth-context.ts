@@ -6,6 +6,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   setUser: (user: User | null) => void;
+  refetchUser: () => Promise<User | null>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

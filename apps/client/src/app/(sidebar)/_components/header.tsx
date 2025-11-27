@@ -40,12 +40,8 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
   ];
 
   const handleLogout = async () => {
-    try {
-      await signOut.mutateAsync();
-      navigate("/login");
-    } catch (error) {
-      console.error("Erreur déconnexion:", error);
-    }
+    await signOut.mutateAsync();
+    navigate(routes.auth.login());
   };
 
   const creditPercentage = user

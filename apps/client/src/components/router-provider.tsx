@@ -6,6 +6,7 @@ import { GuestRoute } from "./guard/guest-route";
 import { lazy } from "react";
 import ModuleIdPage from "@/app/(sidebar)/modules/[id]/module-id-page";
 
+const NotFound = lazy(() => import("@/app/not-found"));
 const ProfilePage = lazy(() => import("@/app/(sidebar)/profile/profile-page"));
 const DashboardPage = lazy(
   () => import("@/app/(sidebar)/dashboard/dashboard-page")
@@ -90,6 +91,11 @@ const router = createBrowserRouter([
   {
     path: routes.search.index(),
     element: <SearchPage />,
+  },
+  // 404
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 
