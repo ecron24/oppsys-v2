@@ -135,19 +135,19 @@ export const chatWithModuleUseCase = buildUseCase()
     }
 
     const chatResponse = {
-      message: executionResult.data?.message,
-      nextStep:
-        executionResult.data?.next_step ||
-        executionResult.data?.nextStep ||
-        null,
-      options: (executionResult.data?.options || {}) as Record<string, unknown>,
-      type: executionResult.data?.type || "text",
-      context: executionResult.data?.context || {},
-      isComplete:
-        executionResult.data?.is_complete ||
-        executionResult.data?.isComplete ||
-        false,
-      data: executionResult.data || null,
+      // message: executionResult.data?.message,
+      // nextStep:
+      //   executionResult.data?.next_step ||
+      //   executionResult.data?.nextStep ||
+      //   null,
+      // options: (executionResult.data?.options || {}) as Record<string, unknown>,
+      // type: executionResult.data?.type || "text",
+      // context: executionResult.data?.context || {},
+      // isComplete:
+      //   executionResult.data?.is_complete ||
+      //   executionResult.data?.isComplete ||
+      //   false,
+      data: executionResult.data,
     };
 
     await ctx.moduleRepo.updateUsage(usageRecord.id, {

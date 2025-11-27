@@ -232,8 +232,8 @@ export const executeModuleUseCase = buildUseCase()
 
     // 7. Save content
     // shouldSaveContent(executionResult.data)
-    const output = executionResult.data;
-    if (body.saveOutput) {
+    if (body.saveOutput && executionResult.data.module_type == "unknown") {
+      const output = executionResult.data;
       const content = (output?.content ||
         output?.text ||
         output?.result ||
@@ -294,6 +294,8 @@ export const executeModuleUseCase = buildUseCase()
 
     const updatedUserResult = await ctx.profileRepo.getByIdWithPlan(user.id);
     if (!updatedUserResult.success) return updatedUserResult;
+
+    const output = executionResult.data;
     const responseData = toCamelCase({
       usage_id: createUsageResult.data.id,
       output: output,

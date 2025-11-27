@@ -94,7 +94,7 @@ export function createN8nInstance({
 
       payload = {
         sessionId: input.sessionId,
-        chatInput: JSON.stringify({
+        input: {
           message: input.message,
           context: input.context || {},
           module_slug: module.slug,
@@ -102,7 +102,7 @@ export function createN8nInstance({
           module_id: module.id,
           moduleType: input.moduleType,
           timestamp: input.timestamp || new Date().toISOString(),
-        }),
+        },
         metadata: {
           worker_result_id: input.sessionId,
           client_id: userEmail,

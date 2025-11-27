@@ -1,33 +1,71 @@
 // Résultat typé pour l'appel n8n
-export type N8nResult = {
-  message?: string;
-  output?: string;
-  response?: string;
-  data?: {
-    output?: string;
-    message?: string;
-    response?: string;
-    [key: string]: unknown;
+export type N8nResult =
+  | {
+      module_type: "unknown";
+      message?: string;
+      output?: string;
+      response?: string;
+      data?: {
+        output?: string;
+        message?: string;
+        response?: string;
+        [key: string]: unknown;
+      };
+      options?: unknown;
+      nextStep?: unknown;
+      next_step?: unknown;
+      type?: string;
+      context?: Record<string, undefined>;
+      is_complete?: boolean;
+      isComplete?: boolean;
+      content?: unknown;
+      text?: unknown;
+      result?: unknown;
+      generated_content?: unknown;
+      title?: unknown;
+      name?: unknown;
+      subject?: unknown;
+      content_type?: unknown;
+      url?: unknown;
+      link?: unknown;
+      metadata?: Record<string, unknown>;
+    }
+  | AiWriterOutput;
+
+type AiWriterOutput = {
+  module_type: "ai-writer";
+  output: {
+    state: "missing" | "ready_for_confirmation" | "confirmed";
+    missing_field: string | null;
+    question: string | null;
+
+    result_partial: {
+      subject: string | null;
+      audience: string | null;
+      keywords: string[] | null;
+      contentType: string | null;
+      tone: string | null;
+      length: string | null;
+      language: string | null;
+      userPlan: string | null;
+    } | null;
+
+    result: {
+      subject: string;
+      audience: string;
+      keywords: string[];
+      combined_text: string;
+      contentType: string | null;
+      tone: string | null;
+      length: string | null;
+      language: string | null;
+      userPlan: string | null;
+    } | null;
+
+    errors: string[] | null;
   };
-  options?: unknown;
-  nextStep?: unknown;
-  next_step?: unknown;
-  type?: string;
-  context?: Record<string, undefined>;
-  is_complete?: boolean;
-  isComplete?: boolean;
-  content?: unknown;
-  text?: unknown;
-  result?: unknown;
-  generated_content?: unknown;
-  title?: unknown;
-  name?: unknown;
-  subject?: unknown;
-  content_type?: unknown;
-  url?: unknown;
-  link?: unknown;
-  metadata?: Record<string, unknown>;
 };
+
 export interface N8nModule {
   id: string;
   name: string;

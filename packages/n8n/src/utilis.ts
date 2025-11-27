@@ -1,7 +1,11 @@
-import type { N8nInput, N8nModule } from "./n8n-type";
+import type { N8nInput, N8nModule, N8nResult } from "./n8n-type";
 
-export function extractMessageFromN8n(result: any) {
+export function extractMessageFromN8n(result: N8nResult) {
   let extractedMessage = "";
+
+  if (result.module_type == "ai-writer") {
+    return result.output.question;
+  }
 
   if (result) {
     if (
@@ -41,8 +45,6 @@ export function extractMessageFromN8n(result: any) {
       if (firstItem.output) extractedMessage = firstItem.output;
       else if (firstItem.message) extractedMessage = firstItem.message;
       else if (firstItem.response) extractedMessage = firstItem.response;
-    } else if (typeof result === "string" && result.trim()) {
-      extractedMessage = result.trim();
     } else {
       console.log("❌ AUCUNE SOURCE DE MESSAGE TROUVÉE");
       console.log(

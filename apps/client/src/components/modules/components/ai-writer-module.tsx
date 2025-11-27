@@ -69,7 +69,6 @@ import { modulesService } from "../service/modules-service";
 import { documentService } from "../../documents/document-service";
 import { LoadingSpinner } from "../../loading";
 import type { RagDocument } from "../../documents/document-types";
-import { chatService } from "../../chat/chat-service";
 import { MODULES_IDS } from "@oppsys/api/client";
 
 type AiWriterModuleProps = {
@@ -131,7 +130,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     [config]
   );
 
-  const [prompt, setPrompt] = useState("");
+  const [desciption, setDescription] = useState("");
   const [contentType, setContentType] = useState("article");
   const [tone, setTone] = useState("professional");
   const [length, setLength] = useState("medium");
@@ -152,12 +151,15 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const [uploadingRag, setUploadingRag] = useState(false);
   const [ragUploadProgress, setRagUploadProgress] = useState(0);
   const [result, setResult] = useState<GeneratedResult | null>(null);
+  const [subject, setSubject] = useState("");
+  const [chatState, setChatState] = useState<
+    "missing" | "ready_for_confirmation" | "confirmed"
+  >("missing");
 
   // SEO Tab States
   const [seoKeywordResearch, setSeoKeywordResearch] = useState("");
   const [seoLanguage, setSeoLanguage] = useState("fr");
   const [seoVolume, setSeoVolume] = useState("medium");
-  const [generatedKeywords, setGeneratedKeywords] = useState<string[]>([]);
   const [keywordLoading, setKeywordLoading] = useState(false);
 
   // Media Tab States
@@ -173,20 +175,14 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const [publishPlatform, setPublishPlatform] = useState("blog");
 
   // Chat States
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  // const [conversationContext, setConversationContext] = useState<
-  //   Record<string, unknown>
-  // >({});
+  const sessionId = useMemo(() => Math.random().toString(), []);
   const [isWaitingForN8n, setIsWaitingForN8n] = useState(false);
-  const [chatInitialized, setChatInitialized] = useState(false);
-  const [currentStepChat, setCurrentStepChat] = useState(0);
   const [conversationHistory, setConversationHistory] = useState<
     ConversationMessage[]
   >([{ message: welcomeMessage, timestamp: new Date(), type: "bot" }]);
   const [userInput, setUserInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
-  const [sessionInitialized, setSessionInitialized] = useState(false);
 
   //  ref
   const isSubmitting = useRef(false);
@@ -194,7 +190,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const isSubmittingChat = useRef(false);
   const lastSubmitTime = useRef(0);
-  const sessionCreationTime = useRef<number | null>(null);
 
   const currentCost = useMemo(() => {
     const baseType = contentTypesFromAPI[contentType];
@@ -236,10 +231,14 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       toast.error("Crédits insuffisants.");
       return false;
     }
-    if (!prompt.trim() || prompt.trim().length < 10) {
-      toast.error("Description trop courte (10 caractères min).");
+    if (!subject.trim()) {
+      toast.error("Sujet requis.");
       return false;
     }
+    // if (!prompt.trim() || prompt.trim().length < 10) {
+    //   toast.error("Description trop courte (10 caractères min).");
+    //   return false;
+    // }
     if (!contentType) {
       toast.error("Veuillez sélectionner un type de contenu.");
       return false;
@@ -247,11 +246,67 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     return true;
   };
 
+  const chatWithModule = async (params: {
+    message: string;
+    content?: Record<string, string>;
+  }) => {
+    const content: Record<string, string> = {
+      desciption: desciption.trim(),
+      contentType,
+      tone,
+      length,
+      imageOption,
+      chatState,
+      ...(params.content || {}),
+    };
+    if (subject.length > 0) {
+      content.subject = subject;
+    }
+    const cleanContext = {
+      content,
+      options: {
+        targetAudience: targetAudience.trim(),
+        keywords: keywords.trim(),
+        seoOptimize,
+        includeCallToAction,
+      },
+      seo: {
+        keywordResearch: seoKeywordResearch.trim(),
+        seoLanguage,
+        seoVolume,
+      },
+      media: {
+        imagePrompt: imagePrompt.trim(),
+        imageStyle,
+        imageCount,
+      },
+      schedule: {
+        schedulePost,
+        scheduledDate,
+        scheduledTime,
+        publishPlatform,
+      },
+      metadata: {
+        sessionId,
+        timestamp: new Date().toISOString(),
+        moduleType: "ai-writer",
+        currentCost,
+      },
+    };
+    const response = await modulesService.chatWithModule(module.slug, {
+      sessionId,
+      message: params.message,
+      context: cleanContext,
+    });
+    return response;
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting.current || loading) return;
+    if (!validateForm()) return;
     if (
       loading ||
-      !prompt.trim() ||
+      // !prompt.trim() ||
       !contentType ||
       !hasEnoughCredits(currentCost) ||
       !sessionId
@@ -259,156 +314,43 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       return;
 
     setError(null);
-    if (!validateForm()) return;
 
     isSubmitting.current = true;
     setLoading(true);
 
-    const moduleId = module.slug;
-    const isFromCompletedChat = currentStepChat === 999;
+    setCurrentStep("Génération du contenu avec l'IA...");
+    setProgress(40);
 
-    if (isFromCompletedChat) {
-      setCurrentStep("Génération du contenu avec l'IA...");
-      setProgress(40);
+    const generationMessage =
+      "Générer maintenant le contenu complet avec toutes les informations collectées";
 
-      const generationMessage =
-        "Générer maintenant le contenu complet avec toutes les informations collectées";
-      const fullContext = {
-        content: {
-          prompt: prompt.trim(),
-          contentType,
-          tone,
-          length,
-          imageOption,
-        },
-        options: {
-          targetAudience: targetAudience.trim(),
-          keywords: keywords.trim(),
-          seoOptimize,
-          includeCallToAction,
-          ragDocuments: ragDocuments.map((doc) => ({
-            name: doc.name,
-            path: doc.path,
-            type: doc.type,
-          })),
-        },
-        seo: {
-          keywordResearch: seoKeywordResearch.trim(),
-          seoLanguage,
-          seoVolume,
-          generatedKeywords,
-        },
-        media: {
-          imagePrompt: imagePrompt.trim(),
-          imageStyle,
-          imageCount,
-        },
-        schedule: {
-          schedulePost,
-          scheduledDate,
-          scheduledTime,
-          publishPlatform,
-        },
-        conversation: {
-          currentStep: currentStepChat,
-          isComplete: currentStepChat === 999,
-        },
-        metadata: {
-          sessionId,
-          timestamp: new Date().toISOString(),
-          moduleType: "ai-writer",
-          currentCost,
-        },
-      };
-      const response = await modulesService.chatWithModule(moduleId, {
-        sessionId,
-        message: generationMessage,
-        context: fullContext,
+    const response = await chatWithModule({
+      message: generationMessage,
+      content: { chatState: "confirmed" },
+    });
+
+    if (response.success) {
+      setProgress(50);
+      setCurrentStep("Génération en cours en arrière-plan...");
+      addMessage("bot", response.data.data.outputMessage || "");
+      toast.success("Génération lancée !", {
+        description:
+          'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
+        duration: 5000,
       });
-      if (response.success) {
-        if (response.data.data.data?.isGenerating) {
-          setProgress(50);
-          setCurrentStep("Génération en cours en arrière-plan...");
-          addMessage("bot", response.data.message || "");
-          toast.success("Génération lancée !", {
-            description:
-              'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
-            duration: 5000,
-          });
-          setCurrentStepChat(998);
 
-          setLoading(false);
-          setProgress(0);
-          setCurrentStep("");
-          isSubmitting.current = false;
-          return {
-            success: true,
-          } as const;
-        }
-        setProgress(80);
-        if (response.data.message) {
-          addMessage("bot", response.data.message);
-          if (response.data.data?.content) {
-            const generatedContent = response.data.data?.content.toString();
-            setResult({
-              content: generatedContent,
-              fromChat: true,
-              sessionId: sessionId,
-            });
-
-            setProgress(100);
-            setCurrentStep("Contenu généré avec succès !");
-            const saveResponse = await modulesService.executeModule(moduleId, {
-              input: {
-                prompt: prompt.trim() || "Contenu généré par IA",
-                content: generatedContent,
-                contentType,
-                tone,
-                length,
-                targetAudience: targetAudience.trim(),
-                keywords: keywords.trim(),
-                imageOption,
-                seoOptimize,
-                includeCallToAction,
-                generatedVia: "chat",
-                sessionId: sessionId,
-                chatHistory: conversationHistory.slice(-5),
-                fullContext: fullContext,
-              },
-              saveOutput: true,
-            });
-            if (saveResponse.success) {
-              toast.success("Contenu généré et sauvegardé !", {
-                description: "Votre contenu est disponible dans 'Mon Contenu'",
-                action: {
-                  label: "Voir",
-                  onClick: () => navigate("/content"),
-                },
-              });
-            } else {
-              console.warn("⚠️ API n'a pas sauvegardé, affichage uniquement");
-              toast.success("Contenu généré !", {
-                description: "Contenu affiché ci-dessous",
-              });
-            }
-            setTimeout(() => {
-              setCurrentStepChat(0);
-              setConversationHistory([
-                { message: welcomeMessage, timestamp: new Date(), type: "bot" },
-              ]);
-              setChatInitialized(false);
-              setActiveTab("content");
-            }, 3000);
-          }
-          return {
-            success: true,
-          } as const;
-        }
-      }
-      console.error("Erreur du chat du module:", response);
-      addMessage(
-        "bot",
-        `❌ **Erreur de génération**
+      setLoading(false);
+      setProgress(0);
+      setCurrentStep("");
+      isSubmitting.current = false;
+      return {
+        success: true,
+      } as const;
+    }
+    console.error("Erreur du chat du module:", response);
+    addMessage(
+      "bot",
+      `❌ **Erreur de génération**
   
             Une erreur est survenue lors de la génération du contenu.
   
@@ -416,106 +358,10 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             • Réessayez la génération
             • Vérifiez vos crédits
             • Contactez le support si le problème persiste`
-      );
-      return {
-        success: false,
-      } as const;
-    } else {
-      setCurrentStep("Préparation des données...");
-      setProgress(30);
-      const apiPayload = {
-        input: {
-          prompt: prompt.trim(),
-          contentType,
-          tone,
-          length,
-          options: {
-            targetAudience: targetAudience.trim(),
-            keywords: keywords.trim(),
-            seoOptimize,
-            includeCallToAction,
-            ragDocuments: ragDocuments.map((doc) => ({
-              name: doc.name,
-              path: doc.path,
-              type: doc.type,
-            })),
-          },
-          imageConfig: {
-            option: imageOption,
-            hasUpload: false,
-          },
-          seo: {
-            keywordResearch: seoKeywordResearch.trim(),
-            seoLanguage,
-            seoVolume,
-            generatedKeywords,
-          },
-          media: {
-            imagePrompt: imagePrompt.trim(),
-            imageStyle,
-            imageCount,
-          },
-          schedule: {
-            schedulePost,
-            scheduledDate,
-            scheduledTime,
-            publishPlatform,
-          },
-        },
-        contentType: "content",
-        saveOutput: true,
-        autoSave: true,
-        timeout: 120000,
-        metadata: {
-          contentType,
-          tone,
-          length,
-          keywords: keywords.trim(),
-          generatedVia: "form",
-          targetAudience: targetAudience.trim(),
-          features: {
-            seoOptimize,
-            includeCallToAction,
-            imageOption,
-          },
-        },
-      };
-      setCurrentStep("Communication avec l'IA...");
-      setProgress(60);
-      const response = await modulesService.executeModule(moduleId, apiPayload);
-      setLoading(false);
-      setProgress(0);
-      setCurrentStep("");
-      isSubmitting.current = false;
-
-      if (response.success && response.data) {
-        setProgress(100);
-        setCurrentStep("Processus terminé !");
-        toast.success("Contenu généré et sauvegardé !", {
-          description: "Votre contenu est disponible dans 'Mon Contenu'",
-          action: {
-            label: "Voir",
-            onClick: () => navigate("/content"),
-          },
-        });
-        setResult({
-          content: response.data.output.content?.toString() || "",
-          fromChat: false,
-          sessionId,
-        });
-        return {
-          success: true,
-        } as const;
-      }
-      console.error("Erreur d'exécution du module:", response);
-    }
-    setError("Erreur inconnue");
-    toast.error(`Échec: Une erreur est survenue.`);
-
-    setLoading(false);
-    setProgress(0);
-    setCurrentStep("");
-    isSubmitting.current = false;
+    );
+    return {
+      success: false,
+    } as const;
   };
 
   const getIconForContentType = (key: string) => {
@@ -545,7 +391,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     []
   );
 
-  const handleKeywordResearch = useCallback(async () => {
+  const handleKeywordResearch = async () => {
     if (!seoKeywordResearch.trim()) {
       toast.error("Please enter a main keyword");
       return;
@@ -555,6 +401,8 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       toast.error("Premium feature required");
       return;
     }
+    toast.warning("Pas encore implémenté");
+    return;
 
     setKeywordLoading(true);
     const response = await modulesService.executeModule(module.slug, {
@@ -567,21 +415,15 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     });
 
     setKeywordLoading(false);
-    if (response.success && response.data?.output.data?.keywords) {
-      const keywords = response.data.output.data.keywords as string[];
-      setGeneratedKeywords(keywords);
-      toast.success(`${keywords.length} keywords found!`);
-      return;
-    }
+    // if (response.success && response.data?.output.data?.keywords) {
+    //   const keywords = response.data.output.data.keywords as string[];
+    //   setGeneratedKeywords(keywords);
+    //   toast.success(`${keywords.length} keywords found!`);
+    //   return;
+    // }
     console.error("Keyword research error:", response);
     toast.error("Error during keyword research");
-  }, [
-    seoKeywordResearch,
-    seoLanguage,
-    seoVolume,
-    permissions.data?.isPremium,
-    module.slug,
-  ]);
+  };
 
   const handleGenerateImage = useCallback(async () => {
     if (!imagePrompt.trim()) {
@@ -593,6 +435,8 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       toast.error("Premium feature required");
       return;
     }
+    toast.warning("Pas encore implémenté");
+    return;
 
     setGeneratingImage(true);
     const response = await modulesService.executeModule(module.slug, {
@@ -643,54 +487,11 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
 
     setIsWaitingForN8n(true);
     setIsTyping(true);
-    const cleanContext = {
-      content: {
-        prompt: prompt.trim(),
-        contentType,
-        tone,
-        length,
-        imageOption,
-      },
-      options: {
-        targetAudience: targetAudience.trim(),
-        keywords: keywords.trim(),
-        seoOptimize,
-        includeCallToAction,
-      },
-      seo: {
-        keywordResearch: seoKeywordResearch.trim(),
-        seoLanguage,
-        seoVolume,
-        generatedKeywords,
-      },
-      media: {
-        imagePrompt: imagePrompt.trim(),
-        imageStyle,
-        imageCount,
-      },
-      schedule: {
-        schedulePost,
-        scheduledDate,
-        scheduledTime,
-        publishPlatform,
-      },
-      conversation: {
-        currentStep: currentStepChat,
-        isComplete: currentStepChat === 999,
-      },
-      metadata: {
-        sessionId,
-        timestamp: new Date().toISOString(),
-        moduleType: "ai-writer",
-        currentCost,
-      },
-    };
-
-    const response = await modulesService.chatWithModule(module.slug, {
-      sessionId,
-      message: currentMessage,
-      context: cleanContext,
-    });
+    const content: Record<string, string> = {};
+    if (subject.length > 0) {
+      content.subject = subject;
+    }
+    const response = await chatWithModule({ message: currentMessage, content });
 
     setIsWaitingForN8n(false);
     setIsTyping(false);
@@ -698,85 +499,35 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       isSubmittingChat.current = false;
     }, 500);
     if (response.success) {
+      const outputMessage = response.data.data.outputMessage || "";
       if (
-        response.data.data.data?.sessionId &&
-        response.data.data?.data.sessionId !== sessionId
+        response.data.data.module_type == "ai-writer" &&
+        outputMessage.length > 0
       ) {
-        setSessionId(response.data.data.data.sessionId.toString());
-      }
-      if (response.data?.message) {
-        addMessage("bot", response.data.message);
-
-        // if (response.data?.context) {
-        //   setConversationContext(response.data.context);
-        // }
-
-        const context = response.data.context as Record<string, unknown>;
-        if (context?.content && typeof context.content === "object") {
-          const content = context.content as Record<string, unknown>;
-          if (typeof content.prompt === "string" && content.prompt.trim()) {
-            setPrompt(content.prompt.trim());
-          }
-          if (
-            typeof content.tone === "string" &&
-            tonesFromAPI.find((t) => t.value === content.tone)
-          ) {
-            setTone(content.tone);
-          }
-          if (
-            typeof content.contentType === "string" &&
-            contentTypesFromAPI[content.contentType]
-          ) {
-            setContentType(content.contentType);
-          }
-          if (
-            typeof content.length === "string" &&
-            lengthsFromAPI.find((l) => l.value === content.length)
-          ) {
-            setLength(content.length);
-          }
-          if (
-            typeof content.imageOption === "string" &&
-            imageOptionsFromAPI.find((o) => o.value === content.imageOption)
-          ) {
-            setImageOption(content.imageOption);
-          }
+        addMessage("bot", outputMessage);
+        if (response.data.data.output) {
+          setSubject(
+            response.data.data.output.result_partial?.subject?.toString() || ""
+          );
+          setKeywords(
+            response.data.data.output.result_partial?.keywords?.toString() || ""
+          );
+          setTargetAudience(
+            response.data.data.output.result_partial?.audience?.toString() || ""
+          );
+          setSeoLanguage(
+            response.data.data.output.result_partial?.language?.toString() || ""
+          );
+          // TODO: tell to the model what are length existed, to avoid length not existing
+          setLength(
+            response.data.data.output.result_partial?.length?.toString() || ""
+          );
+          setTone(
+            response.data.data.output.result_partial?.tone?.toString() || ""
+          );
+          setChatState(response.data.data.output.state);
         }
 
-        const options = context.options as Record<string, unknown>;
-        if (options) {
-          if (options.targetAudience?.toString().trim())
-            setTargetAudience(options.targetAudience.toString().trim());
-          if (options.keywords?.toString().trim())
-            setKeywords(options.keywords.toString().trim());
-          if (options.seoOptimize !== undefined)
-            setSeoOptimize(Boolean(options.seoOptimize));
-          if (options.includeCallToAction !== undefined)
-            setIncludeCallToAction(Boolean(options.includeCallToAction));
-        }
-
-        // const seo = context.seo as Record<string, string>;
-        // if (seo) {
-        //   if (seo.targetKeywords?.trim())
-        //     setTargetKeywords(seo.targetKeywords.trim());
-        //   if (seo.audience?.trim()) setAudience(seo.audience.trim());
-        //   if (seo.customOutline?.trim())
-        //     setCustomOutline(seo.customOutline.trim());
-        //   if (seo.seoOptimize !== undefined)
-        //     setSeoOptimize(Boolean(seo.seoOptimize));
-        // }
-
-        if (typeof response.data?.nextStep === "number") {
-          setCurrentStepChat(response.data.nextStep);
-        }
-
-        if (response.data?.isComplete) {
-          setCurrentStepChat(999);
-        }
-
-        if (!chatInitialized) {
-          setChatInitialized(true);
-        }
         return;
       }
     }
@@ -787,24 +538,24 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     );
   };
 
-  // Initialize session on mount
-  useEffect(() => {
-    if (authUser?.id && !sessionId && !sessionInitialized) {
-      async function effect() {
-        const response = await chatService.createOrGetSession({
-          moduleSlug: module.slug,
-        });
-        if (response.success && response.data?.id) {
-          setSessionId(response.data.id);
-          sessionCreationTime.current = Date.now();
-          return;
-        }
-        console.error("❌ Session initialization error:", response);
-        setSessionInitialized(false);
-      }
-      effect();
-    }
-  }, [authUser?.id, sessionId, sessionInitialized, module.slug]);
+  // // Initialize session on mount
+  // useEffect(() => {
+  //   if (authUser?.id && !sessionId && !sessionInitialized) {
+  //     async function effect() {
+  //       const response = await chatService.createOrGetSession({
+  //         moduleSlug: module.slug,
+  //       });
+  //       if (response.success && response.data?.id) {
+  //         setSessionId(response.data.id);
+  //         sessionCreationTime.current = Date.now();
+  //         return;
+  //       }
+  //       console.error("❌ Session initialization error:", response);
+  //       setSessionInitialized(false);
+  //     }
+  //     effect();
+  //   }
+  // }, [authUser?.id, sessionId, sessionInitialized, module.slug]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -1006,27 +757,15 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
           <div className="flex items-center space-x-1">
             <div
               className={`w-2 h-2 rounded-full ${
-                isWaitingForN8n
-                  ? "bg-orange-500 animate-pulse"
-                  : chatInitialized
-                    ? "bg-green-500"
-                    : "bg-blue-500"
+                isWaitingForN8n ? "bg-orange-500 animate-pulse" : "bg-green-500"
               }`}
             ></div>
             <span
               className={`${
-                isWaitingForN8n
-                  ? "text-orange-600"
-                  : chatInitialized
-                    ? "text-green-600"
-                    : "text-blue-600"
+                isWaitingForN8n ? "text-orange-600" : "text-green-600"
               }`}
             >
-              {isWaitingForN8n
-                ? "Communication ..."
-                : chatInitialized
-                  ? "Connecté"
-                  : "Prêt (En attente)"}
+              {isWaitingForN8n ? "Communication ..." : "Connecté"}
             </span>
           </div>
           <span className="text-muted-foreground">•</span>
@@ -1103,9 +842,9 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                 <div
-                  className={`flex items-center space-x-1 ${prompt.trim() ? "text-green-700" : "text-gray-500"}`}
+                  className={`flex items-center space-x-1 ${desciption.trim() ? "text-green-700" : "text-gray-500"}`}
                 >
-                  {prompt.trim() ? (
+                  {desciption.trim() ? (
                     <CheckCircle className="h-3 w-3" />
                   ) : (
                     <XCircle className="h-3 w-3" />
@@ -1180,7 +919,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
               </div>
             </div>
 
-            {currentStepChat === 999 && (
+            {chatState === "ready_for_confirmation" && (
               <div className="space-y-4">
                 <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
                   <h3 className="font-semibold mb-2 text-green-800 flex items-center">
@@ -1290,11 +1029,24 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="subject">Sujet *</Label>
+              <Input
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder={
+                  currentContentType?.placeholder || "Le sujet du contenu"
+                }
+                disabled={!contentType || loading}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="prompt">Description du contenu *</Label>
               <Textarea
                 id="prompt"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                value={desciption}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder={
                   currentContentType?.placeholder ||
                   "Sélectionnez un type de contenu"
@@ -1435,7 +1187,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
               onClick={handleSubmit}
               disabled={
                 loading ||
-                !prompt.trim() ||
+                !desciption.trim() ||
                 !contentType ||
                 !hasEnoughCredits(currentCost)
               }
@@ -1835,38 +1587,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                         </div>
                       )}
                     </Button>
-
-                    {generatedKeywords.length > 0 && (
-                      <div className="space-y-2 pt-3 border-t">
-                        <Label className="text-sm font-medium">
-                          Mots-clés suggérés ({generatedKeywords.length})
-                        </Label>
-                        <div className="flex flex-wrap gap-2">
-                          {generatedKeywords.map((keyword, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="cursor-pointer hover:bg-primary/10"
-                              onClick={() => {
-                                if (!keywords.includes(keyword)) {
-                                  setKeywords(
-                                    keywords
-                                      ? `${keywords}, ${keyword}`
-                                      : keyword
-                                  );
-                                  toast.success(
-                                    `"${keyword}" ajouté aux mots-clés`
-                                  );
-                                }
-                              }}
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              {keyword}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <Alert>
