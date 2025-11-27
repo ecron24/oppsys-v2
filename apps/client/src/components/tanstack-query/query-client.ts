@@ -14,7 +14,11 @@ export const queryKeys = {
   dashboard: {
     overview: (period: string) => ["dashboard", "overview", period],
     modulesStats: (period: string) => ["dashboard", "modulesStats", period],
-    recentActivity: (limit: string) => ["dashboard", "recentActivity", limit],
+    recentActivity: (limit: number | string) => [
+      "dashboard",
+      "recentActivity",
+      limit.toString(),
+    ],
     performanceStats: ["dashboard", "performanceStats"],
   },
   modules: {
@@ -27,5 +31,8 @@ export const queryKeys = {
   social: {
     socialConnections: ["social", "social-connections"],
     socialStats: ["social", "social-stats"],
+  },
+  content: {
+    userId: (userId?: string) => ["contents", userId],
   },
 };

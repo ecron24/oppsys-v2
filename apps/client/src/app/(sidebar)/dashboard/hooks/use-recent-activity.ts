@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "../services/dashboard-service";
+import { queryKeys } from "@/components/tanstack-query/query-client";
 
 export const useRecentActivity = (limit = 15) => {
   const {
@@ -8,7 +9,7 @@ export const useRecentActivity = (limit = 15) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["recentActivity", limit],
+    queryKey: queryKeys.dashboard.recentActivity(limit),
     queryFn: async () => {
       const response = await dashboardService.getActivity({ limit });
       if (response.success) return response.data;

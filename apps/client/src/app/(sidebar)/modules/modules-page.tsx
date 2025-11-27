@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { Badge, Input, P, H2, H3, H4 } from "@oppsys/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@oppsys/ui";
 import {
@@ -25,7 +25,6 @@ import { ModuleCardSkeleton } from "./_components/module-card-skeleton";
 import { Card, CardContent } from "@oppsys/ui/components/card";
 
 export default function ModulesPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabValue>(
@@ -80,8 +79,6 @@ export default function ModulesPage() {
     () => allFeaturedModules.filter((m) => m.category === "formation"),
     [allFeaturedModules]
   );
-
-  const handleModuleClick = (slug: string) => navigate(routes.modules.id(slug));
 
   const handleTabChange = (tabValue: string) => {
     const value = tabValue as TabValue;
@@ -185,7 +182,6 @@ export default function ModulesPage() {
                       <CompactModuleCard
                         key={module.id}
                         module={module}
-                        onModuleClick={handleModuleClick}
                         currentBalance={actualBalance}
                       />
                     ))}
@@ -252,7 +248,6 @@ export default function ModulesPage() {
                       <ModuleCard
                         key={module.id}
                         module={module}
-                        onModuleClick={handleModuleClick}
                         viewMode={viewMode}
                         currentBalance={actualBalance}
                       />
@@ -297,7 +292,6 @@ export default function ModulesPage() {
                     <CompactModuleCard
                       key={module.id}
                       module={module}
-                      onModuleClick={handleModuleClick}
                       currentBalance={actualBalance}
                     />
                   ))}
@@ -362,7 +356,6 @@ export default function ModulesPage() {
                       <ModuleCard
                         key={module.id}
                         module={module}
-                        onModuleClick={handleModuleClick}
                         viewMode={viewMode}
                         currentBalance={actualBalance}
                       />

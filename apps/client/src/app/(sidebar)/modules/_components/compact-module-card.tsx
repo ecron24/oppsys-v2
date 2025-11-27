@@ -1,26 +1,26 @@
 import { Badge, H4, P } from "@oppsys/ui";
 import type { Module } from "@/components/modules/module-types";
+import { Link } from "react-router";
+import { routes } from "@/routes";
 
 interface CompactModuleCardProps {
   module: Module;
-  onModuleClick: (slug: string) => void;
   currentBalance: number;
 }
 
 export const CompactModuleCard = ({
   module,
-  onModuleClick,
   currentBalance,
 }: CompactModuleCardProps) => {
   const Icon = module.icon;
   const canAfford = currentBalance >= module.creditCost;
 
   return (
-    <div
+    <Link
+      to={canAfford ? routes.modules.id(module.slug) : "#"}
       className={`bg-card border border-border rounded-lg p-4 hover:shadow-sm transition-all cursor-pointer group ${
         !canAfford ? "opacity-70" : "hover:border-primary/50"
       }`}
-      onClick={() => canAfford && onModuleClick(module.slug)}
     >
       <div className="flex items-start gap-3">
         <div className="bg-primary/10 p-2 rounded-md flex-shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -51,6 +51,6 @@ export const CompactModuleCard = ({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };

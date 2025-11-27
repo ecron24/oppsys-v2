@@ -3,7 +3,10 @@ import { toast } from "@oppsys/ui";
 import type { Content, ContentMetadata } from "../content-types";
 import type { User } from "@/components/auth/auth-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/components/tanstack-query/query-client";
+import {
+  queryClient,
+  queryKeys,
+} from "@/components/tanstack-query/query-client";
 import { unwrap } from "@oppsys/shared";
 // import { mockContents } from "./mock-data";
 
@@ -14,7 +17,7 @@ export const useContentState = (user: User | null) => {
     error,
     refetch,
   } = useQuery<Content[]>({
-    queryKey: ["userContents", user?.id],
+    queryKey: queryKeys.content.userId(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const response = await contentService.getUserContent({ limit: "1000" });

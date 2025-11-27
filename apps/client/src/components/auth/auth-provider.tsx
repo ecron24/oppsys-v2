@@ -8,13 +8,13 @@ import { queryClient, queryKeys } from "../tanstack-query/query-client";
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const { data: sessionResult, isLoading: sessionLoading } = useQuery({
-    queryKey: [queryKeys.auth.session],
+    queryKey: queryKeys.auth.session,
     queryFn: authService.getSession,
     staleTime: Infinity, // no refetch as long as session is valid
   });
 
   const { data: userResponse, isLoading: userLoading } = useQuery({
-    queryKey: [queryKeys.auth.user],
+    queryKey: queryKeys.auth.user,
     queryFn: async () => {
       const response = await userService.getMe();
       if (!response.success) {
@@ -34,11 +34,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = authService.onAuthStateChange(async (_, session) => {
       if (session?.user) {
         await queryClient.invalidateQueries({
-          queryKey: [queryKeys.auth.user],
+          queryKey: queryKeys.auth.user,
         });
         return;
       }
-      queryClient.removeQueries({ queryKey: [queryKeys.auth.user] });
+      queryClient.removeQueries({ queryKey: queryKeys.auth.user });
     });
 
     return () => subscription.unsubscribe();

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { toast, Button, Input, P, H2, H3 } from "@oppsys/ui";
+import { toast, Button, Input, P, H2, H3, Skeleton } from "@oppsys/ui";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { Search, Folder, Plus, XCircle } from "lucide-react";
@@ -23,6 +23,7 @@ export default function ContentPage() {
   {
     const { user } = useAuth();
     const {
+      loading,
       contents,
       error,
       refetch: fetchContent,
@@ -216,7 +217,46 @@ export default function ContentPage() {
             </CardContent>
           </Card>
 
-          {paginatedContent.length === 0 ? (
+          {loading && paginatedContent.length === 0 ? (
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: Math.min(itemsPerPage, 6) }).map(
+                  (_, i) => (
+                    <Card
+                      key={i}
+                      className="group flex flex-col justify-between"
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start justify-between space-x-2">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="p-3 rounded-lg bg-muted flex-shrink-0">
+                              <Skeleton className="h-6 w-6" />
+                            </div>
+
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <Skeleton className="h-4 w-3/4 rounded" />
+                              <Skeleton className="h-3 w-1/2 rounded" />
+                              <div className="mt-2">
+                                <Skeleton className="h-3 w-1/4 rounded" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
+                      </div>
+
+                      <div className="px-4 pb-4 flex space-x-2">
+                        <Skeleton className="h-8 flex-1 rounded" />
+                        <Skeleton className="h-8 w-24 rounded" />
+                        <Skeleton className="h-8 w-12 rounded" />
+                      </div>
+                    </Card>
+                  )
+                )}
+              </div>
+            </div>
+          ) : paginatedContent.length === 0 ? (
             <div className="text-center py-12">
               <Folder className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium">Aucun contenu trouvé</h3>

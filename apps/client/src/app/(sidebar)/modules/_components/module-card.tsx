@@ -3,10 +3,12 @@ import { Clock, AlertCircle, Star } from "lucide-react";
 import type { Module, ViewMode } from "@/components/modules/module-types";
 import { Card } from "@oppsys/ui/components/card";
 import { MODULE_CATEGORIES_MAPPING } from "../modules-config";
+import { LinkButton } from "@/components/link-button";
+import { routes } from "@/routes";
+import { Link } from "react-router";
 
 export function ModuleCard({
   module,
-  onModuleClick,
   viewMode,
   currentBalance,
 }: ModuleCardProps) {
@@ -50,13 +52,19 @@ export function ModuleCard({
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => canAfford && onModuleClick(module.slug)}
-            disabled={!canAfford}
-            className="ml-4"
-          >
-            Utiliser
-          </Button>
+          {canAfford ? (
+            <LinkButton
+              to={routes.modules.id(module.slug)}
+              disabled={!canAfford}
+              className="ml-4"
+            >
+              Utiliser
+            </LinkButton>
+          ) : (
+            <Button disabled={!canAfford} className="ml-4">
+              Utiliser
+            </Button>
+          )}
         </div>
       </Card>
     );
@@ -68,8 +76,8 @@ export function ModuleCard({
         featured ? "border border-primary/30" : ""
       } ${!canAfford ? "opacity-70" : ""}`}
     >
-      <div
-        onClick={() => canAfford && onModuleClick(module.slug)}
+      <Link
+        to={canAfford ? routes.modules.id(module.slug) : "#"}
         className={`flex flex-col flex-grow ${
           canAfford ? "cursor-pointer" : "cursor-not-allowed"
         }`}
@@ -119,29 +127,19 @@ export function ModuleCard({
             </div>
           )}
 
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (canAfford) {
-                onModuleClick(module.slug);
-              }
-            }}
-            disabled={!canAfford}
-            className="w-full mt-auto"
-          >
+          <Button disabled={!canAfford} className="w-full mt-auto">
             {canAfford
               ? "Utiliser ce module"
               : `+${module.creditCost - currentBalance} crédits requis`}
           </Button>
         </div>
-      </div>
+      </Link>
     </Card>
   );
 }
 
 type ModuleCardProps = {
   module: Module;
-  onModuleClick: (slug: string) => void;
   viewMode: ViewMode;
   currentBalance: number;
 };
