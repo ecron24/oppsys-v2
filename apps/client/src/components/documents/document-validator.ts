@@ -5,11 +5,13 @@ const allowedTypes = [
   "text/plain",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
+] as const;
+type AllowedType = (typeof allowedTypes)[number];
+
 const fileSizeMaxBytes = 10 * 1024 * 1024; // 10Mb
 
 export function validateDocumentFile(file: File) {
-  if (!allowedTypes.includes(file.type)) {
+  if (!allowedTypes.includes(file.type as AllowedType)) {
     toast.error(`Format non supporté: ${file.name}`, {
       description: "Formats acceptés: PDF, TXT, DOC, DOCX",
     });
@@ -31,5 +33,10 @@ export function validateDocumentFile(file: File) {
 
   return {
     success: true,
+    data: {
+      fileName: file.name,
+      fileType: file.type as AllowedType,
+      fileSize: file.size,
+    },
   };
 }

@@ -55,10 +55,7 @@ import {
 import type { Module } from "../module-types";
 import type { LucideIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
-import type {
-  RagDocument,
-  RagUploadBody,
-} from "@/components/documents/document-types";
+import type { RagDocument } from "@/components/documents/document-types";
 import { modulesService } from "../service/modules-service";
 import { documentService } from "@/components/documents/document-service";
 import { MODULES_IDS } from "@oppsys/api/client";
@@ -310,9 +307,9 @@ export default function DocumentGeneratorModule({
       try {
         // Créer URL d'upload
         const response = await documentService.generateRagUploadUrl({
-          fileName: file.name,
-          fileType: file.type as RagUploadBody["fileType"],
-          fileSize: file.size,
+          fileName: validateResult.data.fileName,
+          fileType: validateResult.data.fileType,
+          fileSize: validateResult.data.fileSize,
         });
 
         if ("error" in response) {
