@@ -30,9 +30,15 @@ export type N8nResult =
       link?: unknown;
       metadata?: Record<string, unknown>;
     }
-  | AiWriterOutput;
+  | AiWriterOutput
+  | DocumentGenerator;
 
-type AiWriterOutput = {
+export type DocumentGenerator = {
+  module_type: "document-generator";
+  output: {};
+};
+
+export type AiWriterOutput = {
   module_type: "ai-writer";
   output: {
     state: "missing" | "ready_for_confirmation" | "confirmed";

@@ -475,8 +475,8 @@ export default function RealEstateLeaseGenerator({
 
   // Téléchargement du document
   const downloadDocument = () => {
-    if (result?.output.moduleType == "ai-writer") return;
     if (
+      result?.output.moduleType == "unknown" &&
       result?.output?.result &&
       typeof result.output.result === "object" &&
       "documentUrl" in result.output.result &&
@@ -1483,7 +1483,7 @@ export default function RealEstateLeaseGenerator({
               <CheckCircle className="h-5 w-5 text-green-500" />
               <Label>Document généré avec succès !</Label>
             </div>
-            {result.output.moduleType !== "ai-writer" &&
+            {result.output.moduleType == "unknown" &&
               result?.output?.result &&
               typeof result.output.result === "object" &&
               "documentUrl" in result.output.result && (

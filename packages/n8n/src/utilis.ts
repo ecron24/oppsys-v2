@@ -7,6 +7,10 @@ export function extractMessageFromN8n(result: N8nResult) {
     return result.output.question;
   }
 
+  if (result.module_type == "document-generator") {
+    return "Document generated";
+  }
+
   if (result) {
     if (
       result.output &&

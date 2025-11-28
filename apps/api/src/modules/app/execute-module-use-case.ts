@@ -300,6 +300,7 @@ export const executeModuleUseCase = buildUseCase()
     const responseData = toCamelCase({
       usage_id: createUsageResult.data.id,
       output: output,
+      executionResult: executionResult.data,
       credits_used: module.creditCost,
       remaining_credits:
         updatedUserResult.data?.creditBalance ||
