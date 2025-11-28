@@ -55,10 +55,14 @@ import {
 import type { Module } from "../module-types";
 import type { LucideIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
-import type { RagDocument } from "@/components/documents/document-types";
+import type {
+  RagDocument,
+  RagUploadBody,
+} from "@/components/documents/document-types";
 import { modulesService } from "../service/modules-service";
 import { documentService } from "@/components/documents/document-service";
 import { MODULES_IDS } from "@oppsys/api/client";
+import { validateDocumentFile } from "@/components/documents/document-validator";
 
 type Config = Extract<
   Module["config"],
@@ -67,16 +71,6 @@ type Config = Extract<
 
 type DocumentGeneratorModuleProps = {
   module: Module;
-};
-
-type RagUploadUrlRequest = {
-  fileName: string;
-  fileType:
-    | "application/pdf"
-    | "text/plain"
-    | "application/msword"
-    | "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  fileSize: number;
 };
 
 const ICONS: Record<string, LucideIcon> = {
@@ -307,35 +301,17 @@ export default function DocumentGeneratorModule({
     setRagUploadProgress(0);
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i] as File;
+      const file = files[i];
 
       // Validation
-      const allowedTypes = [
-        "application/pdf",
-        "text/plain",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`Format non supporté: ${file.name}`, {
-          description: "Formats acceptés: PDF, TXT, DOC, DOCX",
-        });
-        continue;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        // 10MB max
-        toast.error(`Fichier trop volumineux: ${file.name}`, {
-          description: "Taille maximale: 10MB",
-        });
-        continue;
-      }
+      const validateResult = validateDocumentFile(file);
+      if (!validateResult.success) continue;
 
       try {
         // Créer URL d'upload
         const response = await documentService.generateRagUploadUrl({
           fileName: file.name,
-          fileType: file.type as RagUploadUrlRequest["fileType"],
+          fileType: file.type as RagUploadBody["fileType"],
           fileSize: file.size,
         });
 

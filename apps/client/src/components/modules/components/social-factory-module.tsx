@@ -81,6 +81,7 @@ import type { RagDocument } from "../../documents/document-types";
 import type { LucideIcon } from "lucide-react";
 import { contentService } from "@/components/content/content-service.ts";
 import { MODULES_IDS } from "@oppsys/api/client";
+import { validateDocumentFile } from "@/components/documents/document-validator.ts";
 
 type Config = Extract<
   Module["config"],
@@ -297,26 +298,9 @@ export default function SocialFactoryModule({
       const file = files[i];
 
       // Validation
-      const allowedTypes = [
-        "application/pdf",
-        "text/plain",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`Format non supporté: ${file.name}`, {
-          description: "Formats acceptés: PDF, TXT, DOC, DOCX",
-        });
-        continue;
-      }
+      const validateResult = validateDocumentFile(file);
+      if (!validateResult.success) continue;
 
-      if (file.size > 10 * 1024 * 1024) {
-        // 10MB max
-        toast.error(`Fichier trop volumineux: ${file.name}`, {
-          description: "Taille maximale: 10MB",
-        });
-        continue;
-      }
       const response = await documentService.generateUrlAndUploadFile(file);
       if (response.success) {
         // Ajouter à la liste
