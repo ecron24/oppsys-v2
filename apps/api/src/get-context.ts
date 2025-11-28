@@ -1,7 +1,6 @@
 import { AuthRepoSupabase } from "./auth/infra/auth-repo-supabase";
 import { n8nInstance } from "./lib/n8n-instance";
 import { supabase } from "./lib/supabase";
-import { LoggerWinston } from "./logger/infra/logger-winston";
 import { ModuleRepoSupabase } from "./modules/infra/module-repo-supabase";
 import { NotificationRepoSupabase } from "./notification/infra/notification-repo-supabase";
 import { PlanRepoSupabase } from "./plan/infra/plan-repo-supabase";
@@ -17,34 +16,73 @@ import { TranscriptionRepoSupabase } from "./transcriptions/infra/transcription-
 import { FormationRepoSupabase } from "./formations/infra/formation-repo-supabase";
 import { TemplateRepoSupabase } from "./templates/infra/template-repo-supabase";
 import { YouTubeRepoSupabase } from "./youtube/infra/youtube-repo-supabase";
-import type { Logger } from "./logger/domain/logger";
+import { createLogger } from "./logger/create-logger";
 
 export function getContext() {
-  const logger: Logger = new LoggerWinston();
-  const chatSessionRepo = new ChatSessionRepoSupabase(supabase, logger);
-  const socialTokenRepo = new SocialTokenRepoSupabase(supabase, logger);
-  const socialTokenManager = new SocialTokenManager(socialTokenRepo, logger);
-  const transcriptionRepo = new TranscriptionRepoSupabase(supabase, logger);
+  const logger = createLogger("<default>");
+  const chatSessionRepo = new ChatSessionRepoSupabase(
+    supabase,
+    createLogger("chat-session-repo")
+  );
+  const socialTokenRepo = new SocialTokenRepoSupabase(
+    supabase,
+    createLogger("social-token-repo")
+  );
+  const socialTokenManager = new SocialTokenManager(
+    socialTokenRepo,
+    createLogger("social-token-manager")
+  );
+  const transcriptionRepo = new TranscriptionRepoSupabase(
+    supabase,
+    createLogger("transcription-repo")
+  );
 
   return {
-    planRepo: new PlanRepoSupabase(supabase, logger),
-    profileRepo: new ProfileRepoSupabase(supabase, logger),
+    planRepo: new PlanRepoSupabase(supabase, createLogger("plan-repo")),
+    profileRepo: new ProfileRepoSupabase(
+      supabase,
+      createLogger("profile-repo")
+    ),
     logger,
-    moduleRepo: new ModuleRepoSupabase(supabase, logger),
-    authRepo: new AuthRepoSupabase(supabase, logger),
-    notificationRepo: new NotificationRepoSupabase(supabase, logger),
+    moduleRepo: new ModuleRepoSupabase(supabase, createLogger("module-repo")),
+    authRepo: new AuthRepoSupabase(supabase, createLogger("auth-repo")),
+    notificationRepo: new NotificationRepoSupabase(
+      supabase,
+      createLogger("notification-repo")
+    ),
     n8n: n8nInstance,
     chatSessionRepo,
-    contentRepo: new ContentRepoSupabase(supabase, logger),
-    dashboardRepo: new DashboardRepoSupabase(supabase, logger),
+    contentRepo: new ContentRepoSupabase(
+      supabase,
+      createLogger("content-repo")
+    ),
+    dashboardRepo: new DashboardRepoSupabase(
+      supabase,
+      createLogger("dashboard-repo")
+    ),
     socialTokenManager,
-    socialAuthService: new SocialAuthService(socialTokenManager, logger),
+    socialAuthService: new SocialAuthService(
+      socialTokenManager,
+      createLogger("social-auth-service")
+    ),
     socialTokenRepo,
-    scheduledTaskRepo: new ScheduledTaskRepoSupabase(supabase, logger),
+    scheduledTaskRepo: new ScheduledTaskRepoSupabase(
+      supabase,
+      createLogger("scheduled-task-repo")
+    ),
     transcriptionRepo,
-    formationRepo: new FormationRepoSupabase(supabase, logger),
-    templateRepo: new TemplateRepoSupabase(supabase, logger),
-    youtubeRepo: new YouTubeRepoSupabase(supabase, logger),
+    formationRepo: new FormationRepoSupabase(
+      supabase,
+      createLogger("formation-repo")
+    ),
+    templateRepo: new TemplateRepoSupabase(
+      supabase,
+      createLogger("template-repo")
+    ),
+    youtubeRepo: new YouTubeRepoSupabase(
+      supabase,
+      createLogger("youtube-repo")
+    ),
     supabase,
   };
 }

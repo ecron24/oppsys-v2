@@ -3,7 +3,6 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { logger as honoLogger } from "hono/logger";
 import { apiRouter } from "./api-router";
-import { createLogger } from "@oppsys/logger";
 import { timeout } from "hono/timeout";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
@@ -13,8 +12,9 @@ import { bodyLimit } from "hono/body-limit";
 import { openAPIRouteHandler } from "hono-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
 import { HTTPException } from "hono/http-exception";
+import { createLogger } from "./logger/create-logger";
 
-const logger = createLogger();
+const logger = createLogger("app");
 const app = new Hono();
 
 app.use(async (c, next) => {

@@ -1,4 +1,4 @@
-import { createLogger } from "@oppsys/logger";
+import { createLoggerPino } from "@oppsys/logger";
 import {
   getUserProfileForService,
   type OppSysSupabaseClient,
@@ -8,7 +8,7 @@ import { determineTriggerType } from "./trigger-type";
 import { buildChatInput, extractMessageFromN8n } from "./utilis";
 import { toSnakeCase } from "@oppsys/shared";
 
-const logger = createLogger();
+const logger = createLoggerPino("execute-workflow-n8n");
 
 type ExecuteParams = {
   module: N8nModule;
@@ -41,8 +41,8 @@ export function createN8nInstance({
 
     if (!profileResult.success) {
       logger.error(
-        `Impossible de récupérer le profil utilisateur ${userId} via RPC:`,
-        profileResult.error
+        profileResult.error,
+        `Impossible de récupérer le profil utilisateur ${userId} via RPC:`
       );
       return {
         success: false,
@@ -78,12 +78,15 @@ export function createN8nInstance({
     let triggerType = determineTriggerType(module, input);
     authData.module_info.trigger_type = triggerType;
 
-    logger.debug(`Type de trigger déterminé: ${triggerType}`, {
-      module_slug: module.slug,
-      has_chat_input: !!(input.isChatMode && input.sessionId),
-      module_trigger_type: module.n8n_trigger_type,
-      endpoint_ends_with_chat: module.endpoint?.endsWith("/chat"),
-    });
+    logger.debug(
+      {
+        module_slug: module.slug,
+        has_chat_input: !!(input.isChatMode && input.sessionId),
+        module_trigger_type: module.n8n_trigger_type,
+        endpoint_ends_with_chat: module.endpoint?.endsWith("/chat"),
+      },
+      `Type de trigger déterminé: ${triggerType}`
+    );
 
     let payload;
 
@@ -115,16 +118,19 @@ export function createN8nInstance({
         auth: authData,
       };
 
-      logger.debug(`Payload chat préparé:`, {
-        sessionId: input.sessionId.slice(-8),
-        chatInputLength: JSON.stringify({
-          message: input.message,
-          context: input.context || {},
-          module_slug: module.slug,
-          module_name: module.name,
-          module_id: module.id,
-        }).length,
-      });
+      logger.debug(
+        {
+          sessionId: input.sessionId.slice(-8),
+          chatInputLength: JSON.stringify({
+            message: input.message,
+            context: input.context || {},
+            module_slug: module.slug,
+            module_name: module.name,
+            module_id: module.id,
+          }).length,
+        },
+        `Payload chat préparé:`
+      );
     } else if (module.slug === "real-estate-lease-generator") {
       // FORMAT SPÉCIFIQUE POUR LE GÉNÉRATEUR IMMOBILIER
       payload = {
@@ -213,7 +219,6 @@ export function createN8nInstance({
 
     // Logging de l'exécution
     logger.debug(
-      `Executing n8n workflow`,
       toSnakeCase({
         module: module.name,
         user: userEmail,
@@ -232,7 +237,8 @@ export function createN8nInstance({
             ? input.message.substring(0, 50) + "..."
             : null,
         },
-      })
+      }),
+      `Executing n8n workflow`
     );
 
     try {
@@ -266,12 +272,15 @@ export function createN8nInstance({
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => "Erreur inconnue");
-        logger.error(`N8N Error ${response.status} for ${module.name}:`, {
-          user: userEmail,
-          plan: userPlan,
-          error: errorText,
-          payload_sent: payload,
-        });
+        logger.error(
+          {
+            user: userEmail,
+            plan: userPlan,
+            error: errorText,
+            payload_sent: payload,
+          },
+          `N8N Error ${response.status} for ${module.name}:`
+        );
         throw new Error(
           `Module ${module.name} error: ${response.status} - ${errorText}`
         );
@@ -279,12 +288,15 @@ export function createN8nInstance({
 
       const result: N8nResult = (await response.json()) || {};
 
-      logger.info(`N8N Success for ${module.name}`, {
-        user: userEmail,
-        plan: userPlan,
-        execution_time: Date.now(),
-        has_result: !!result,
-      });
+      logger.info(
+        {
+          user: userEmail,
+          plan: userPlan,
+          execution_time: Date.now(),
+          has_result: !!result,
+        },
+        `N8N Success for ${module.name}`
+      );
       const outputMessage = extractMessageFromN8n(result);
 
       return { success: true, data: { ...result, outputMessage } } as const;
@@ -304,12 +316,15 @@ export function createN8nInstance({
 
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      logger.error(`N8N Execution failed for ${module.name}:`, {
-        user: userEmail,
-        plan: userPlan,
-        error: errorMessage,
-        payload_sent: payload,
-      });
+      logger.error(
+        {
+          user: userEmail,
+          plan: userPlan,
+          error: errorMessage,
+          payload_sent: payload,
+        },
+        `N8N Execution failed for ${module.name}:`
+      );
       return {
         success: false,
         kind: "EXECUTION_ERROR",
