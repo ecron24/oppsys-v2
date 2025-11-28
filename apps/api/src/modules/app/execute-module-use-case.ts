@@ -5,7 +5,6 @@ import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
 import { InsufficientCreditError } from "../domain/exception";
 import { toCamelCase } from "@oppsys/shared";
-import { ContentTypeSchema } from "src/content/domain/content";
 
 export const ExecuteModuleBodySchema = z.object({
   input: z.record(z.string(), z.any()),
@@ -68,11 +67,13 @@ export const executeModuleUseCase = buildUseCase()
     }
 
     // 3. Deduct credits
+
     if (module.creditCost > 0) {
       const deductResult = await ctx.profileRepo.deductCredits(
         user.id,
         module.creditCost
       );
+
       if (!deductResult.success) {
         await createNotificationUseCase(ctx, {
           userId: user.id,
@@ -231,66 +232,66 @@ export const executeModuleUseCase = buildUseCase()
     });
 
     // 7. Save content
-    // shouldSaveContent(executionResult.data)
-    if (body.saveOutput && executionResult.data.module_type == "unknown") {
-      const output = executionResult.data;
-      const content = (output?.content ||
-        output?.text ||
-        output?.result ||
-        output?.generated_content ||
-        (typeof output?.data === "string"
-          ? output.data
-          : JSON.stringify(output?.data || output))) as string;
+    // saving content must be in workflow
+    // if (body.saveOutput && executionResult.data.module_type == "unknown") {
+    //   const output = executionResult.data;
+    //   const content = (output?.content ||
+    //     output?.text ||
+    //     output?.result ||
+    //     output?.generated_content ||
+    //     (typeof output?.data === "string"
+    //       ? output.data
+    //       : JSON.stringify(output?.data || output))) as string;
 
-      const title = (output?.title ||
-        output?.name ||
-        output?.subject ||
-        `Contenu généré par ${module.name}`) as string;
+    //   const title = (output?.title ||
+    //     output?.name ||
+    //     output?.subject ||
+    //     `Contenu généré par ${module.name}`) as string;
 
-      // Détection intelligente du type
-      const rawtype = (output?.type ||
-        output?.content_type ||
-        (module.name.toLowerCase().includes("article")
-          ? "article"
-          : module.name.toLowerCase().includes("social")
-            ? "social-post"
-            : module.name.toLowerCase().includes("video")
-              ? "video"
-              : module.name.toLowerCase().includes("document")
-                ? "document"
-                : "other")) as string;
-      const type = ContentTypeSchema.safeParse(rawtype).data || "other";
+    //   // Détection intelligente du type
+    //   const rawtype = (output?.type ||
+    //     output?.content_type ||
+    //     (module.name.toLowerCase().includes("article")
+    //       ? "article"
+    //       : module.name.toLowerCase().includes("social")
+    //         ? "social-post"
+    //         : module.name.toLowerCase().includes("video")
+    //           ? "video"
+    //           : module.name.toLowerCase().includes("document")
+    //             ? "document"
+    //             : "other")) as string;
+    //   const type = ContentTypeSchema.safeParse(rawtype).data || "other";
 
-      // Métadonnées enrichies
-      const metadata = {
-        module_name: module.name,
-        module_slug: module.slug,
-        created_at: new Date().toISOString(),
-        output_keys: Object.keys(output || {}),
-        content_length: content?.length || 0,
-        word_count: content ? content.split(/\s+/).length : 0,
-        has_url: !!(output?.url || output?.link),
-        generation_source: "api",
-        content: content,
-        ...output?.metadata,
-        original_output: output,
-      };
-      const url = (output?.url || output?.link) as string | undefined;
-      if (content) {
-        await ctx.contentRepo.create({
-          userId: user.id,
-          contentData: {
-            moduleId: module.id,
-            moduleSlug: module.slug,
-            title: title?.substring(0, 200),
-            type,
-            status: "draft",
-            metadata,
-            url,
-          },
-        });
-      }
-    }
+    //   // Métadonnées enrichies
+    //   const metadata = {
+    //     module_name: module.name,
+    //     module_slug: module.slug,
+    //     created_at: new Date().toISOString(),
+    //     output_keys: Object.keys(output || {}),
+    //     content_length: content?.length || 0,
+    //     word_count: content ? content.split(/\s+/).length : 0,
+    //     has_url: !!(output?.url || output?.link),
+    //     generation_source: "api",
+    //     content: content,
+    //     ...output?.metadata,
+    //     original_output: output,
+    //   };
+    //   const url = (output?.url || output?.link) as string | undefined;
+    //   if (content) {
+    //     await ctx.contentRepo.create({
+    //       userId: user.id,
+    //       contentData: {
+    //         moduleId: module.id,
+    //         moduleSlug: module.slug,
+    //         title: title?.substring(0, 200),
+    //         type,
+    //         status: "draft",
+    //         metadata,
+    //         url,
+    //       },
+    //     });
+    //   }
+    // }
 
     const updatedUserResult = await ctx.profileRepo.getByIdWithPlan(user.id);
     if (!updatedUserResult.success) return updatedUserResult;
