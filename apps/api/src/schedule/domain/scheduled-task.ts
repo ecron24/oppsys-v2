@@ -38,7 +38,7 @@ export const ScheduledTaskSchema = z.object({
       id: z.string(),
       title: z.string().nullable(),
       type: z.string().nullable(),
-      htmlPpreview: z.string().nullable(),
+      htmlPreview: z.string().nullable(),
       status: z.string(),
       metadata: z.record(z.string(), z.unknown()),
     })

@@ -29,6 +29,9 @@ const AuthCallbackPage = lazy(
 const GoogleDataPolicyPage = lazy(
   () => import("@/app/privacy/google-data-policy-page")
 );
+const CalendarPage = lazy(
+  () => import("@/app/(sidebar)/calendar/calendar-page")
+);
 
 const router = createBrowserRouter([
   {
@@ -46,6 +49,7 @@ const router = createBrowserRouter([
       { path: routes.content.index(), element: <ContentPage /> },
       { path: routes.billing.index(), element: <BillingPage /> },
       { path: routes.profile.index(), element: <ProfilePage /> },
+      { path: routes.calendar.index(), element: <CalendarPage /> },
       {
         path: routes.completeProfile.index(),
         element: <CompleteProfilePage />,

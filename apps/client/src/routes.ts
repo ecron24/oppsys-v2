@@ -26,6 +26,9 @@ export const routes = {
   profile: {
     index: () => "/profile",
   },
+  calendar: {
+    index: () => "/calendar",
+  },
   auth: {
     login: () => "/login",
     register: () => "/register",

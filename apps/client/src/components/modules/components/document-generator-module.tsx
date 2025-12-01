@@ -79,6 +79,54 @@ const ICONS: Record<string, LucideIcon> = {
   manual: FileText,
 };
 
+export type Payload =
+  | {
+      template: "business";
+      workflowType: "business_proposal";
+      clientName: string;
+      proposalType: string;
+      projectName: string;
+      objectives: string;
+      budget: string;
+      deadline: string;
+      language: string;
+      maxSections: number;
+    }
+  | {
+      template: "business";
+      workflowType: "technical_manual";
+      documentType: string;
+      product: string;
+      version: string;
+      audience: string;
+      techStack: string;
+      language: string;
+      maxSections: number;
+    }
+  | {
+      template: "legal";
+      workflowType: "legal_document";
+      documentType: string;
+      partieA: string;
+      partieB: string;
+      objet: string;
+      jurisdiction: string;
+      language: string;
+      maxSections: number;
+    }
+  | {
+      template: "legal";
+      workflowType: "report_technical";
+      reportType: string;
+      businessDomain: string;
+      timeframe: string;
+      metrics: string;
+      audience: string;
+      clientName: string;
+      language: string;
+      maxSections: number;
+    };
+
 export default function DocumentGeneratorModule({
   module,
 }: DocumentGeneratorModuleProps) {
