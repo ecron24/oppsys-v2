@@ -1,9 +1,8 @@
 import type { CalendarEvent } from "@/components/schelude/schelude-types";
 import { Calendar, Clock, Edit, Trash2, Send } from "lucide-react";
-import moment from "moment";
-// import "moment/locale/fr";
+import dayjs from "dayjs";
 
-moment.locale("fr");
+dayjs.locale("fr");
 
 interface ScheduledPostsListProps {
   events: CalendarEvent[];
@@ -22,7 +21,7 @@ const ScheduledPostsList = ({
   // Grouper les événements par date
   const groupedEvents = sortedEvents.reduce(
     (groups, event) => {
-      const date = moment(event.start).format("YYYY-MM-DD");
+      const date = dayjs(event.start).format("YYYY-MM-DD");
       if (!groups[date]) {
         groups[date] = [];
       }
@@ -38,7 +37,7 @@ const ScheduledPostsList = ({
         <div key={date} className="space-y-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            {moment(date).format("dddd D MMMM YYYY")}
+            {dayjs(date).format("dddd D MMMM YYYY")}
           </h3>
           <div className="space-y-2">
             {dayEvents.map((event) => (
@@ -69,7 +68,7 @@ const ScheduledPostsList = ({
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground gap-2">
                       <Clock className="h-4 w-4" />
-                      {moment(event.start).format("HH:mm")}
+                      {dayjs(event.start).format("HH:mm")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
