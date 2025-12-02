@@ -1,6 +1,6 @@
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { CommunicationPrefs } from "./communication-prefs";
-import { H3 } from "@oppsys/ui";
+import { H3 } from "@oppsys/ui/components/typography";
 
 export const NotificationsTab = () => {
   const { user } = useAuth();

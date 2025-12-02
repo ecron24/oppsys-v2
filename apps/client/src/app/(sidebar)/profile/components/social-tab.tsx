@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSocialConnections } from "@/components/social/hooks/use-social-connections";
-import { Button, H3, P } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { H3, P } from "@oppsys/ui/components/typography";
 import { LoadingSpinner } from "@/components/loading";
 import {
   CheckCircle,

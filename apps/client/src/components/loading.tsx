@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
-import { cn, P } from "@oppsys/ui";
+import { cn } from "@oppsys/ui/lib/utils";
+import { P } from "@oppsys/ui/components/typography";
 import type { ReactNode } from "react";
 
 const sizeClasses = {

@@ -3,7 +3,8 @@ import { useAuth } from "../auth/hooks/use-auth";
 import { useAuthOperations } from "../auth/hooks/use-auth-operations";
 import { Navigate } from "react-router";
 import { Mail, Shield } from "lucide-react";
-import { Button, H2, P } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { H2, P } from "@oppsys/ui/components/typography";
 import { PageLoader } from "../loading";
 import { routes } from "@/routes";
 

@@ -1,4 +1,4 @@
-import { P } from "@oppsys/ui";
+import { P } from "@oppsys/ui/components/typography";
 import { Card, CardContent } from "@oppsys/ui/components/card";
 import type { PropsWithChildren } from "react";
 

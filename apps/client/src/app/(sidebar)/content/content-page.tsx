@@ -1,5 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { toast, Button, Input, P, H2, H3, Skeleton } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
+import { Button } from "@oppsys/ui/components/button";
+import { Input } from "@oppsys/ui/components/input";
+import { H2, H3, P } from "@oppsys/ui/components/typography";
+import { Skeleton } from "@oppsys/ui/components/skeleton";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { Search, Folder, Plus, XCircle } from "lucide-react";

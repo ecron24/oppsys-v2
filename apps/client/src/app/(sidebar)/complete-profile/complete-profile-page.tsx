@@ -1,6 +1,6 @@
 import { useCompleteProfileForm } from "./hooks/use-complete-profile";
 import { getPasswordStrength } from "@/lib/password-utils";
-import { H2, H4, P } from "@oppsys/ui";
+import { H2, H4, P } from "@oppsys/ui/components/typography";
 import {
   User,
   Lock,

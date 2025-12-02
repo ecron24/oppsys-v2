@@ -5,7 +5,7 @@ import { FieldGroup } from "@oppsys/ui/components/field";
 import { Lock, Mail, Zap } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { routes } from "@/routes";
-import { Button } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
 
 const formSchema = z.object({
   email: z.email("Email invalide").min(1, "Email requis"),

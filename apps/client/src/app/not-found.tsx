@@ -1,6 +1,6 @@
 import { LinkButton } from "@/components/link-button";
 import { routes } from "@/routes";
-import { H1, P } from "@oppsys/ui";
+import { H1, P } from "@oppsys/ui/components/typography";
 
 export default function NotFound() {
   return (

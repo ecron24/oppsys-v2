@@ -9,7 +9,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { H3, H4, P } from "@oppsys/ui";
+import { H3, H4, P } from "@oppsys/ui/components/typography";
 
 interface QuickAction {
   title: string;

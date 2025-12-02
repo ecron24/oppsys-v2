@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button, H4, Input, Label, P, toast } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { H4, P } from "@oppsys/ui/components/typography";
+import { Input } from "@oppsys/ui/components/input";
+import { Label } from "@oppsys/ui/components/label";
+import { toast } from "@oppsys/ui/lib/sonner";
 import {
   Mail,
   Shield,

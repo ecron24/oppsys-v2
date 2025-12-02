@@ -1,4 +1,5 @@
-import { Button, P } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { P } from "@oppsys/ui/components/typography";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import z from "zod";
 import { FieldGroup } from "@oppsys/ui/components/field";

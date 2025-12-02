@@ -1,4 +1,4 @@
-import { toast } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
 
 const allowedTypes = [
   "application/pdf",

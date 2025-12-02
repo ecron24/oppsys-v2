@@ -1,6 +1,7 @@
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { useProfile } from "../hooks/use-profile";
-import { Button, H3, H4, P } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { H3, H4, P } from "@oppsys/ui/components/typography";
 import { LoadingSpinner } from "@/components/loading";
 import { Download, Trash2 } from "lucide-react";
 import { useState } from "react";

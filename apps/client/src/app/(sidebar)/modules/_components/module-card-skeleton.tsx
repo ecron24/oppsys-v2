@@ -1,4 +1,4 @@
-import { Skeleton } from "@oppsys/ui";
+import { Skeleton } from "@oppsys/ui/components/skeleton";
 import type { ViewMode } from "@/components/modules/module-types";
 import { Card, CardContent } from "@oppsys/ui/components/card";
 

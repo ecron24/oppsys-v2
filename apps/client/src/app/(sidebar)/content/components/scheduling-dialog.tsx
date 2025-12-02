@@ -6,13 +6,13 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  Button,
-  H3,
-  P,
-} from "@oppsys/ui";
-import { Input, Label } from "@oppsys/ui";
+} from "@oppsys/ui/components/dialog";
+import { Button } from "@oppsys/ui/components/button";
+import { H3, P } from "@oppsys/ui/components/typography";
+import { Input } from "@oppsys/ui/components/input";
+import { Label } from "@oppsys/ui/components/label";
 import { Calendar, Crown } from "lucide-react";
-import { toast } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
 import { LoadingSpinner } from "@/components/loading";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import type { Content } from "../content-types";

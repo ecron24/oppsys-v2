@@ -1,4 +1,5 @@
-import { Badge, H4, P } from "@oppsys/ui";
+import { Badge } from "@oppsys/ui/components/badge";
+import { H4, P } from "@oppsys/ui/components/typography";
 import type { Module } from "@/components/modules/module-types";
 import { Link } from "react-router";
 import { routes } from "@/routes";

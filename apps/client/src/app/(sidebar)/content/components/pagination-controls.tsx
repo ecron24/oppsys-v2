@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
 
 export const PaginationControls = ({
   currentPage,

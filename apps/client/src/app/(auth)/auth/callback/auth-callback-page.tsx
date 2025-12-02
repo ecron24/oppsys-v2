@@ -9,7 +9,8 @@ import {
   ArrowRight,
   RefreshCw,
 } from "lucide-react";
-import { Button, H1, H4, P } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { H1, H4, P } from "@oppsys/ui/components/typography";
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();

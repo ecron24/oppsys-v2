@@ -3,16 +3,14 @@ import { useAuthOperations } from "@/components/auth/hooks/use-auth-operations";
 import { LinkButton } from "@/components/link-button";
 import { ThemeSwitcher } from "@/components/themes/theme-switcher";
 import { routes } from "@/routes";
+import { Button } from "@oppsys/ui/components/button";
 import {
-  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  H1,
-  H3,
-  P,
-  SidebarTrigger,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/dropdown-menu";
+import { H1, H3, P } from "@oppsys/ui/components/typography";
+import { SidebarTrigger } from "@oppsys/ui/components/sidebar";
 import {
   Bell,
   User,

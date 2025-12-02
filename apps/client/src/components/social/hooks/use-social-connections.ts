@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { toast } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
 import { socialService } from "@/components/social/service/social-service";
 import {
   queryClient,

@@ -4,7 +4,9 @@ import { GeneralFormSchema, type GeneralForm } from "../profile-types";
 import { Save } from "lucide-react";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import { FieldGroup } from "@oppsys/ui/components/field";
-import { H3, Input, Label, P } from "@oppsys/ui";
+import { H3, P } from "@oppsys/ui/components/typography";
+import { Input } from "@oppsys/ui/components/input";
+import { Label } from "@oppsys/ui/components/label";
 
 interface GeneralTabProps {
   initialData: GeneralForm;

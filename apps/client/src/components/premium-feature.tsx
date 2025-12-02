@@ -1,5 +1,5 @@
 import { Crown, Lock } from "lucide-react";
-import { Button } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import { useNavigate } from "react-router";
 import type { ReactNode } from "react";

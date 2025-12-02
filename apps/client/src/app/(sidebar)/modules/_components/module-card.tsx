@@ -1,4 +1,6 @@
-import { Button, Badge, P } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { Badge } from "@oppsys/ui/components/badge";
+import { P } from "@oppsys/ui/components/typography";
 import { Clock, AlertCircle, Star } from "lucide-react";
 import type { Module, ViewMode } from "@/components/modules/module-types";
 import { Card } from "@oppsys/ui/components/card";

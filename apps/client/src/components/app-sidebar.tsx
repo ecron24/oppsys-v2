@@ -14,10 +14,10 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { cn } from "@oppsys/ui/lib/utils";
+import { Kbd } from "@oppsys/ui/components/kbd";
+import { P } from "@oppsys/ui/components/typography";
 import {
-  cn,
-  Kbd,
-  P,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -27,7 +27,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/sidebar";
 import { useAuth } from "./auth/hooks/use-auth";
 import { routes } from "@/routes";
 import { Link, useLocation } from "react-router";

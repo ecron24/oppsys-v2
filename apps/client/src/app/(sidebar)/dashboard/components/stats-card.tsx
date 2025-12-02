@@ -1,4 +1,4 @@
-import { P } from "@oppsys/ui";
+import { P } from "@oppsys/ui/components/typography";
 import type { LucideIcon } from "lucide-react";
 import { TrendingUp, AlertCircle } from "lucide-react";
 

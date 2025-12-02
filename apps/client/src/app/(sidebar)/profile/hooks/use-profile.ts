@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
 import { userService } from "@/components/auth/services/user-service";
 import { useAuthOperations } from "@/components/auth/hooks/use-auth-operations";
 import type { GeneralForm, SecurityForm } from "../profile-types";

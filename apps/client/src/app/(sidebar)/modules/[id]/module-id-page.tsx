@@ -9,7 +9,9 @@ import {
   Star,
   XCircle,
 } from "lucide-react";
-import { Badge, Card, CardContent, H2, P } from "@oppsys/ui";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Card, CardContent } from "@oppsys/ui/components/card";
+import { H2, P } from "@oppsys/ui/components/typography";
 import { routes } from "@/routes";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { LinkButton } from "@/components/link-button";

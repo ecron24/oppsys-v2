@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "./use-auth";
-import { toast } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
 import { authService } from "../services/auth-service";
 import { userService } from "../services/user-service";
 import type { Provider } from "@oppsys/supabase";

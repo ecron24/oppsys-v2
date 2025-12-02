@@ -6,32 +6,35 @@ import {
   useCallback,
   type ChangeEvent,
 } from "react";
+import { toast } from "@oppsys/ui/lib/sonner";
 import {
-  toast,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  Button,
-  Label,
-  Input,
-  Textarea,
+} from "@oppsys/ui/components/card";
+import { Button } from "@oppsys/ui/components/button";
+import { Label } from "@oppsys/ui/components/label";
+import { Input } from "@oppsys/ui/components/input";
+import { Textarea } from "@oppsys/ui/components/textarea";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Checkbox,
-  Badge,
-  Progress,
+} from "@oppsys/ui/components/select";
+import { Checkbox } from "@oppsys/ui/components/checkbox";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Progress } from "@oppsys/ui/components/progress";
+import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  Alert,
-  AlertDescription,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/tabs";
+import { Alert, AlertDescription } from "@oppsys/ui/components/alert";
 import { useAuth } from "../../auth/hooks/use-auth";
 import { useCredits } from "@/hooks/use-credits";
 import { LoadingSpinner } from "../../loading";

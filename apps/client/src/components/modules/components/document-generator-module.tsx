@@ -1,25 +1,26 @@
 import { useState, useRef, useMemo } from "react";
 import z from "zod";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
+import { toast } from "@oppsys/ui/lib/sonner";
 import {
-  toast,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  Button,
-  Label,
-  Checkbox,
-  Badge,
-  Progress,
+} from "@oppsys/ui/components/card";
+import { Button } from "@oppsys/ui/components/button";
+import { Label } from "@oppsys/ui/components/label";
+import { Checkbox } from "@oppsys/ui/components/checkbox";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Progress } from "@oppsys/ui/components/progress";
+import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  Alert,
-  AlertDescription,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/tabs";
+import { Alert, AlertDescription } from "@oppsys/ui/components/alert";
 import { LoadingSpinner } from "../../loading";
 import { useAuth } from "../../auth/hooks/use-auth";
 import { useCredits } from "@/hooks/use-credits";

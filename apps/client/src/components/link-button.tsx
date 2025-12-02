@@ -1,4 +1,4 @@
-import { Button } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
 import { type ComponentProps } from "react";
 import { Link } from "react-router";
 

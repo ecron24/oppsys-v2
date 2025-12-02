@@ -15,7 +15,9 @@ import {
   extractPostContent,
 } from "../utils/content-utils";
 import type { Content, ContentMetadata } from "../content-types";
-import { Button, H4, P, toast } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { H4, P } from "@oppsys/ui/components/typography";
+import { toast } from "@oppsys/ui/lib/sonner";
 
 export const ContentPreview = ({ content }: ContentPreviewProps) => {
   const moduleSlug = getCorrectModuleSlug(content);

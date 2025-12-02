@@ -8,7 +8,7 @@ import { SocialTab } from "./components/social-tab";
 import { DataTab } from "./components/data-tab";
 import type { GeneralForm } from "./profile-types";
 import { User, Shield, Bell, Share2, Download } from "lucide-react";
-import { H2, P } from "@oppsys/ui";
+import { H2, P } from "@oppsys/ui/components/typography";
 import { Card, CardContent } from "@oppsys/ui/components/card";
 
 const ProfilePage = () => {

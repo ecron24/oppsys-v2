@@ -11,7 +11,7 @@ import {
   Database,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Dialog, DialogContent } from "@oppsys/ui";
+import { Dialog, DialogContent } from "@oppsys/ui/components/dialog";
 
 export function DeleteAccountModal({
   isOpen,

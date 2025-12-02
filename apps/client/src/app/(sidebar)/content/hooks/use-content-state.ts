@@ -1,5 +1,5 @@
 import { contentService } from "@/components/content/content-service";
-import { toast } from "@oppsys/ui";
+import { toast } from "@oppsys/ui/lib/sonner";
 import type { Content, ContentMetadata } from "../content-types";
 import type { User } from "@/components/auth/auth-types";
 import { useMutation, useQuery } from "@tanstack/react-query";

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useAppForm } from "@oppsys/ui";
 import { z } from "zod";
 import { useAuthOperations } from "@/components/auth/hooks/use-auth-operations";
 import { useNavigate } from "react-router";
 import { routes } from "@/routes";
-import { toast } from "@oppsys/ui";
+import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
+import { toast } from "@oppsys/ui/lib/sonner";
 
 const completeProfileSchema = z
   .object({

@@ -1,7 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router";
-import { Badge, Input, P, H2, H3, H4 } from "@oppsys/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@oppsys/ui";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Input } from "@oppsys/ui/components/input";
+import { H2, H3, H4, P } from "@oppsys/ui/components/typography";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@oppsys/ui/components/tabs";
 import {
   Search,
   Filter,

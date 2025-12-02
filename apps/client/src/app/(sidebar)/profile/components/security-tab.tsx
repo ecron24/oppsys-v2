@@ -3,7 +3,7 @@ import { useProfile } from "../hooks/use-profile";
 import { SecurityFormSchema } from "../profile-types";
 import { Lock } from "lucide-react";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
-import { H3 } from "@oppsys/ui";
+import { H3 } from "@oppsys/ui/components/typography";
 import { TwoFactorAuthSetup } from "./two-factor-auth-setup";
 import { FieldGroup } from "@oppsys/ui/components/field";
 

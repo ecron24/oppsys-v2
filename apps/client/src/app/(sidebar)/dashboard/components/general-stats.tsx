@@ -1,6 +1,6 @@
 import { Target } from "lucide-react";
 import type { DashboardContentData, PeriodUsage } from "../type";
-import { H3 } from "@oppsys/ui";
+import { H3 } from "@oppsys/ui/components/typography";
 
 interface GeneralStatsProps {
   content: DashboardContentData;

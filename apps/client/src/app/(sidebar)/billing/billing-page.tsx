@@ -1,4 +1,7 @@
-import { Button, cn, H2, H3, H4, P, toast } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
+import { cn } from "@oppsys/ui/lib/utils";
+import { H2, H3, H4, P } from "@oppsys/ui/components/typography";
+import { toast } from "@oppsys/ui/lib/sonner";
 import { WithHeader } from "../_components/with-header";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import {

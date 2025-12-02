@@ -5,7 +5,7 @@ import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import { routes } from "@/routes";
 import { FieldGroup } from "@oppsys/ui/components/field";
 import { Lock, Mail } from "lucide-react";
-import { Button } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
 
 const formSchema = z
   .object({

@@ -6,8 +6,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  TooltipButton,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/dialog";
+import { TooltipButton } from "@oppsys/ui/components/tooltip-button";
 import { getCorrectModuleSlug } from "../utils/content-utils";
 import { ContentPreview } from "./content-preview";
 import { Link } from "react-router";

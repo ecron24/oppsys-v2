@@ -1,5 +1,5 @@
 import { routes } from "@/routes";
-import { H1, H2, H3, P } from "@oppsys/ui";
+import { H1, H2, H3, P } from "@oppsys/ui/components/typography";
 import {
   Shield,
   ArrowLeft,

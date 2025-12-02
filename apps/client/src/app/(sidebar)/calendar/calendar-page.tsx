@@ -5,17 +5,15 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import { modulesService } from "@/components/modules/service/modules-service";
+import { toast } from "@oppsys/ui/lib/sonner";
 import {
-  toast,
   Dialog,
   DialogHeader,
   DialogContent,
   DialogFooter,
-  Button,
-  H3,
-  P,
-  H2,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/dialog";
+import { Button } from "@oppsys/ui/components/button";
+import { H2, H3, P } from "@oppsys/ui/components/typography";
 import ScheduledPostsList from "./scheduled-posts-list";
 import {
   Calendar as CalendarIcon,

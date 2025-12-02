@@ -3,7 +3,7 @@ import { FileText, AlertCircle, Sparkles } from "lucide-react";
 import { usePerformanceStats } from "../hooks/use-performance-stats";
 import { formatTimeAgo } from "@/lib/date-humanizer";
 import { LinkButton } from "@/components/link-button";
-import { H3, P } from "@oppsys/ui";
+import { H3, P } from "@oppsys/ui/components/typography";
 import { routes } from "@/routes";
 
 export function PerformanceStats() {

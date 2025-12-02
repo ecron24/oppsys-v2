@@ -9,7 +9,9 @@ import { FavoriteModules } from "./components/favorite-modules";
 import { QuickActions } from "./components/quick-actions";
 import { GeneralStats } from "./components/general-stats";
 import { LinkButton } from "@/components/link-button";
-import { Badge, Button, H2, H4, P } from "@oppsys/ui";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Button } from "@oppsys/ui/components/button";
+import { H2, H4, P } from "@oppsys/ui/components/typography";
 import { routes } from "@/routes";
 
 export default function DashboardPage() {

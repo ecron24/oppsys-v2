@@ -7,7 +7,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import type { Content } from "../content-types";
-import { Badge, Button, H4, P } from "@oppsys/ui";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Button } from "@oppsys/ui/components/button";
+import { H4, P } from "@oppsys/ui/components/typography";
 import { Card } from "@oppsys/ui/components/card";
 import { CONTENT_TYPES } from "../utils/constants";
 import type { JSX } from "react";

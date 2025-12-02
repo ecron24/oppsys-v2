@@ -1,4 +1,4 @@
-import { Button } from "@oppsys/ui";
+import { Button } from "@oppsys/ui/components/button";
 import { MODULE_CATEGORIES_MAPPING } from "@/app/(sidebar)/modules/modules-config";
 
 interface CategoryFilterProps {

@@ -2,7 +2,8 @@ import { Link } from "react-router";
 import { Sparkles, AlertCircle, ArrowUpRight } from "lucide-react";
 import { useModulesStats } from "../hooks/use-modules-stats";
 import { routes } from "@/routes";
-import { Badge, H3, H4, P } from "@oppsys/ui";
+import { Badge } from "@oppsys/ui/components/badge";
+import { H3, H4, P } from "@oppsys/ui/components/typography";
 
 export function FavoriteModules() {
   const { modulesStats, loading, error } = useModulesStats("month");
