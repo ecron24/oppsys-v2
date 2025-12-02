@@ -1,4 +1,6 @@
 import { useState, useRef, useMemo } from "react";
+import z from "zod";
+import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import {
   toast,
   Card,
@@ -8,13 +10,6 @@ import {
   CardDescription,
   Button,
   Label,
-  Input,
-  Textarea,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Checkbox,
   Badge,
   Progress,
@@ -29,7 +24,6 @@ import { LoadingSpinner } from "../../loading";
 import { useAuth } from "../../auth/hooks/use-auth";
 import { useCredits } from "@/hooks/use-credits";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
-import { useNavigate } from "react-router";
 import {
   FileText,
   Building,
@@ -60,6 +54,8 @@ import { modulesService } from "../service/modules-service";
 import { documentService } from "@/components/documents/document-service";
 import { MODULES_IDS } from "@oppsys/api/client";
 import { validateDocumentFile } from "@/components/documents/document-validator";
+import { LinkButton } from "@/components/link-button";
+import { routes } from "@/routes";
 
 type Config = Extract<
   Module["config"],
@@ -127,14 +123,34 @@ export type Payload =
       maxSections: number;
     };
 
+const formSchema = z.object({
+  title: z.string().min(5, "Titre trop court").max(150, "Titre trop long"),
+  description: z.string().min(20, "Description trop courte"),
+  content: z.string().min(50, "Contenu requis."),
+  language: z.string().default("fr").optional(),
+  outputFormat: z.string().default("docx").optional(),
+  documentStyle: z.string().default("corporate").optional(),
+  template: z.string().optional(),
+  companyName: z.string().optional(),
+  companyAddress: z.string().optional(),
+  projectReference: z.string().optional(),
+  includeHeader: z.boolean().default(true).optional(),
+  includeFooter: z.boolean().default(true).optional(),
+  includeSignature: z.boolean().default(false).optional(),
+  includeDateStamp: z.boolean().default(true).optional(),
+  includePageNumbers: z.boolean().default(true).optional(),
+  includeTOC: z.boolean().default(false).optional(),
+  customClauses: z.string().optional(),
+  additionalNotes: z.string().optional(),
+});
+type FormType = z.infer<typeof formSchema>;
+
 export default function DocumentGeneratorModule({
   module,
 }: DocumentGeneratorModuleProps) {
-  // HOOKS
   const { user: authUser } = useAuth();
   const { balance, hasEnoughCredits, formatBalance } = useCredits();
   const permissions = usePremiumFeatures();
-  const navigate = useNavigate();
 
   // CONFIGURATION
   const config = useMemo(
@@ -165,24 +181,6 @@ export default function DocumentGeneratorModule({
 
   // ÉTATS
   const [documentType, setDocumentType] = useState<string>("proposal");
-  const [template, setTemplate] = useState<string>("");
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [content, setContent] = useState<string>("");
-  const [language, setLanguage] = useState<string>("fr");
-  const [outputFormat, setOutputFormat] = useState<string>("docx");
-  const [documentStyle, setDocumentStyle] = useState<string>("corporate");
-  const [companyName, setCompanyName] = useState<string>("");
-  const [companyAddress, setCompanyAddress] = useState<string>("");
-  const [projectReference, setProjectReference] = useState<string>("");
-  const [includeHeader, setIncludeHeader] = useState<boolean>(true);
-  const [includeFooter, setIncludeFooter] = useState<boolean>(true);
-  const [includeSignature, setIncludeSignature] = useState<boolean>(false);
-  const [includeDateStamp, setIncludeDateStamp] = useState<boolean>(true);
-  const [includePageNumbers, setIncludePageNumbers] = useState<boolean>(true);
-  const [includeTOC, setIncludeTOC] = useState<boolean>(false);
-  const [customClauses, setCustomClauses] = useState<string>("");
-  const [additionalNotes, setAdditionalNotes] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [currentStep, setCurrentStep] = useState<string>("");
@@ -192,7 +190,123 @@ export default function DocumentGeneratorModule({
   const [uploadingRag, setUploadingRag] = useState<boolean>(false);
   const [ragUploadProgress, setRagUploadProgress] = useState<number>(0);
 
-  const isSubmitting = useRef<boolean>(false);
+  const form = useAppForm({
+    defaultValues: {
+      title: "",
+      description: "",
+      content: "",
+      language: "fr",
+      outputFormat: "docx",
+      documentStyle: "corporate",
+      template: "",
+      companyName: "",
+      companyAddress: "",
+      projectReference: "",
+      includeHeader: true,
+      includeFooter: true,
+      includeSignature: false,
+      includeDateStamp: true,
+      includePageNumbers: true,
+      includeTOC: false,
+      customClauses: "",
+      additionalNotes: "",
+    } as FormType,
+    validators: {
+      onSubmit: formSchema,
+    },
+    onSubmitInvalid() {
+      toast.error("Veuillez remplir tous les champs obligatoires.");
+    },
+    onSubmit: async ({ value }) => {
+      // Reuse previous validation & submission logic
+      if (!authUser) {
+        toast.error("Vous devez être connecté.");
+        return;
+      }
+      if (!hasEnoughCredits(currentCost)) {
+        toast.error("Crédits insuffisants.");
+        return;
+      }
+      // If legalAdvice required, ensure companyName
+      const currentDocumentType = documentTypesFromAPI[documentType];
+      if (currentDocumentType?.legalAdvice && !value.companyName?.trim()) {
+        toast.error("Informations entreprise requises");
+        return;
+      }
+
+      setError(null);
+      setLoading(true);
+      setCurrentStep("Lancement du processus...");
+      setProgress(50);
+
+      const moduleSlug = module.slug;
+
+      const apiPayload = {
+        input: {
+          documentType,
+          template: value.template,
+          title: value.title.trim(),
+          description: value.description.trim(),
+          content: value.content.trim(),
+          language: value.language,
+          outputFormat: value.outputFormat,
+          documentStyle: value.documentStyle,
+          companyInfo: {
+            name: value.companyName?.trim() || "",
+            address: value.companyAddress?.trim() || "",
+            email: "",
+          },
+          clientInfo: { name: "", address: "" },
+          projectInfo: {
+            reference: value.projectReference?.trim() || "",
+            additionalNotes: value.additionalNotes?.trim() || "",
+          },
+          formatting: {
+            includeHeader: !!value.includeHeader,
+            includeFooter: !!value.includeFooter,
+            includeSignature: !!value.includeSignature,
+            includeDateStamp: !!value.includeDateStamp,
+            includePageNumbers: !!value.includePageNumbers,
+            includeTOC: !!value.includeTOC,
+          },
+          customClauses: value.customClauses?.trim() || "",
+          ragDocuments: ragDocuments.map((doc) => ({
+            name: doc.name,
+            path: doc.path,
+            type: doc.type,
+          })),
+        },
+        save_output: true,
+        timeout: 120000,
+      } as const;
+
+      setCurrentStep("Communication avec le générateur...");
+      const response = await modulesService.executeModule(
+        moduleSlug,
+        apiPayload
+      );
+
+      setLoading(false);
+      setCurrentStep("");
+      if (response.success) {
+        setProgress(100);
+        setCurrentStep("Processus terminé !");
+        toast.success("Génération du document lancée !", {
+          description:
+            "Votre document sera bientôt prêt sur la page 'Mon Contenu'.",
+        });
+        setUsageId(response.data?.usageId);
+        setProgress(0);
+        return;
+      }
+
+      console.error("Erreur d'exécution du module:", response);
+      setProgress(0);
+      setError(response.error);
+      toast.error(`Échec: ${response.error}`);
+    },
+  });
+
   const ragFileInputRef = useRef<HTMLInputElement>(null);
 
   // CALCULS DÉRIVÉS
@@ -204,130 +318,9 @@ export default function DocumentGeneratorModule({
   // VARIABLES DÉRIVÉES
   const currentBalance = balance || 0;
   const currentDocumentType = documentTypesFromAPI[documentType];
-  const currentStyle = documentStylesFromAPI[documentStyle];
-  const currentFormat = outputFormatsFromAPI.find(
-    (f) => f.value === outputFormat
-  );
-
-  // FONCTIONS DE GESTION
-  const handleNavigateToBilling = () => navigate("/billing");
 
   const handleDocumentTypeChange = (newType: string) => {
     setDocumentType(newType);
-    setTemplate("");
-  };
-
-  const validateForm = (): boolean => {
-    if (!authUser) {
-      toast.error("Vous devez être connecté.");
-      return false;
-    }
-    if (!hasEnoughCredits(currentCost)) {
-      toast.error("Crédits insuffisants.");
-      return false;
-    }
-    if (!title.trim() || title.trim().length < 5) {
-      toast.error("Titre trop court");
-      return false;
-    }
-    if (!description.trim() || description.trim().length < 20) {
-      toast.error("Description trop courte");
-      return false;
-    }
-    if (!content.trim() || content.trim().length < 50) {
-      toast.error("Contenu requis.");
-      return false;
-    }
-    if (
-      "legalAdvice" in currentDocumentType &&
-      currentDocumentType?.legalAdvice &&
-      !companyName.trim()
-    ) {
-      toast.error("Informations entreprise requises");
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (isSubmitting.current || loading) return;
-    setError(null);
-    if (!validateForm()) return;
-
-    isSubmitting.current = true;
-    setLoading(true);
-    setCurrentStep("Lancement du processus...");
-    setProgress(50);
-
-    const moduleSlug = module?.slug || "document-generator";
-
-    const apiPayload = {
-      input: {
-        documentType,
-        template,
-        title: title.trim(),
-        description: description.trim(),
-        content: content.trim(),
-        language,
-        outputFormat,
-        documentStyle,
-        companyInfo: {
-          name: companyName.trim(),
-          address: companyAddress.trim(),
-          email: "",
-        },
-        clientInfo: { name: "", address: "" },
-        projectInfo: {
-          reference: projectReference.trim(),
-          additionalNotes: additionalNotes.trim(),
-        },
-        formatting: {
-          includeHeader,
-          includeFooter,
-          includeSignature,
-          includeDateStamp,
-          includePageNumbers,
-          includeTOC,
-        },
-        customClauses: customClauses.trim(),
-        ragDocuments: ragDocuments.map((doc) => ({
-          name: doc.name,
-          path: doc.path,
-          type: doc.type,
-        })),
-      },
-      save_output: true,
-      timeout: 120000,
-    };
-
-    try {
-      setCurrentStep("Communication avec le générateur...");
-      const response = await modulesService.executeModule(
-        moduleSlug,
-        apiPayload
-      );
-
-      if (response.success) {
-        setProgress(100);
-        setCurrentStep("Processus terminé !");
-        toast.success("Génération du document lancée !", {
-          description:
-            "Votre document sera bientôt prêt sur la page 'Mon Contenu'.",
-        });
-        setUsageId(response.data?.usageId);
-      } else {
-        throw new Error(response.error || "Une erreur est survenue.");
-      }
-    } catch (error) {
-      console.error("Erreur d'exécution du module:", error);
-      setError((error as Error).message);
-      toast.error(`Échec: ${(error as Error).message}`);
-    } finally {
-      setLoading(false);
-      setProgress(0);
-      setCurrentStep("");
-      isSubmitting.current = false;
-    }
   };
 
   const handleRagUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -476,203 +469,200 @@ export default function DocumentGeneratorModule({
           </TabsList>
 
           <TabsContent value="content" className="space-y-6">
-            <div className="space-y-3">
-              <Label>Type de document</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(documentTypesFromAPI).map(([key, docType]) => {
-                  const IconComponent = ICONS[key] || FileText;
-                  return (
-                    <div
-                      key={key}
-                      className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
-                        documentType === key
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 dark:border-blue-400 dark:bg-blue-900/20 dark:ring-blue-400/30"
-                          : "border-border hover:border-blue-500/50"
-                      }`}
-                      onClick={() => handleDocumentTypeChange(key)}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <IconComponent className="h-4 w-4 text-blue-600" />
-                          <span className="font-medium text-sm">
-                            {docType.label}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {docType.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs">
-                            {docType.cost} crédits
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {docType.complexity}
-                          </span>
-                        </div>
-                        {docType.legalAdvice && (
-                          <div className="flex items-center space-x-1">
-                            <Scale className="h-3 w-3 text-orange-500" />
-                            <span className="text-xs text-orange-600">
-                              Révision juridique conseillée
-                            </span>
+            <form
+              id="document-form"
+              className="space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                form.handleSubmit();
+              }}
+            >
+              <div className="space-y-3">
+                <Label>Type de document</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {Object.entries(documentTypesFromAPI).map(
+                    ([key, docType]) => {
+                      const IconComponent = ICONS[key] || FileText;
+                      return (
+                        <div
+                          key={key}
+                          className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                            documentType === key
+                              ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 dark:border-blue-400 dark:bg-blue-900/20 dark:ring-blue-400/30"
+                              : "border-border hover:border-blue-500/50"
+                          }`}
+                          onClick={() => handleDocumentTypeChange(key)}
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <IconComponent className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium text-sm">
+                                {docType.label}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {docType.description}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <Badge variant="outline" className="text-xs">
+                                {docType.cost} crédits
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {docType.complexity}
+                              </span>
+                            </div>
+                            {docType.legalAdvice && (
+                              <div className="flex items-center space-x-1">
+                                <Scale className="h-3 w-3 text-orange-500" />
+                                <span className="text-xs text-orange-600">
+                                  Révision juridique conseillée
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
               </div>
-            </div>
 
-            {"templates" in currentDocumentType &&
-              currentDocumentType?.templates &&
-              currentDocumentType.templates.length > 0 && (
+              {currentDocumentType?.templates.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Template (Fonctionnalité de base)</Label>
-                  <Select
-                    value={template}
-                    onValueChange={setTemplate}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currentDocumentType.templates.map((tmpl) => (
-                        <SelectItem key={tmpl} value={tmpl}>
-                          {tmpl}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <form.AppField
+                    name="template"
+                    children={(field) => (
+                      <field.SelectField
+                        label="Template (Fonctionnalité de base)"
+                        options={currentDocumentType.templates.map((t) => ({
+                          label: t,
+                          value: t,
+                        }))}
+                        placeholder="Sélectionnez un template"
+                      />
+                    )}
+                  />
                 </div>
               )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Titre du document *</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Ex: Proposition de services marketing digital"
-                  disabled={loading}
-                  maxLength={150}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{title.length}/150 caractères</span>
-                  <span>Minimum 5 caractères</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <form.AppField
+                    name="title"
+                    children={(field) => (
+                      <>
+                        <field.InputField
+                          label="Titre du document *"
+                          placeholder="Ex: Proposition de services marketing digital"
+                          maxLength={150}
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>
+                            {(field.state.value || "").length}/150 caractères
+                          </span>
+                          <span>Minimum 5 caractères</span>
+                        </div>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <form.AppField name="language">
+                    {(field) => (
+                      <field.SelectField
+                        label="Langue"
+                        options={supportedLanguagesFromAPI.map((lang) => ({
+                          label: (
+                            <div className="flex items-center space-x-2">
+                              <span>{lang.flag}</span>
+                              <span>{lang.label}</span>
+                            </div>
+                          ),
+                          value: lang.value,
+                        }))}
+                      />
+                    )}
+                  </form.AppField>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Langue</Label>
-                <Select
-                  value={language}
-                  onValueChange={setLanguage}
-                  disabled={loading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {supportedLanguagesFromAPI.map((lang) => (
-                      <SelectItem key={lang.value} value={lang.value}>
-                        <div className="flex items-center space-x-2">
-                          <span>{lang.flag}</span>
-                          <span>{lang.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description du contexte *</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Décrivez le contexte, l'objectif du document..."
-                className="min-h-[80px]"
-                disabled={loading}
-                maxLength={800}
+              <form.AppField
+                name="description"
+                children={(field) => (
+                  <>
+                    <field.TextareaField
+                      label="Description du contexte *"
+                      placeholder="Décrivez le contexte, l'objectif du document..."
+                      textareaClassName="min-h-[80px]"
+                      maxLength={800}
+                    />
+                  </>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="content">Contenu principal détaillé *</Label>
-              <Textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Développez le contenu détaillé du document..."
-                className="min-h-[150px]"
-                disabled={loading}
-                maxLength={5000}
+              <form.AppField
+                name="content"
+                children={(field) => (
+                  <field.TextareaField
+                    label="Contenu principal détaillé *"
+                    placeholder="Développez le contenu détaillé du document..."
+                    textareaClassName="min-h-[150px]"
+                    maxLength={5000}
+                  />
+                )}
               />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Format de sortie</Label>
-                <Select
-                  value={outputFormat}
-                  onValueChange={setOutputFormat}
-                  disabled={loading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {outputFormatsFromAPI.map((format) => (
-                      <SelectItem key={format.value} value={format.value}>
-                        <div className="flex items-center justify-between w-full">
-                          <span>
-                            {format.icon} {format.label}
-                          </span>
-                          {format.premium && (
-                            <Badge variant="outline" className="text-xs">
-                              Premium
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Style de document</Label>
-                <Select
-                  value={documentStyle}
-                  onValueChange={setDocumentStyle}
-                  disabled={loading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(documentStylesFromAPI).map(
-                      ([key, style]) => (
-                        <SelectItem key={key} value={key}>
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className={`w-2 h-2 rounded-full ${style.color.replace("text-", "bg-")}`}
-                            ></div>
-                            <span>{style.label}</span>
-                          </div>
-                        </SelectItem>
-                      )
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <form.AppField name="outputFormat">
+                    {(field) => (
+                      <field.SelectField
+                        label="Format de sortie"
+                        options={outputFormatsFromAPI.map((format) => ({
+                          label: (
+                            <div className="flex items-center justify-between w-full">
+                              <span>
+                                {format.icon} {format.label}
+                              </span>
+                              {format.premium && (
+                                <Badge variant="outline" className="text-xs">
+                                  Premium
+                                </Badge>
+                              )}
+                            </div>
+                          ),
+                          value: format.value,
+                        }))}
+                      />
                     )}
-                  </SelectContent>
-                </Select>
+                  </form.AppField>
+                </div>
+                <div className="space-y-2">
+                  <form.AppField
+                    name="documentStyle"
+                    children={(field) => (
+                      <field.SelectField
+                        label="Style de document"
+                        options={Object.entries(documentStylesFromAPI).map(
+                          ([key, style]) => ({
+                            label: (
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${style.color.replace("text-", "bg-")}`}
+                                ></div>
+                                <span>{style.label}</span>
+                              </div>
+                            ),
+                            value: key,
+                          })
+                        )}
+                      />
+                    )}
+                  />
+                </div>
               </div>
-            </div>
 
-            {"legalAdvice" in currentDocumentType &&
-              currentDocumentType?.legalAdvice && (
+              {currentDocumentType?.legalAdvice && (
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                   <h4 className="font-medium flex items-center space-x-2">
                     <Building className="h-4 w-4" />
@@ -680,238 +670,288 @@ export default function DocumentGeneratorModule({
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName">Nom de l'entreprise *</Label>
-                      <Input
-                        id="companyName"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Votre Entreprise SARL"
-                        disabled={loading}
-                      />
+                      <form.AppField name="companyName">
+                        {(field) => (
+                          <field.InputField
+                            label="Nom de l'entreprise *"
+                            placeholder="Votre Entreprise SARL"
+                          />
+                        )}
+                      </form.AppField>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="companyAddress">Adresse entreprise</Label>
-                      <Input
-                        id="companyAddress"
-                        value={companyAddress}
-                        onChange={(e) => setCompanyAddress(e.target.value)}
-                        placeholder="123 Rue de l'Entreprise, 75001 Paris"
-                        disabled={loading}
-                      />
+                      <form.AppField name="companyAddress">
+                        {(field) => (
+                          <field.InputField
+                            label="Adresse entreprise"
+                            placeholder="123 Rue de l'Entreprise, 75001 Paris"
+                          />
+                        )}
+                      </form.AppField>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="projectReference">Référence projet</Label>
-                      <Input
-                        id="projectReference"
-                        value={projectReference}
-                        onChange={(e) => setProjectReference(e.target.value)}
-                        placeholder="REF-2024-001"
-                        disabled={loading}
-                      />
+                      <form.AppField name="projectReference">
+                        {(field) => (
+                          <field.InputField
+                            label="Référence projet"
+                            placeholder="REF-2024-001"
+                          />
+                        )}
+                      </form.AppField>
                     </div>
                   </div>
                 </div>
               )}
 
-            <div className="space-y-4">
-              <h4 className="font-medium">Options de formatage</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="includeHeader"
-                    checked={includeHeader}
-                    onCheckedChange={(checked) =>
-                      setIncludeHeader(checked === true)
-                    }
-                    disabled={loading}
-                  />
-                  <Label htmlFor="includeHeader" className="text-sm">
-                    En-tête personnalisé
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="includeFooter"
-                    checked={includeFooter}
-                    onCheckedChange={(checked) =>
-                      setIncludeFooter(checked === true)
-                    }
-                    disabled={loading}
-                  />
-                  <Label htmlFor="includeFooter" className="text-sm">
-                    Pied de page
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="includeSignature"
-                    checked={includeSignature}
-                    onCheckedChange={(checked) =>
-                      setIncludeSignature(checked === true)
-                    }
-                    disabled={loading}
-                  />
-                  <Label htmlFor="includeSignature" className="text-sm">
-                    Zone de signature
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="includeDateStamp"
-                    checked={includeDateStamp}
-                    onCheckedChange={(checked) =>
-                      setIncludeDateStamp(checked === true)
-                    }
-                    disabled={loading}
-                  />
-                  <Label htmlFor="includeDateStamp" className="text-sm">
-                    Horodatage
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="includePageNumbers"
-                    checked={includePageNumbers}
-                    onCheckedChange={(checked) =>
-                      setIncludePageNumbers(checked === true)
-                    }
-                    disabled={loading}
-                  />
-                  <Label htmlFor="includePageNumbers" className="text-sm">
-                    Numéros de page
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="includeTOC"
-                    checked={includeTOC}
-                    onCheckedChange={(checked) =>
-                      setIncludeTOC(checked === true)
-                    }
-                    disabled={loading}
-                  />
-                  <Label htmlFor="includeTOC" className="text-sm">
-                    Table des matières
-                  </Label>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="customClauses">
-                  Clauses personnalisées (optionnel)
-                </Label>
-                <Textarea
-                  id="customClauses"
-                  value={customClauses}
-                  onChange={(e) => setCustomClauses(e.target.value)}
-                  placeholder="Ajoutez des clauses spécifiques..."
-                  className="min-h-[80px]"
-                  disabled={loading}
-                  maxLength={2000}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="additionalNotes">
-                  Notes supplémentaires (optionnel)
-                </Label>
-                <Textarea
-                  id="additionalNotes"
-                  value={additionalNotes}
-                  onChange={(e) => setAdditionalNotes(e.target.value)}
-                  placeholder="Instructions spéciales..."
-                  className="min-h-[80px]"
-                  disabled={loading}
-                  maxLength={1000}
-                />
-              </div>
-            </div>
-
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <strong>Type :</strong> {currentDocumentType?.label}
+              <div className="space-y-4">
+                <h4 className="font-medium">Options de formatage</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <form.AppField name="includeHeader">
+                      {(field) => (
+                        <>
+                          <Checkbox
+                            id={field.name}
+                            checked={!!field.state.value}
+                            onCheckedChange={(checked) =>
+                              field.handleChange(checked === true)
+                            }
+                            disabled={loading}
+                          />
+                          <Label htmlFor={field.name} className="text-sm">
+                            En-tête personnalisé
+                          </Label>
+                        </>
+                      )}
+                    </form.AppField>
                   </div>
-                  <div>
-                    <strong>Format :</strong> {currentFormat?.label}
+                  <div className="flex items-center space-x-2">
+                    <form.AppField name="includeFooter">
+                      {(field) => (
+                        <>
+                          <Checkbox
+                            id={field.name}
+                            checked={!!field.state.value}
+                            onCheckedChange={(checked) =>
+                              field.handleChange(checked === true)
+                            }
+                            disabled={loading}
+                          />
+                          <Label htmlFor={field.name} className="text-sm">
+                            Pied de page
+                          </Label>
+                        </>
+                      )}
+                    </form.AppField>
                   </div>
-                  <div>
-                    <strong>Style :</strong> {currentStyle?.label}
+                  <div className="flex items-center space-x-2">
+                    <form.AppField name="includeSignature">
+                      {(field) => (
+                        <>
+                          <Checkbox
+                            id={field.name}
+                            checked={!!field.state.value}
+                            onCheckedChange={(checked) =>
+                              field.handleChange(checked === true)
+                            }
+                            disabled={loading}
+                          />
+                          <Label htmlFor={field.name} className="text-sm">
+                            Zone de signature
+                          </Label>
+                        </>
+                      )}
+                    </form.AppField>
                   </div>
-                  <div>
-                    <strong>Coût :</strong> {currentCost} crédits
+                  <div className="flex items-center space-x-2">
+                    <form.AppField name="includeDateStamp">
+                      {(field) => (
+                        <>
+                          <Checkbox
+                            id={field.name}
+                            checked={!!field.state.value}
+                            onCheckedChange={(checked) =>
+                              field.handleChange(checked === true)
+                            }
+                            disabled={loading}
+                          />
+                          <Label htmlFor={field.name} className="text-sm">
+                            Horodatage
+                          </Label>
+                        </>
+                      )}
+                    </form.AppField>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <form.AppField name="includePageNumbers">
+                      {(field) => (
+                        <>
+                          <Checkbox
+                            id={field.name}
+                            checked={!!field.state.value}
+                            onCheckedChange={(checked) =>
+                              field.handleChange(checked === true)
+                            }
+                            disabled={loading}
+                          />
+                          <Label htmlFor={field.name} className="text-sm">
+                            Numéros de page
+                          </Label>
+                        </>
+                      )}
+                    </form.AppField>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <form.AppField name="includeTOC">
+                      {(field) => (
+                        <>
+                          <Checkbox
+                            id={field.name}
+                            checked={!!field.state.value}
+                            onCheckedChange={(checked) =>
+                              field.handleChange(checked === true)
+                            }
+                            disabled={loading}
+                          />
+                          <Label htmlFor={field.name} className="text-sm">
+                            Table des matières
+                          </Label>
+                        </>
+                      )}
+                    </form.AppField>
                   </div>
                 </div>
-              </AlertDescription>
-            </Alert>
-
-            {loading && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{currentStep || "Génération en cours..."}</span>
-                  <span>{Math.round(progress)}%</span>
-                </div>
-                <Progress value={progress} className="w-full" />
               </div>
-            )}
 
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                loading ||
-                !title.trim() ||
-                !description.trim() ||
-                !content.trim() ||
-                !hasEnoughCredits(currentCost)
-              }
-              className="w-full"
-              size="lg"
-            >
-              {loading ? (
-                <LoadingSpinner />
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Générer le document ({currentCost} crédits)</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <form.AppField
+                    name="customClauses"
+                    children={(field) => (
+                      <field.TextareaField
+                        label="Clauses personnalisées (optionnel)"
+                        placeholder="Ajoutez des clauses spécifiques..."
+                        textareaClassName="min-h-[80px]"
+                        maxLength={2000}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <form.AppField
+                    name="additionalNotes"
+                    children={(field) => (
+                      <field.TextareaField
+                        label="Notes supplémentaires (optionnel)"
+                        placeholder="Instructions spéciales..."
+                        textareaClassName="min-h-[80px]"
+                        maxLength={100}
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <form.Subscribe
+                  selector={(s) => ({
+                    outputFormat: s.values.outputFormat,
+                    documentStyle: s.values.documentStyle,
+                  })}
+                >
+                  {({ outputFormat, documentStyle }) => (
+                    <AlertDescription>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <strong>Type :</strong> {currentDocumentType?.label}
+                        </div>
+                        <div>
+                          <strong>Format :</strong>{" "}
+                          {
+                            outputFormatsFromAPI.find(
+                              (f) => f.value === outputFormat
+                            )?.label
+                          }
+                        </div>
+                        {documentStyle && (
+                          <div>
+                            <strong>Style :</strong>{" "}
+                            {documentStylesFromAPI[documentStyle]?.label}
+                          </div>
+                        )}
+                        <div>
+                          <strong>Coût :</strong> {currentCost} crédits
+                        </div>
+                      </div>
+                    </AlertDescription>
+                  )}
+                </form.Subscribe>
+              </Alert>
+
+              {loading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{currentStep || "Génération en cours..."}</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="w-full" />
                 </div>
               )}
-            </Button>
 
-            {usageId && (
-              <div className="space-y-4 border-t pt-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <Label>Tâche de génération lancée avec succès !</Label>
+              <form.AppForm>
+                <form.SubmitButton
+                  className="w-full"
+                  size="lg"
+                  disabled={loading || !hasEnoughCredits(currentCost)}
+                  isLoading={loading}
+                >
+                  {!loading && (
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="h-4 w-4" />
+                      <span>Générer le document ({currentCost} crédits)</span>
+                    </div>
+                  )}
+                  {loading && <LoadingSpinner />}
+                </form.SubmitButton>
+              </form.AppForm>
+
+              {usageId && (
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <Label>Tâche de génération lancée avec succès !</Label>
+                  </div>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      <p>
+                        Votre document est en cours de création. Il apparaîtra
+                        sur votre page "Mon Contenu" dans quelques instants, dès
+                        que le lien sera généré par nos systèmes.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        ID de suivi : {usageId}
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" asChild>
+                      <a href="/mon-contenu">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Aller à "Mon Contenu"
+                      </a>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setUsageId(null)}
+                    >
+                      Fermer
+                    </Button>
+                  </div>
                 </div>
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <p>
-                      Votre document est en cours de création. Il apparaîtra sur
-                      votre page "Mon Contenu" dans quelques instants, dès que
-                      le lien sera généré par nos systèmes.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      ID de suivi : {usageId}
-                    </p>
-                  </AlertDescription>
-                </Alert>
-                <div className="flex space-x-2">
-                  <Button variant="outline" asChild>
-                    <a href="/mon-contenu">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Aller à "Mon Contenu"
-                    </a>
-                  </Button>
-                  <Button variant="secondary" onClick={() => setUsageId(null)}>
-                    Fermer
-                  </Button>
-                </div>
-              </div>
-            )}
+              )}
+            </form>
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-4">
@@ -948,13 +988,10 @@ export default function DocumentGeneratorModule({
                   Accédez à notre collection exclusive de templates
                   professionnels validés par des experts.
                 </p>
-                <Button
-                  onClick={handleNavigateToBilling}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                >
+                <LinkButton to={routes.billing.index()}>
                   <Crown className="h-4 w-4 mr-2" />
                   Découvrir Templates Premium
-                </Button>
+                </LinkButton>
               </div>
             )}
           </TabsContent>
@@ -993,14 +1030,10 @@ export default function DocumentGeneratorModule({
                   Personnalisez l'apparence de vos documents avec des options de
                   design professionnel.
                 </p>
-                <Button
-                  onClick={handleNavigateToBilling}
-                  variant="outline"
-                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                >
+                <LinkButton to={routes.billing.index()} variant="outline">
                   <Crown className="h-4 w-4 mr-2" />
                   Activer Style Premium
-                </Button>
+                </LinkButton>
               </div>
             )}
           </TabsContent>
@@ -1129,14 +1162,10 @@ export default function DocumentGeneratorModule({
                   Outils professionnels de niveau entreprise pour vos documents
                   critiques.
                 </p>
-                <Button
-                  onClick={handleNavigateToBilling}
-                  variant="outline"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
+                <LinkButton to={routes.billing.index()} variant="outline">
                   <Settings className="h-4 w-4 mr-2" />
                   Découvrir les Fonctionnalités
-                </Button>
+                </LinkButton>
               </div>
             )}
           </TabsContent>
@@ -1155,13 +1184,10 @@ export default function DocumentGeneratorModule({
                   Débloquez tous les templates, styles et fonctionnalités
                   avancées.
                 </p>
-                <Button
-                  onClick={handleNavigateToBilling}
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white"
-                >
+                <LinkButton to={routes.billing.index()}>
                   <Crown className="h-4 w-4 mr-2" />
                   Découvrir Premium
-                </Button>
+                </LinkButton>
               </div>
             </TabsContent>
           )}
@@ -1178,15 +1204,15 @@ export default function DocumentGeneratorModule({
                 Vous avez besoin de {currentCost} crédits, mais vous n'en avez
                 que {currentBalance}.
               </p>
-              <Button
-                onClick={handleNavigateToBilling}
+              <LinkButton
+                to={routes.billing.index()}
                 variant="outline"
                 size="sm"
                 className="mt-2"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Recharger le compte
-              </Button>
+              </LinkButton>
             </div>
           </div>
         )}
@@ -1214,14 +1240,10 @@ export default function DocumentGeneratorModule({
                     </div>
                   ))}
                 </div>
-                <Button
-                  onClick={handleNavigateToBilling}
-                  size="sm"
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                >
+                <LinkButton to={routes.billing.index()} size="sm">
                   <Crown className="h-3 w-3 mr-1" />
                   Découvrir Premium
-                </Button>
+                </LinkButton>
               </div>
             </div>
           </div>

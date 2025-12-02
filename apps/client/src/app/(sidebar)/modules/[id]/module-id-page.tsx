@@ -9,7 +9,7 @@ import {
   Star,
   XCircle,
 } from "lucide-react";
-import { Badge, H2, P } from "@oppsys/ui";
+import { Badge, Card, CardContent, H2, P } from "@oppsys/ui";
 import { routes } from "@/routes";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { LinkButton } from "@/components/link-button";
@@ -72,31 +72,33 @@ export default function ModuleIdPage() {
         </div>
 
         {/* Titre et description du module */}
-        <div className="card bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <module.icon className="h-6 w-6 text-primary" />
+        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <CardContent>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <module.icon className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <H2 className="text-2xl font-bold text-card-foreground">
+                    {module.name}
+                  </H2>
+                  <P className="text-muted-foreground mt-1">
+                    {module.description}
+                  </P>
+                </div>
               </div>
-              <div>
-                <H2 className="text-2xl font-bold text-card-foreground">
-                  {module.name}
-                </H2>
-                <P className="text-muted-foreground mt-1">
-                  {module.description}
+              <div className="text-right">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary text-primary-foreground">
+                  {module.creditCost} crédits
+                </span>
+                <P className="text-xs text-muted-foreground mt-1">
+                  Votre solde: {user?.creditBalance} crédits
                 </P>
               </div>
             </div>
-            <div className="text-right">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary text-primary-foreground">
-                {module.creditCost} crédits
-              </span>
-              <P className="text-xs text-muted-foreground mt-1">
-                Votre solde: {user?.creditBalance} crédits
-              </P>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Status de connectivité */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
