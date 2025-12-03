@@ -73,18 +73,13 @@ import {
   Unlock,
   RefreshCw,
   Image as ImageIcon2,
-  Plus,
-  FileText,
 } from "lucide-react";
 import { modulesService } from "../service/modules-service";
-import { documentService } from "../../documents/document-service";
 import { LoadingSpinner } from "../../loading";
 import type { ExecuteModuleData, Module } from "../module-types";
-import type { RagDocument } from "../../documents/document-types";
 import type { LucideIcon } from "lucide-react";
 import { contentService } from "@/components/content/content-service.ts";
 import { MODULES_IDS } from "@oppsys/api/client";
-import { validateDocumentFile } from "@/components/documents/document-validator.ts";
 
 type Config = Extract<
   Module["config"],
@@ -182,9 +177,6 @@ export default function SocialFactoryModule({
   const [progress, setProgress] = useState<number>(0);
   const [currentStep, setCurrentStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [ragDocuments, setRagDocuments] = useState<RagDocument[]>([]);
-  const [uploadingRag, setUploadingRag] = useState<boolean>(false);
-  const [ragUploadProgress, setRagUploadProgress] = useState<number>(0);
   const [schedulingContentId, setSchedulingContentId] = useState<string | null>(
     null
   );
@@ -200,7 +192,6 @@ export default function SocialFactoryModule({
   // RÉFÉRENCES
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const ragFileInputRef = useRef<HTMLInputElement>(null);
   const isSubmitting = useRef<boolean>(false);
   const isScheduling = useRef<boolean>(false);
 
@@ -268,73 +259,12 @@ export default function SocialFactoryModule({
     if (files.length > 0) setUploadedImages((prev) => [...prev, ...files]);
     toast.success(`${files.length} image(s) ajoutée(s).`);
   };
-  const handleVideoUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setUploadedVideo(file);
-    toast.success("Vidéo ajoutée.");
-  };
+
   const removeImage = (index: number) =>
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   const removeVideo = () => {
     setUploadedVideo(null);
     if (videoInputRef.current) videoInputRef.current.value = "";
-  };
-
-  const handleRagUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) return;
-    const files = Array.from(event.target.files);
-    if (!files.length) return;
-
-    if (!permissions.data?.isPremium) {
-      toast.error("Fonctionnalité Premium requise", {
-        description:
-          "L'ajout de documents de référence nécessite un abonnement Premium.",
-      });
-      return;
-    }
-
-    setUploadingRag(true);
-    setRagUploadProgress(0);
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
-      // Validation
-      const validateResult = validateDocumentFile(file);
-      if (!validateResult.success) continue;
-
-      const response = await documentService.generateUrlAndUploadFile(file);
-      if (response.success) {
-        // Ajouter à la liste
-        const ragDoc = {
-          id: (Date.now() + i).toString(),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          path: response.data.filePath,
-          uploadedAt: new Date().toISOString(),
-        };
-
-        setRagDocuments((prev) => [...prev, ragDoc]);
-        setRagUploadProgress(((i + 1) / files.length) * 100);
-
-        toast.success(`Document ajouté: ${file.name}`);
-        return;
-      }
-      toast.error(`Erreur pour ${file.name}: ${response.error}`);
-    }
-
-    setUploadingRag(false);
-    setRagUploadProgress(0);
-    if (ragFileInputRef.current) {
-      ragFileInputRef.current.value = "";
-    }
-  };
-
-  const removeRagDocument = (docId: string) => {
-    setRagDocuments((prev) => prev.filter((doc) => doc.id !== docId));
-    toast.success("Document retiré");
   };
 
   const validateForm = (): boolean => {
@@ -547,13 +477,7 @@ export default function SocialFactoryModule({
         scheduledDate,
         scheduledTime,
         media: { imageCount: uploadedImages.length, hasVideo: !!uploadedVideo },
-        options: {
-          ragDocuments: ragDocuments.map((doc) => ({
-            name: doc.name,
-            path: doc.path,
-            type: doc.type,
-          })),
-        },
+        options: {},
       },
     };
 
@@ -1036,16 +960,6 @@ export default function SocialFactoryModule({
                         Ajouter Image(s)
                       </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">
-                        Vidéo (max {permissions.data?.media?.maxVideoSize || 0}
-                        MB)
-                      </Label>
-                      <Button variant="outline" size="sm" disabled>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Ajouter Vidéo
-                      </Button>
-                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground pt-2 border-t">
                     ⚡ Passez à Premium pour uploader des médias et générer des
@@ -1087,129 +1001,6 @@ export default function SocialFactoryModule({
                       className="hidden"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>
-                      Vidéo (max {permissions.data?.media?.maxVideoSize || 0}MB)
-                    </Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => videoInputRef.current?.click()}
-                      disabled={loading || !!uploadedVideo}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Ajouter Vidéo
-                    </Button>
-                    <input
-                      ref={videoInputRef}
-                      type="file"
-                      accept="video/*"
-                      onChange={handleVideoUpload}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2 pt-4 border-t">
-                  <Label className="flex items-center space-x-2">
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    <span>Génération d'images par IA</span>
-                  </Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200 text-amber-800"
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Générer avec l'IA
-                  </Button>
-                </div>
-
-                <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-amber-600" />
-                      <Label className="font-medium">
-                        Documents de référence (Premium)
-                      </Label>
-                      <Badge
-                        variant="secondary"
-                        className="bg-amber-100 text-amber-700 text-xs"
-                      >
-                        <Crown className="h-3 w-3 mr-1" />
-                        RAG
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => ragFileInputRef.current?.click()}
-                      disabled={loading || uploadingRag}
-                      className="border-amber-300 text-amber-700 hover:bg-amber-50"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter documents
-                    </Button>
-                  </div>
-
-                  <input
-                    type="file"
-                    ref={ragFileInputRef}
-                    onChange={handleRagUpload}
-                    accept=".pdf,.txt,.doc,.docx"
-                    multiple
-                    className="hidden"
-                  />
-
-                  <p className="text-xs text-amber-700">
-                    Ajoutez des documents (PDF, TXT, DOC, DOCX) pour enrichir la
-                    génération avec vos propres contenus.
-                  </p>
-
-                  {uploadingRag && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span>Upload en cours...</span>
-                        <span>{Math.round(ragUploadProgress)}%</span>
-                      </div>
-                      <Progress value={ragUploadProgress} className="h-2" />
-                    </div>
-                  )}
-
-                  {ragDocuments.length > 0 && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Documents ajoutés ({ragDocuments.length})
-                      </Label>
-                      <div className="space-y-2 max-h-32 overflow-y-auto">
-                        {ragDocuments.map((doc) => (
-                          <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-2 bg-white rounded border"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <FileText className="h-4 w-4 text-amber-600" />
-                              <div>
-                                <p className="text-sm font-medium truncate max-w-[200px]">
-                                  {doc.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {(doc.size / 1024).toFixed(0)} KB
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeRagDocument(doc.id)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </PremiumMediaFeature>

@@ -143,9 +143,6 @@ export const executeModuleUseCase = buildUseCase()
       endpoint: module.endpoint,
       // endpoint:
       //   "https://n8n.oppsys.io/webhook/b918023a-dd7c-47ec-b8f4-dcd076e8a466",
-      // endpoint:
-      //   "https://n8n.oppsys.io/webhook/bfea41bf-fb6d-40f2-8cd4-3194bea1899c/chat",
-      n8n_trigger_type: "CHAT" as const,
     };
 
     // 5. Execute module

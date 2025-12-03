@@ -33,16 +33,12 @@ import {
   Briefcase,
   FileCheck,
   Eye,
-  Palette,
   Settings,
   CheckCircle,
   AlertCircle,
   Info,
   Crown,
-  Wand2,
   Brain,
-  Shield,
-  FileSignature,
   Sparkles,
   Plus,
   X,
@@ -127,11 +123,8 @@ export type Payload =
 const formSchema = z.object({
   title: z.string().min(5, "Titre trop court").max(150, "Titre trop long"),
   description: z.string().min(20, "Description trop courte"),
-  content: z.string().min(50, "Contenu requis."),
   language: z.string().default("fr").optional(),
   outputFormat: z.string().default("docx").optional(),
-  documentStyle: z.string().default("corporate").optional(),
-  template: z.string().optional(),
   companyName: z.string().optional(),
   companyAddress: z.string().optional(),
   projectReference: z.string().optional(),
@@ -142,7 +135,6 @@ const formSchema = z.object({
   includePageNumbers: z.boolean().default(true).optional(),
   includeTOC: z.boolean().default(false).optional(),
   customClauses: z.string().optional(),
-  additionalNotes: z.string().optional(),
 });
 type FormType = z.infer<typeof formSchema>;
 
@@ -161,10 +153,6 @@ export default function DocumentGeneratorModule({
   const documentTypesFromAPI = useMemo(() => config?.types || {}, [config]);
   const outputFormatsFromAPI = useMemo(
     () => config?.outputFormats || [],
-    [config]
-  );
-  const documentStylesFromAPI = useMemo(
-    () => config?.documentStyles || {},
     [config]
   );
   const supportedLanguagesFromAPI = useMemo(
@@ -210,7 +198,6 @@ export default function DocumentGeneratorModule({
       includePageNumbers: true,
       includeTOC: false,
       customClauses: "",
-      additionalNotes: "",
     } as FormType,
     validators: {
       onSubmit: formSchema,
@@ -245,22 +232,16 @@ export default function DocumentGeneratorModule({
       const apiPayload = {
         input: {
           documentType,
-          template: value.template,
           title: value.title.trim(),
           description: value.description.trim(),
-          content: value.content.trim(),
           language: value.language,
           outputFormat: value.outputFormat,
-          documentStyle: value.documentStyle,
           companyInfo: {
             name: value.companyName?.trim() || "",
             address: value.companyAddress?.trim() || "",
-            email: "",
           },
-          clientInfo: { name: "", address: "" },
           projectInfo: {
             reference: value.projectReference?.trim() || "",
-            additionalNotes: value.additionalNotes?.trim() || "",
           },
           formatting: {
             includeHeader: !!value.includeHeader,
@@ -276,6 +257,7 @@ export default function DocumentGeneratorModule({
             path: doc.path,
             type: doc.type,
           })),
+          // ragDocuments: [{name: "file example", path: "file path in supabase", type: "mimetype of the file"}],
         },
         save_output: true,
         timeout: 120000,
@@ -461,8 +443,6 @@ export default function DocumentGeneratorModule({
             className={`grid w-full ${permissions.data?.isFree ? "grid-cols-5" : "grid-cols-4"}`}
           >
             <TabsTrigger value="content">Contenu</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="style">Style</TabsTrigger>
             <TabsTrigger value="advanced">Avancé</TabsTrigger>
             {permissions.data?.isFree && (
               <TabsTrigger value="premium">Premium</TabsTrigger>
@@ -528,24 +508,6 @@ export default function DocumentGeneratorModule({
                 </div>
               </div>
 
-              {currentDocumentType?.templates.length > 0 && (
-                <div className="space-y-2">
-                  <form.AppField
-                    name="template"
-                    children={(field) => (
-                      <field.SelectField
-                        label="Template (Fonctionnalité de base)"
-                        options={currentDocumentType.templates.map((t) => ({
-                          label: t,
-                          value: t,
-                        }))}
-                        placeholder="Sélectionnez un template"
-                      />
-                    )}
-                  />
-                </div>
-              )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <form.AppField
@@ -601,18 +563,6 @@ export default function DocumentGeneratorModule({
                 )}
               />
 
-              <form.AppField
-                name="content"
-                children={(field) => (
-                  <field.TextareaField
-                    label="Contenu principal détaillé *"
-                    placeholder="Développez le contenu détaillé du document..."
-                    textareaClassName="min-h-[150px]"
-                    maxLength={5000}
-                  />
-                )}
-              />
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <form.AppField name="outputFormat">
@@ -637,29 +587,6 @@ export default function DocumentGeneratorModule({
                       />
                     )}
                   </form.AppField>
-                </div>
-                <div className="space-y-2">
-                  <form.AppField
-                    name="documentStyle"
-                    children={(field) => (
-                      <field.SelectField
-                        label="Style de document"
-                        options={Object.entries(documentStylesFromAPI).map(
-                          ([key, style]) => ({
-                            label: (
-                              <div className="flex items-center space-x-2">
-                                <div
-                                  className={`w-2 h-2 rounded-full ${style.color.replace("text-", "bg-")}`}
-                                ></div>
-                                <span>{style.label}</span>
-                              </div>
-                            ),
-                            value: key,
-                          })
-                        )}
-                      />
-                    )}
-                  />
                 </div>
               </div>
 
@@ -838,19 +765,6 @@ export default function DocumentGeneratorModule({
                     )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <form.AppField
-                    name="additionalNotes"
-                    children={(field) => (
-                      <field.TextareaField
-                        label="Notes supplémentaires (optionnel)"
-                        placeholder="Instructions spéciales..."
-                        textareaClassName="min-h-[80px]"
-                        maxLength={100}
-                      />
-                    )}
-                  />
-                </div>
               </div>
 
               <Alert>
@@ -858,10 +772,9 @@ export default function DocumentGeneratorModule({
                 <form.Subscribe
                   selector={(s) => ({
                     outputFormat: s.values.outputFormat,
-                    documentStyle: s.values.documentStyle,
                   })}
                 >
-                  {({ outputFormat, documentStyle }) => (
+                  {({ outputFormat }) => (
                     <AlertDescription>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
@@ -875,12 +788,6 @@ export default function DocumentGeneratorModule({
                             )?.label
                           }
                         </div>
-                        {documentStyle && (
-                          <div>
-                            <strong>Style :</strong>{" "}
-                            {documentStylesFromAPI[documentStyle]?.label}
-                          </div>
-                        )}
                         <div>
                           <strong>Coût :</strong> {currentCost} crédits
                         </div>
@@ -955,90 +862,6 @@ export default function DocumentGeneratorModule({
             </form>
           </TabsContent>
 
-          <TabsContent value="templates" className="space-y-4">
-            {permissions.data?.isPremium ? (
-              <div className="p-4 bg-muted/30 rounded-lg border space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Bibliothèque de templates premium</Label>
-                  <Badge
-                    variant="secondary"
-                    className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 text-xs"
-                  >
-                    <Crown className="h-3 w-3 mr-1" />
-                    Premium Activé
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Button className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200 text-orange-800">
-                    <FileSignature className="h-4 w-4 mr-2" />
-                    Templates Légaux
-                  </Button>
-                  <Button className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200 text-orange-800">
-                    <Briefcase className="h-4 w-4 mr-2" />
-                    Templates Business
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center p-8 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border-2 border-orange-200">
-                <FileSignature className="h-16 w-16 mx-auto mb-4 text-orange-500" />
-                <h3 className="text-xl font-bold text-orange-900 mb-2">
-                  Bibliothèque Templates Premium
-                </h3>
-                <p className="text-orange-700 mb-6 max-w-md mx-auto">
-                  Accédez à notre collection exclusive de templates
-                  professionnels validés par des experts.
-                </p>
-                <LinkButton to={routes.billing.index()}>
-                  <Crown className="h-4 w-4 mr-2" />
-                  Découvrir Templates Premium
-                </LinkButton>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="style" className="space-y-4">
-            {permissions.data?.isPremium ? (
-              <div className="p-4 bg-muted/30 rounded-lg border space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Options de design avancées</Label>
-                  <Badge
-                    variant="secondary"
-                    className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 text-xs"
-                  >
-                    <Crown className="h-3 w-3 mr-1" />
-                    Premium Activé
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 text-purple-800">
-                    <Palette className="h-4 w-4 mr-2" />
-                    Thèmes Premium
-                  </Button>
-                  <Button className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 text-purple-800">
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Design Personnalisé
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center p-8 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-200">
-                <Palette className="h-16 w-16 mx-auto mb-4 text-purple-500" />
-                <h3 className="text-xl font-bold text-purple-900 mb-2">
-                  Design & Style Premium
-                </h3>
-                <p className="text-purple-700 mb-6 max-w-md mx-auto">
-                  Personnalisez l'apparence de vos documents avec des options de
-                  design professionnel.
-                </p>
-                <LinkButton to={routes.billing.index()} variant="outline">
-                  <Crown className="h-4 w-4 mr-2" />
-                  Activer Style Premium
-                </LinkButton>
-              </div>
-            )}
-          </TabsContent>
-
           <TabsContent value="advanced" className="space-y-4">
             {permissions.data?.isPremium ? (
               <>
@@ -1057,10 +880,6 @@ export default function DocumentGeneratorModule({
                     <Button className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-800">
                       <Brain className="h-4 w-4 mr-2" />
                       IA Avancée
-                    </Button>
-                    <Button className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-800">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Validation Juridique
                     </Button>
                   </div>
                 </div>
