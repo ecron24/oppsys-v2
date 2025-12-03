@@ -2,7 +2,6 @@ import {
   useState,
   useRef,
   useMemo,
-  useEffect,
   useCallback,
   type ChangeEvent,
 } from "react";
@@ -56,7 +55,6 @@ import {
   Camera,
   Copy,
   Download,
-  Send,
   type LucideIcon,
   Brain,
   MessageSquare,
@@ -74,16 +72,10 @@ import { LoadingSpinner } from "../../loading";
 import type { RagDocument } from "../../documents/document-types";
 import { MODULES_IDS } from "@oppsys/api/client";
 import { validateDocumentFile } from "@/components/documents/document-validator";
+import { Chat, type ChatRef } from "../shared/chat";
 
 type AiWriterModuleProps = {
   module: Module;
-};
-
-type ConversationMessage = {
-  type: "user" | "bot";
-  message: string;
-  data?: unknown;
-  timestamp: Date;
 };
 
 type GeneratedResult = {
@@ -114,6 +106,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const { balance, hasEnoughCredits, formatBalance } = useCredits();
   const permissions = usePremiumFeatures();
   const navigate = useNavigate();
+  const chatRef = useRef<ChatRef>(null);
 
   const config = useMemo(
     () => (module.config || {}) as Config,
@@ -181,20 +174,11 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   // Chat States
   // TODO: generate from uuidv7
   const sessionId = useMemo(() => Math.random().toString(), []);
-  const [isWaitingForN8n, setIsWaitingForN8n] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<
-    ConversationMessage[]
-  >([{ message: welcomeMessage, timestamp: new Date(), type: "bot" }]);
-  const [userInput, setUserInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
 
   //  ref
   const isSubmitting = useRef(false);
   const ragFileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const isSubmittingChat = useRef(false);
-  const lastSubmitTime = useRef(0);
 
   const currentCost = useMemo(() => {
     const baseType = contentTypesFromAPI[contentType];
@@ -337,7 +321,11 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     if (response.success) {
       setProgress(50);
       setCurrentStep("Génération en cours en arrière-plan...");
-      addMessage("bot", response.data.data.outputMessage || "");
+      chatRef.current?.addMessage({
+        data: null,
+        message: response.data.data.outputMessage || "",
+        type: "bot",
+      });
       toast.success("Génération lancée !", {
         description:
           'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
@@ -353,17 +341,19 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       } as const;
     }
     console.error("Erreur du chat du module:", response);
-    addMessage(
-      "bot",
-      `❌ **Erreur de génération**
+    chatRef.current?.addMessage({
+      data: null,
+      message: `❌ **Erreur de génération**
   
             Une erreur est survenue lors de la génération du contenu.
   
             **Solutions possibles :**
             • Réessayez la génération
             • Vérifiez vos crédits
-            • Contactez le support si le problème persiste`
-    );
+            • Contactez le support si le problème persiste`,
+      type: "bot",
+    });
+
     return {
       success: false,
     } as const;
@@ -380,21 +370,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     };
     return ICONS[key] || Sparkles;
   };
-
-  const addMessage = useCallback(
-    (type: "user" | "bot", message: string, data?: unknown) => {
-      setConversationHistory((prev) => [
-        ...prev,
-        {
-          type,
-          message,
-          data,
-          timestamp: new Date(),
-        },
-      ]);
-    },
-    []
-  );
 
   const handleKeywordResearch = async () => {
     if (!seoKeywordResearch.trim()) {
@@ -469,80 +444,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     module.slug,
   ]);
 
-  const handleChatSubmit = async () => {
-    if (!userInput.trim() || isWaitingForN8n || !sessionId) return;
-
-    if (isSubmittingChat.current) {
-      toast.warning("Soumission ignorée (déjà en cours)");
-      return;
-    }
-
-    const now = Date.now();
-    if (now - lastSubmitTime.current < 2000) {
-      toast.warning("Veuillez patienter avant d'envoyer un autre message");
-      return;
-    }
-
-    isSubmittingChat.current = true;
-    lastSubmitTime.current = now;
-
-    const currentMessage = userInput.trim();
-    addMessage("user", currentMessage);
-    setUserInput("");
-
-    setIsWaitingForN8n(true);
-    setIsTyping(true);
-    const content: Record<string, string> = {};
-    if (subject.length > 0) {
-      content.subject = subject;
-    }
-    const response = await chatWithModule({ message: currentMessage, content });
-
-    setIsWaitingForN8n(false);
-    setIsTyping(false);
-    setTimeout(() => {
-      isSubmittingChat.current = false;
-    }, 500);
-    if (response.success) {
-      const outputMessage = response.data.data.outputMessage || "";
-      if (
-        response.data.data.module_type == "ai-writer" &&
-        outputMessage.length > 0
-      ) {
-        addMessage("bot", outputMessage);
-        if (response.data.data.output) {
-          setSubject(
-            response.data.data.output.result_partial?.subject?.toString() || ""
-          );
-          setKeywords(
-            response.data.data.output.result_partial?.keywords?.toString() || ""
-          );
-          setTargetAudience(
-            response.data.data.output.result_partial?.audience?.toString() || ""
-          );
-          setSeoLanguage(
-            response.data.data.output.result_partial?.language?.toString() || ""
-          );
-          // TODO: tell to the model what are length existed, to avoid length not existing
-          setLength(
-            response.data.data.output.result_partial?.length?.toString() || ""
-          );
-          setTone(
-            response.data.data.output.result_partial?.tone?.toString() || ""
-          );
-          setChatState(response.data.data.output.state);
-        }
-
-        return;
-      }
-    }
-    console.error("❌ Chat error:", response);
-    addMessage(
-      "bot",
-      `❌ **Erreur de connexion**\n\nImpossible de communiquer avec l'assistant IA.\n\n`
-    );
-  };
-
   // // Initialize session on mount
   // useEffect(() => {
   //   if (authUser?.id && !sessionId && !sessionInitialized) {
@@ -561,11 +462,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   //     effect();
   //   }
   // }, [authUser?.id, sessionId, sessionInitialized, module.slug]);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversationHistory, isTyping]);
 
   const handleCopy = async () => {
     if (!result?.content) return;
@@ -588,60 +484,6 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     element.click();
     document.body.removeChild(element);
   };
-
-  const renderChatMessage = useCallback(
-    (msg: ConversationMessage, index: number) => {
-      const isBot = msg.type === "bot";
-      const messageId = `${msg.type}-${msg.timestamp.getTime()}-${index}`;
-
-      const formatMessage = (text: string) => {
-        if (!text) return "";
-        text = text.replace(/^\* (.+)$/gm, "• $1");
-        text = text.replace(/^- (.+)$/gm, "• $1");
-        text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        text = text.replace(
-          /\[([^\]]+)\]\(([^)]+)\)/g,
-          '<a href="$2" target="_blank">$1</a>'
-        );
-        text = text.replace(/\n\n/g, "<br/><br/>");
-        text = text.replace(/\n/g, "<br/>");
-        return text;
-      };
-
-      return (
-        <div
-          key={messageId}
-          className={`flex ${isBot ? "justify-start" : "justify-end"} mb-4`}
-        >
-          <div
-            className={`max-w-[85%] p-4 rounded-lg border shadow-sm ${
-              isBot
-                ? "bg-blue-50 border-blue-200 text-blue-900"
-                : "bg-green-50 border-green-200 text-green-900"
-            }`}
-          >
-            <div className="flex items-start space-x-3">
-              {isBot && (
-                <Brain className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div
-                  className="text-sm leading-relaxed"
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessage(msg.message),
-                  }}
-                />
-                <span className="text-xs opacity-60 mt-2 block">
-                  {msg.timestamp.toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    },
-    []
-  );
 
   const handleRagUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -743,18 +585,8 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
 
         <div className="flex items-center space-x-2 text-sm">
           <div className="flex items-center space-x-1">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isWaitingForN8n ? "bg-orange-500 animate-pulse" : "bg-green-500"
-              }`}
-            ></div>
-            <span
-              className={`${
-                isWaitingForN8n ? "text-orange-600" : "text-green-600"
-              }`}
-            >
-              {isWaitingForN8n ? "Communication ..." : "Connecté"}
-            </span>
+            <div className={`w-2 h-2 rounded-full bg-green-500"`}></div>
+            <span className={`${"text-green-600"}`}>{"Connecté"}</span>
           </div>
           <span className="text-muted-foreground">•</span>
           <span className="text-muted-foreground">
@@ -876,36 +708,72 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
               </div>
             </div>
 
-            <div className="border rounded-lg min-h-[400px] max-h-[600px] overflow-y-auto p-4 bg-gradient-to-b from-blue-50/30 to-white">
-              <div className="space-y-4">
-                {conversationHistory.map((msg, index) =>
-                  renderChatMessage(msg, index)
-                )}
+            <Chat
+              ref={chatRef}
+              welcomeMessage={welcomeMessage}
+              onSubmit={async ({ message }) => {
+                const content: Record<string, string> = {};
+                if (subject.length > 0) {
+                  content.subject = subject;
+                }
+                const response = await chatWithModule({
+                  message,
+                  content,
+                });
+                if (response.success) {
+                  const outputMessage = response.data.data.outputMessage || "";
+                  if (
+                    response.data.data.module_type == "ai-writer" &&
+                    outputMessage.length > 0
+                  ) {
+                    if (response.data.data.output) {
+                      setSubject(
+                        response.data.data.output.result_partial?.subject?.toString() ||
+                          ""
+                      );
+                      setKeywords(
+                        response.data.data.output.result_partial?.keywords?.toString() ||
+                          ""
+                      );
+                      setTargetAudience(
+                        response.data.data.output.result_partial?.audience?.toString() ||
+                          ""
+                      );
+                      setSeoLanguage(
+                        response.data.data.output.result_partial?.language?.toString() ||
+                          ""
+                      );
+                      // TODO: tell to the model what are length existed, to avoid length not existing
+                      setLength(
+                        response.data.data.output.result_partial?.length?.toString() ||
+                          ""
+                      );
+                      setTone(
+                        response.data.data.output.result_partial?.tone?.toString() ||
+                          ""
+                      );
+                      setChatState(response.data.data.output.state);
+                    }
 
-                {isTyping && (
-                  <div className="flex justify-start mb-4">
-                    <div className="bg-gray-100 border border-gray-200 rounded-lg p-3 max-w-[80%]">
-                      <div className="flex items-center space-x-2">
-                        <Brain className="h-5 w-5 text-gray-600" />
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={chatEndRef} />
-              </div>
-            </div>
+                    return {
+                      success: true,
+                      data: {
+                        aiResponse: outputMessage,
+                      },
+                    };
+                  }
+                }
+                console.error("❌ Chat error:", response);
+                return {
+                  success: false,
+                  error:
+                    "error" in response
+                      ? new Error(response.error)
+                      : new Error("unknown error"),
+                  kind: "CHAT_ERROR",
+                };
+              }}
+            />
 
             {chatState === "ready_for_confirmation" && (
               <div className="space-y-4">
@@ -933,50 +801,8 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                     </div>
                   </div>
                 </div>
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={loading || !hasEnoughCredits(currentCost)}
-                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                  size="lg"
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <LoadingSpinner />
-                      <span>Génération en cours...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Sparkles className="h-4 w-4" />
-                      <span>🚀 Générer le contenu ({currentCost} crédits)</span>
-                    </div>
-                  )}
-                </Button>
               </div>
             )}
-
-            <div className="flex space-x-2">
-              <Input
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                placeholder="Décrivez votre contenu ou posez une question..."
-                onKeyPress={(e) =>
-                  e.key === "Enter" && !e.shiftKey && handleChatSubmit()
-                }
-                disabled={loading || isWaitingForN8n}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleChatSubmit}
-                disabled={!userInput.trim() || loading || isWaitingForN8n}
-              >
-                {isWaitingForN8n ? (
-                  <LoadingSpinner />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
           </TabsContent>
 
           {/* ONGLET CONTENT - SIMPLIFIÉ (Garde juste l'essentiel) */}

@@ -25,6 +25,7 @@
     "react": "catalog:",
     "react-big-calendar": "^1.19.4",
     "react-dom": "catalog:",
+    "react-markdown": "^10.1.0",
     "react-router": "^7.9.3",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",

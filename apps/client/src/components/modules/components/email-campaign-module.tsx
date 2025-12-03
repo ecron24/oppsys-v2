@@ -6,29 +6,32 @@ import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import { modulesService } from "../service/modules-service";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  Button,
-  Label,
-  Input,
-  Textarea,
+} from "@oppsys/ui/components/card";
+import { Button } from "@oppsys/ui/components/button";
+import { Label } from "@oppsys/ui/components/label";
+import { Textarea } from "@oppsys/ui/components/textarea";
+import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
-  Checkbox,
-  Badge,
-  Progress,
+  SelectTrigger,
+  SelectValue,
+} from "@oppsys/ui/components/select";
+import { Input } from "@oppsys/ui/components/input";
+import { Badge } from "@oppsys/ui/components/badge";
+import { Progress } from "@oppsys/ui/components/progress";
+import { Alert, AlertDescription } from "@oppsys/ui/components/alert";
+import {
   Tabs,
+  TabsContent,
   TabsList,
   TabsTrigger,
-  TabsContent,
-  Alert,
-  AlertDescription,
-} from "@oppsys/ui";
+} from "@oppsys/ui/components/tabs";
+import { Checkbox } from "@oppsys/ui/components/checkbox";
 import {
   Mail,
   Send,
@@ -50,7 +53,8 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "../../loading";
 import type { MODULES_IDS } from "@oppsys/api";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { Chat, type ChatRef } from "../shared/chat";
 
 type EmailCampaignModuleProps = {
   module: Module;
@@ -61,12 +65,6 @@ type Config = Extract<
   { configType: typeof MODULES_IDS.EMAIL_CAMPAIGN }
 >;
 
-type ConversationMessage = {
-  type: "user" | "bot";
-  message: string;
-  data?: unknown;
-  timestamp: Date;
-};
 const welcomeMessage = `👋 Bonjour ! Je vais vous aider à créer votre campagne email.
 
 Pour commencer : **que voulez-vous accomplir avec cette campagne ?**
@@ -82,15 +80,9 @@ export default function EmailCampaignModule({
   const { balance, hasEnoughCredits, formatBalance } = useCredits();
   const currentBalance = balance;
   const permissions = usePremiumFeatures();
+  const chatRef = useRef<ChatRef>(null);
   // TODO: generate from uuidv7
   const sessionId = useMemo(() => Math.random().toString(), []);
-  const [isWaitingForN8n, setIsWaitingForN8n] = useState(false);
-
-  const [conversationHistory, setConversationHistory] = useState<
-    ConversationMessage[]
-  >([{ message: welcomeMessage, timestamp: new Date(), type: "bot" }]);
-  const [userInput, setUserInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -132,7 +124,6 @@ export default function EmailCampaignModule({
 
   // ✅ RÉFÉRENCES
   const isSubmitting = useRef(false);
-  const chatEndRef = useRef(null);
 
   const config = useMemo(
     () => (module.config || {}) as Config,
@@ -192,52 +183,39 @@ export default function EmailCampaignModule({
     });
 
     return {
-      // === CAMPAGNE ===
       campaign: {
         name: campaignName.trim(),
         objective: campaignObjective.trim(),
         type: campaignType,
         style: contentStyle,
       },
-
-      // === AUDIENCE ===
       audience: {
         type: audienceType,
         size: audienceSize,
       },
-
-      // === CONTENU ===
       content: {
         subject: emailSubject.trim(),
         body: emailContent.trim(),
         callToAction: callToAction.trim(),
         keyMessages: validKeyMessages,
       },
-
-      // === AUTOMATION ===
       automation: {
         sendImmediately,
         scheduledDate,
         scheduledTime,
         selectedIntegration,
       },
-
-      // === TRACKING ===
       tracking: {
         enableTracking,
         trackOpens,
         trackClicks,
         enableConversionTracking,
       },
-
-      // === UTILISATEUR ===
       user: {
         plan: authUser?.plans?.monthlyCredits || "free",
         isPremium: permissions.data?.isPremium || false,
         balance: currentBalance || 0,
       },
-
-      // === CONVERSATION ===
       conversation: {
         currentStep: currentStep,
         isComplete: currentStep === 999,
@@ -247,8 +225,6 @@ export default function EmailCampaignModule({
             validKeyMessages.length > 0
         ),
       },
-
-      // === MÉTADONNÉES ===
       metadata: {
         sessionId,
         timestamp: new Date().toISOString(),
@@ -256,17 +232,6 @@ export default function EmailCampaignModule({
         currentCost: currentCost(),
       },
     };
-  };
-
-  const addMessage = (
-    type: "user" | "bot",
-    message: string,
-    data?: unknown
-  ) => {
-    setConversationHistory((prev) => [
-      ...prev,
-      { type, message, data, timestamp: new Date() },
-    ]);
   };
 
   const chatWithModule = async (params: {
@@ -279,51 +244,6 @@ export default function EmailCampaignModule({
       context: { ...buildFullContext(), content: params.content ?? {} },
     });
     return response;
-  };
-
-  const handleChatSubmit = async () => {
-    if (!userInput.trim() || isWaitingForN8n) return;
-
-    if (isSubmitting.current) {
-      toast.warning("Soumission ignorée (déjà en cours)");
-      return;
-    }
-    isSubmitting.current = true;
-
-    const currentMessage = userInput.trim();
-    addMessage("user", currentMessage);
-    setUserInput("");
-
-    setIsWaitingForN8n(true);
-    setIsTyping(true);
-    const response = await chatWithModule({ message: currentMessage });
-
-    setIsWaitingForN8n(false);
-    setIsTyping(false);
-    setTimeout(() => {
-      isSubmitting.current = false;
-    }, 500);
-    if (response.success) {
-      const outputMessage = response.data.data.outputMessage || "";
-      if (
-        // response.data.data.module_type == "ai-writer" &&
-        outputMessage.length > 0
-      ) {
-        addMessage("bot", outputMessage);
-        // TODO: update state after finishing workflow
-        void setCurrentStep;
-        void setContentStyle;
-        void setEmailSubject;
-        void setEmailContent;
-        void setCallToAction;
-        return;
-      }
-    }
-    console.error("❌ Chat error:", response);
-    addMessage(
-      "bot",
-      `❌ **Erreur de connexion**\n\nImpossible de communiquer avec l'assistant IA.\n\n`
-    );
   };
 
   const validateForm = () => {
@@ -385,7 +305,11 @@ export default function EmailCampaignModule({
     if (response.success) {
       setProgress(50);
       setCurrentGenerationStep("Génération en cours en arrière-plan...");
-      addMessage("bot", response.data.data.outputMessage || "");
+      chatRef.current?.addMessage({
+        type: "bot",
+        message: response.data.data.outputMessage || "",
+        data: null,
+      });
       toast.success("Génération lancée !", {
         description:
           'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
@@ -401,17 +325,18 @@ export default function EmailCampaignModule({
       } as const;
     }
     console.error("Erreur du chat du module:", response);
-    addMessage(
-      "bot",
-      `❌ **Erreur de génération**
+    chatRef.current?.addMessage({
+      type: "bot",
+      message: `❌ **Erreur de génération**
   
             Une erreur est survenue lors de la génération du contenu.
   
             **Solutions possibles :**
             • Réessayez la génération
             • Vérifiez vos crédits
-            • Contactez le support si le problème persiste`
-    );
+            • Contactez le support si le problème persiste`,
+      data: null,
+    });
     return {
       success: false,
     } as const;
@@ -436,60 +361,6 @@ export default function EmailCampaignModule({
       return newMessages;
     });
   };
-
-  const renderChatMessage = useCallback(
-    (msg: ConversationMessage, index: number) => {
-      const isBot = msg.type === "bot";
-      const messageId = `${msg.type}-${msg.timestamp.getTime()}-${index}`;
-
-      const formatMessage = (text: string) => {
-        if (!text) return "";
-        text = text.replace(/^\* (.+)$/gm, "• $1");
-        text = text.replace(/^- (.+)$/gm, "• $1");
-        text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        text = text.replace(
-          /\[([^\]]+)\]\(([^)]+)\)/g,
-          '<a href="$2" target="_blank">$1</a>'
-        );
-        text = text.replace(/\n\n/g, "<br/><br/>");
-        text = text.replace(/\n/g, "<br/>");
-        return text;
-      };
-
-      return (
-        <div
-          key={messageId}
-          className={`flex ${isBot ? "justify-start" : "justify-end"} mb-4`}
-        >
-          <div
-            className={`max-w-[85%] p-4 rounded-lg border shadow-sm ${
-              isBot
-                ? "bg-blue-50 border-blue-200 text-blue-900"
-                : "bg-green-50 border-green-200 text-green-900"
-            }`}
-          >
-            <div className="flex items-start space-x-3">
-              {isBot && (
-                <Brain className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div
-                  className="text-sm leading-relaxed"
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessage(msg.message),
-                  }}
-                />
-                <span className="text-xs opacity-60 mt-2 block">
-                  {msg.timestamp.toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    },
-    []
-  );
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4">
@@ -535,20 +406,8 @@ export default function EmailCampaignModule({
           </CardDescription>
           <div className="flex items-center space-x-2 text-sm">
             <div className="flex items-center space-x-1">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  isWaitingForN8n
-                    ? "bg-orange-500 animate-pulse"
-                    : "bg-green-500"
-                }`}
-              ></div>
-              <span
-                className={`${
-                  isWaitingForN8n ? "text-orange-600" : "text-green-600"
-                }`}
-              >
-                {isWaitingForN8n ? "Communication ..." : "Connecté"}
-              </span>
+              <div className={`w-2 h-2 rounded-full "bg-green-500`}></div>
+              <span className={`text-green-600`}>{"Connecté"}</span>
             </div>
             <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">
@@ -590,17 +449,9 @@ export default function EmailCampaignModule({
               {/* Indicateur amélioré */}
               <div className="bg-gray-50 border rounded-lg p-3 text-xs space-y-1">
                 <div className="flex items-center space-x-2">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      isWaitingForN8n
-                        ? "bg-orange-500 animate-pulse"
-                        : "bg-green-500"
-                    }`}
-                  ></div>
+                  <div className={`w-2 h-2 rounded-full"bg-green-500"`}></div>
                   <span className="font-medium">État :</span>
-                  <span>
-                    {isWaitingForN8n ? "Communication ..." : "Connecté"}
-                  </span>
+                  <span>{"Connecté"}</span>
                 </div>
                 <div className="text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded">
                   💡 Les crédits ne seront utilisés qu'après validation de votre
@@ -623,45 +474,46 @@ export default function EmailCampaignModule({
                 </div>
               </div>
 
-              {isWaitingForN8n && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-sm text-blue-800">
-                    Communication avec en cours...
-                  </span>
-                </div>
-              )}
+              <Chat
+                ref={chatRef}
+                welcomeMessage={welcomeMessage}
+                onSubmit={async ({ message }) => {
+                  const response = await chatWithModule({
+                    message,
+                  });
+                  if (response.success) {
+                    const outputMessage =
+                      response.data.data.outputMessage || "";
+                    if (
+                      // response.data.data.module_type == "ai-writer" &&
+                      outputMessage.length > 0
+                    ) {
+                      // TODO: update state after finishing workflow
+                      void setCurrentStep;
+                      void setContentStyle;
+                      void setEmailSubject;
+                      void setEmailContent;
+                      void setCallToAction;
+                      return {
+                        success: true,
+                        data: {
+                          aiResponse: outputMessage,
+                        },
+                      };
+                    }
+                  }
 
-              <div className="border rounded-lg min-h-[400px] max-h-[600px] overflow-y-auto p-4 bg-gradient-to-b from-blue-50/30 to-white">
-                <div className="space-y-4">
-                  {conversationHistory.map((msg, index) =>
-                    renderChatMessage(msg, index)
-                  )}
-
-                  {isTyping && (
-                    <div className="flex justify-start mb-4">
-                      <div className="bg-gray-100 border border-gray-200 rounded-lg p-3 max-w-[80%]">
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-5 w-5 text-gray-600" />
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                            <div
-                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.1s" }}
-                            ></div>
-                            <div
-                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div ref={chatEndRef} />
-                </div>
-              </div>
+                  console.error("❌ Chat error:", response);
+                  return {
+                    success: false,
+                    error:
+                      "error" in response
+                        ? new Error(response.error)
+                        : new Error("unknown error"),
+                    kind: "CHAT_ERROR",
+                  };
+                }}
+              />
 
               {/* Bouton création campagne */}
               {currentStep === 999 && (
@@ -722,29 +574,6 @@ export default function EmailCampaignModule({
                   </Button>
                 </div>
               )}
-
-              <div className="flex space-x-2">
-                <Input
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  placeholder="Tapez votre message..."
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && !e.shiftKey && handleChatSubmit()
-                  }
-                  disabled={loading || isWaitingForN8n}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleChatSubmit}
-                  disabled={!userInput.trim() || loading || isWaitingForN8n}
-                >
-                  {isWaitingForN8n ? (
-                    <LoadingSpinner />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="content" className="space-y-6">
