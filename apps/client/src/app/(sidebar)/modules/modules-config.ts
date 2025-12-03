@@ -60,7 +60,7 @@ const DataAnalyzerModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
 );
 const EmailCampaignModule = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/email-campaign-module")
 );
 const ContentTranslatorModule = lazy(
   () => import("@/components/modules/components/placeholder-module")

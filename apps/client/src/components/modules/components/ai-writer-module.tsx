@@ -179,6 +179,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const [publishPlatform, setPublishPlatform] = useState("blog");
 
   // Chat States
+  // TODO: generate from uuidv7
   const sessionId = useMemo(() => Math.random().toString(), []);
   const [isWaitingForN8n, setIsWaitingForN8n] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<

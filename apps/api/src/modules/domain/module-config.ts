@@ -66,20 +66,45 @@ export const SeoAnalyzerConfigSchema = z
   .transform((cfg) => ({ ...cfg, configType: "seo-analyzer" as const }));
 
 /* ------------------ 4. email-campaign ------------------ */
+const CostLabelSchema = z.object({
+  cost: z.number(),
+  label: z.string(),
+  description: z.string().optional(),
+  premium: z.boolean().optional(),
+});
+const ContentStyleSchema = z.object({
+  label: z.string(),
+  tone: z.string(),
+  industry: z.string(),
+});
+const AiModelSchema = CostLabelSchema.extend({
+  description: z.string(),
+});
+const IntegrationOptionSchema = z.object({
+  label: z.string(),
+  setupCost: z.number(),
+  monthlyCost: z.number(),
+  premium: z.boolean().optional(),
+});
+const CampaignTypeSchema = z.object({
+  cost: z.number(),
+  label: z.string(),
+  premium: z.boolean().optional(),
+});
+
 export const EmailCampaignConfigSchema = z
   .object({
     baseCost: z.number(),
-    campaignTypes: z.object({
-      nurturing: z.object({
-        cost: z.number(),
-        label: z.string(),
-        premium: z.boolean().optional(),
-      }),
-      newsletter: z.object({ cost: z.number(), label: z.string() }),
-      promotional: z.object({ cost: z.number(), label: z.string() }),
-    }),
+    aiModels: z.record(z.string(), AiModelSchema),
+    audienceTypes: z.record(z.string(), CostLabelSchema),
+    contentStyles: z.record(z.string(), ContentStyleSchema),
+    integrationOptions: z.record(z.string(), IntegrationOptionSchema),
+    campaignTypes: z.record(z.string(), CampaignTypeSchema),
   })
-  .transform((cfg) => ({ ...cfg, configType: "email-campaign" as const }));
+  .transform((cfg) => ({
+    ...cfg,
+    configType: "email-campaign" as const,
+  }));
 
 /* ------------------ LevelSchema shared for formations ------------------ */
 const LevelSchema = z.object({
