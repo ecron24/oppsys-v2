@@ -1,4 +1,5 @@
+import { v7 as uuidV7 } from "uuid";
+
 export function generateUuid() {
-  // TODO: generate from uuid
-  return Math.random().toString();
+  return uuidV7();
 }

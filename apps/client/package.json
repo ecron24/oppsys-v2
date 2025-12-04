@@ -29,6 +29,7 @@
     "react-router": "^7.9.3",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
+    "uuid": "^13.0.0",
     "zod": "catalog:"
   },
   "devDependencies": {
