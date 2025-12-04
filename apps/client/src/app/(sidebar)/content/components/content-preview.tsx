@@ -265,22 +265,6 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
             <p className="text-sm text-red-700 mb-3">
               Aucun contenu HTML trouvé. Vérifiez la structure dans la console.
             </p>
-            <details className="text-xs">
-              <summary className="cursor-pointer text-red-600 font-medium mb-2">
-                🔧 DEBUG : Métadonnées complètes
-              </summary>
-              <pre className="bg-white p-2 rounded border overflow-x-auto max-h-64">
-                {JSON.stringify(
-                  {
-                    metadata,
-                    content_type: content.type,
-                    module_slug: moduleSlug,
-                  },
-                  null,
-                  2
-                )}
-              </pre>
-            </details>
           </div>
         )}
 
@@ -347,7 +331,6 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
     );
   }
 
-  // Pour les posts de réseaux sociaux
   if (content.type === "social-post" || moduleSlug === "social-factory") {
     const {
       postContent,
@@ -361,39 +344,6 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
 
     return (
       <div className="space-y-4">
-        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg text-xs">
-          <details>
-            <summary className="cursor-pointer font-bold text-yellow-700 mb-2">
-              🔧 DEBUG INFO (cliquez pour voir) - À supprimer une fois résolu
-            </summary>
-            <div className="space-y-1 text-yellow-800">
-              <div>
-                <strong>Source trouvée:</strong>{" "}
-                {foundSource || "AUCUNE SOURCE TROUVÉE"}
-              </div>
-              <div>
-                <strong>Contenu extrait:</strong>{" "}
-                {postContent.substring(0, 200)}...
-              </div>
-              <div>
-                <strong>Plateforme:</strong> {platform}
-              </div>
-              <div>
-                <strong>Hashtags:</strong> {hashtags.join(", ")}
-              </div>
-              <div>
-                <strong>Call to Action:</strong> {callToAction}
-              </div>
-              <div>
-                <strong>Emojis:</strong> {emojis}
-              </div>
-              <div>
-                <strong>A une erreur:</strong> {hasError ? "OUI" : "NON"}
-              </div>
-            </div>
-          </details>
-        </div>
-
         <div className="bg-muted/50 p-4 rounded-lg border">
           <div className="flex items-center justify-between mb-3">
             <H4 className="font-medium flex items-center">
@@ -431,9 +381,10 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
             ) : (
               <div className="space-y-3">
                 <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-line text-sm font-medium">
-                    {postContent}
-                  </p>
+                  <p
+                    className="whitespace-pre-line text-sm font-medium"
+                    dangerouslySetInnerHTML={{ __html: postContent }}
+                  ></p>
                 </div>
 
                 {emojis && (

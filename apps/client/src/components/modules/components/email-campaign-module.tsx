@@ -48,6 +48,7 @@ import { useMemo, useRef, useState } from "react";
 import { Chat, type ChatRef } from "../shared/chat";
 import z from "zod";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
+import { generateUuid } from "@/lib/generate-uuid";
 
 type EmailCampaignModuleProps = {
   module: Module;
@@ -94,8 +95,7 @@ export default function EmailCampaignModule({
   const currentBalance = balance;
   const permissions = usePremiumFeatures();
   const chatRef = useRef<ChatRef>(null);
-  // TODO: generate from uuidv7
-  const sessionId = useMemo(() => Math.random().toString(), []);
+  const sessionId = useMemo(() => generateUuid(), []);
 
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);

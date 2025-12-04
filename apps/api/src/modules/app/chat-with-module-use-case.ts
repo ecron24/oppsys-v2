@@ -103,8 +103,6 @@ export const chatWithModuleUseCase = buildUseCase()
       name: module.name,
       slug: module.slug,
       endpoint: module.endpoint,
-      // endpoint:
-      //   "https://n8n.oppsys.io/webhook/b7d94e01-3dbb-4e4b-ad99-d406dbc085bf/chat",
       n8nTriggerType: "CHAT" as const,
     };
     const executionResult = await ctx.n8n.executeWorkflow({

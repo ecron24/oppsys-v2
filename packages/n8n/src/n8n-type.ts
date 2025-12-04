@@ -31,10 +31,16 @@ export type N8nResult =
       metadata?: Record<string, unknown>;
     }
   | AiWriterOutput
-  | DocumentGenerator;
+  | DocumentGenerator
+  | SocialFactory;
 
 export type DocumentGenerator = {
   module_type: "document-generator";
+  output: {};
+};
+
+export type SocialFactory = {
+  module_type: "social-factory";
   output: {};
 };
 

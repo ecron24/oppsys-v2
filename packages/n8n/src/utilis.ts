@@ -11,6 +11,10 @@ export function extractMessageFromN8n(result: N8nResult) {
     return "Document generated";
   }
 
+  if (result.module_type == "social-factory") {
+    return "Post generated";
+  }
+
   if (result) {
     if (
       result.output &&

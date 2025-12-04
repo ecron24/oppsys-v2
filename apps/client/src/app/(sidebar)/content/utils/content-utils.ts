@@ -85,97 +85,13 @@ export const extractPostContent = (
 } => {
   const metadata = parseMetadata(content.metadata || {});
 
-  let postContent = "";
+  const postContent =
+    content.htmlPreview?.toString() || metadata.htmlPreview?.toString() || "";
   let hashtags: string[] = [];
   let callToAction = "";
   let emojis = "";
   let platform = "Social Media";
   let hasError = false;
-  let foundSource: string | null = null;
-
-  const contentSources = [
-    { source: "metadata.post_content", value: metadata.post_content },
-    { source: "metadata.content", value: metadata.content },
-    { source: "metadata.caption", value: metadata.caption },
-    {
-      source: "metadata.generated_content.post",
-      value: metadata.generatedContent?.post,
-    },
-    {
-      source: "metadata.generated_content.caption",
-      value: metadata.generatedContent?.caption,
-    },
-    {
-      source: "metadata.generated_content.content",
-      value: metadata.generatedContent?.content,
-    },
-    // { source: "content.content", value: content.content },
-    { source: "content.html_preview", value: content.htmlPreview },
-    // { source: "content.preview", value: content.preview },
-    { source: "metadata.output.post", value: metadata.output?.post },
-    { source: "metadata.result.post", value: metadata.result?.post },
-    {
-      source: "metadata.result.content",
-      value: metadata.result?.content,
-    },
-    {
-      source: "metadata.workflow_result.post",
-      value: metadata.workflowResult?.post,
-    },
-    // {
-    //   source: "metadata.execution_result.content",
-    //   value: metadata.workflowResult?.content,
-    // },
-  ];
-
-  for (const sourceInfo of contentSources) {
-    const value = sourceInfo.value;
-    if (value && typeof value === "string" && value.trim().length > 0) {
-      if (value.includes("<") && value.includes(">")) {
-        try {
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = value;
-          const extractedText = tempDiv.textContent || tempDiv.innerText || "";
-          if (extractedText.trim()) {
-            postContent = extractedText.trim();
-            foundSource = `${sourceInfo.source} (extracted from HTML)`;
-            break;
-          }
-        } catch (e) {
-          console.error("Erreur extraction HTML:", e);
-        }
-      }
-
-      if (value.startsWith("{") && value.endsWith("}")) {
-        try {
-          const parsedValue = JSON.parse(value);
-          const possibleContent =
-            parsedValue.post || parsedValue.caption || parsedValue.content;
-          if (possibleContent) {
-            postContent = possibleContent;
-            foundSource = `${sourceInfo.source} (parsed JSON)`;
-
-            hashtags = parsedValue.hashtags
-              ? parsedValue.hashtags
-                  .split(" ")
-                  .filter((tag: string) => tag.startsWith("#"))
-              : [];
-            callToAction = parsedValue.call_to_action || parsedValue.cta || "";
-            emojis = Array.isArray(parsedValue.emojis)
-              ? parsedValue.emojis.join(" ")
-              : parsedValue.emojis || "";
-            break;
-          }
-        } catch (e) {
-          console.error("Erreur parsing JSON:", e);
-        }
-      }
-
-      postContent = value;
-      foundSource = sourceInfo.source;
-      break;
-    }
-  }
 
   if (!hashtags.length) {
     const hashtagSources = [
@@ -236,6 +152,6 @@ export const extractPostContent = (
     emojis,
     platform,
     hasError,
-    foundSource,
+    foundSource: "html",
   };
 };

@@ -48,7 +48,6 @@ export const getUserProfileForService = createFn()
         error: profileError || new Error("User profile not found"),
       };
     }
-    console.log("userProfile", userProfile);
 
     return {
       success: true,

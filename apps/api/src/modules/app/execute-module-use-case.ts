@@ -141,8 +141,6 @@ export const executeModuleUseCase = buildUseCase()
       name: module.name,
       slug: module.slug,
       endpoint: module.endpoint,
-      // endpoint:
-      //   "https://n8n.oppsys.io/webhook/b918023a-dd7c-47ec-b8f4-dcd076e8a466",
     };
 
     // 5. Execute module

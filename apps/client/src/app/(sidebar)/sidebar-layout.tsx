@@ -6,7 +6,7 @@ export default function SidebarLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <div className="w-full">{<Outlet />}</div>
+      <div className="w-full overflow-x-hidden">{<Outlet />}</div>
     </SidebarProvider>
   );
 }

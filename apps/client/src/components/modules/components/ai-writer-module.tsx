@@ -73,6 +73,7 @@ import type { RagDocument } from "../../documents/document-types";
 import { MODULES_IDS } from "@oppsys/api/client";
 import { validateDocumentFile } from "@/components/documents/document-validator";
 import { Chat, type ChatRef } from "../shared/chat";
+import { generateUuid } from "@/lib/generate-uuid";
 
 type AiWriterModuleProps = {
   module: Module;
@@ -172,8 +173,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   const [publishPlatform, setPublishPlatform] = useState("blog");
 
   // Chat States
-  // TODO: generate from uuidv7
-  const sessionId = useMemo(() => Math.random().toString(), []);
+  const sessionId = useMemo(() => generateUuid(), []);
   const [activeTab, setActiveTab] = useState("chat");
 
   //  ref

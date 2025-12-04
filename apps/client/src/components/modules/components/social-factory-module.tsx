@@ -76,10 +76,11 @@ import {
 } from "lucide-react";
 import { modulesService } from "../service/modules-service";
 import { LoadingSpinner } from "../../loading";
-import type { ExecuteModuleData, Module } from "../module-types";
+import type { Module } from "../module-types";
 import type { LucideIcon } from "lucide-react";
 import { contentService } from "@/components/content/content-service.ts";
 import { MODULES_IDS } from "@oppsys/api/client";
+import { generateUuid } from "@/lib/generate-uuid.ts";
 
 type Config = Extract<
   Module["config"],
@@ -145,6 +146,8 @@ export default function SocialFactoryModule({
   );
 
   // ÉTATS
+
+  const sessionId = useMemo(() => generateUuid(), []);
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>([
     "instagram",
   ]);
@@ -173,7 +176,6 @@ export default function SocialFactoryModule({
   const [scheduledTime, setScheduledTime] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [schedulingLoading, setSchedulingLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<ExecuteModuleData | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [currentStep, setCurrentStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -452,59 +454,53 @@ export default function SocialFactoryModule({
 
     isSubmitting.current = true;
     setLoading(true);
-    setResult(null);
     setCurrentStep("Lancement du processus...");
     setProgress(50);
 
     const moduleId = module?.slug || "social-factory";
-    const apiPayload = {
-      input: {
-        networks: selectedNetworks,
-        postType,
-        contentStyle,
-        objective,
-        topic: topic.trim(),
-        keywords: keywords.trim(),
-        callToAction: callToAction.trim(),
-        includeHashtags,
-        includeEmojis,
-        autoGenerateHashtags,
-        mentions: mentions.trim(),
-        addCTA,
-        ctaType: addCTA ? ctaType : "",
-        ctaUrl: addCTA ? ctaUrl.trim() : "",
-        schedulePost,
-        scheduledDate,
-        scheduledTime,
-        media: { imageCount: uploadedImages.length, hasVideo: !!uploadedVideo },
-        options: {},
-      },
+    const context = {
+      networks: selectedNetworks,
+      postType,
+      contentStyle,
+      objective,
+      topic: topic.trim(),
+      keywords: keywords.trim(),
+      callToAction: callToAction.trim(),
+      includeHashtags,
+      includeEmojis,
+      autoGenerateHashtags,
+      mentions: mentions.trim(),
+      addCTA,
+      ctaType: addCTA ? ctaType : "",
+      ctaUrl: addCTA ? ctaUrl.trim() : "",
+      schedulePost,
+      scheduledDate,
+      scheduledTime,
+      media: { imageCount: uploadedImages.length, hasVideo: !!uploadedVideo },
+      options: {},
     };
 
-    try {
-      setCurrentStep("Communication avec le générateur...");
-      const response = await modulesService.executeModule(moduleId, apiPayload);
-      if (response && response.success) {
-        setProgress(100);
-        setCurrentStep("Processus terminé !");
-        toast.success("Génération lancée !", {
-          description: "Votre contenu sera bientôt prêt.",
-        });
-        setResult(response.data);
-      } else {
-        throw new Error(response.error || "Une erreur est survenue.");
-      }
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Une erreur est survenue.";
-      setError(message);
-      toast.error(`Échec: ${message}`);
-    } finally {
-      setLoading(false);
-      setProgress(0);
-      setCurrentStep("");
-      isSubmitting.current = false;
+    setCurrentStep("Communication avec le générateur...");
+    const response = await modulesService.chatWithModule(moduleId, {
+      message: "Générer le contenu demandé basê sur le contexte fourni.",
+      sessionId,
+      context,
+    });
+    setLoading(false);
+    setProgress(0);
+    setCurrentStep("");
+    isSubmitting.current = false;
+    if (response.success) {
+      setProgress(100);
+      setCurrentStep("Processus terminé !");
+      toast.success("Génération lancée !", {
+        description: "Votre contenu sera bientôt prêt.",
+      });
+      return;
     }
+    const message = response.error;
+    setError(message);
+    toast.error(`Échec: ${message}`);
   };
 
   const getIconForType = (key: string): LucideIcon => {
@@ -1521,20 +1517,6 @@ export default function SocialFactoryModule({
             </Button>
           )}
         </div>
-
-        {result && (
-          <div className="space-y-4 border-t pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <Label>Contenu généré avec succès</Label>
-              </div>
-            </div>
-            <Button variant="outline" onClick={() => setResult(null)} size="sm">
-              Fermer
-            </Button>
-          </div>
-        )}
 
         {!hasEnoughCredits(currentCost) && currentCost > 0 && (
           <div className="flex items-start space-x-2 p-4 bg-destructive/10 border-destructive/20 rounded-lg">

@@ -78,23 +78,11 @@ export function createN8nInstance({
     let triggerType = determineTriggerType(module, input);
     authData.module_info.trigger_type = triggerType;
 
-    logger.debug(
-      {
-        module_slug: module.slug,
-        has_chat_input: !!(input.isChatMode && input.sessionId),
-        module_trigger_type: module.n8n_trigger_type,
-        endpoint_ends_with_chat: module.endpoint?.endsWith("/chat"),
-      },
-      `Type de trigger déterminé: ${triggerType}`
-    );
-
     let payload;
 
     // CONSTRUCTION DU PAYLOAD SELON LE TYPE
     if (input.isChatMode && input.sessionId && input.message) {
       // MODE CHAT EXPLICITE
-      logger.debug(`Mode CHAT détecté pour ${module.name}`);
-
       payload = {
         sessionId: input.sessionId,
         input: {
@@ -117,20 +105,6 @@ export function createN8nInstance({
         },
         auth: authData,
       };
-
-      logger.debug(
-        {
-          sessionId: input.sessionId.slice(-8),
-          chatInputLength: JSON.stringify({
-            message: input.message,
-            context: input.context || {},
-            module_slug: module.slug,
-            module_name: module.name,
-            module_id: module.id,
-          }).length,
-        },
-        `Payload chat préparé:`
-      );
     } else if (module.slug === "real-estate-lease-generator") {
       // FORMAT SPÉCIFIQUE POUR LE GÉNÉRATEUR IMMOBILIER
       payload = {
@@ -218,7 +192,7 @@ export function createN8nInstance({
     headers["Authorization"] = `Basic ${basicAuth}`;
 
     // Logging de l'exécution
-    logger.debug(
+    logger.info(
       toSnakeCase({
         module: module.name,
         user: userEmail,

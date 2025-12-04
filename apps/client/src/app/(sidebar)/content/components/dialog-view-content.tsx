@@ -37,7 +37,7 @@ export function DialogViewContent({
         onClose?.();
       }}
     >
-      <DialogContent>
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{content.title}</DialogTitle>
           <DialogDescription>
