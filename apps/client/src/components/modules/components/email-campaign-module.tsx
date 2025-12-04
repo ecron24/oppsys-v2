@@ -13,15 +13,6 @@ import {
 } from "@oppsys/ui/components/card";
 import { Button } from "@oppsys/ui/components/button";
 import { Label } from "@oppsys/ui/components/label";
-import { Textarea } from "@oppsys/ui/components/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@oppsys/ui/components/select";
-import { Input } from "@oppsys/ui/components/input";
 import { Badge } from "@oppsys/ui/components/badge";
 import { Progress } from "@oppsys/ui/components/progress";
 import { Alert, AlertDescription } from "@oppsys/ui/components/alert";
@@ -55,6 +46,8 @@ import { LoadingSpinner } from "../../loading";
 import type { MODULES_IDS } from "@oppsys/api";
 import { useMemo, useRef, useState } from "react";
 import { Chat, type ChatRef } from "../shared/chat";
+import z from "zod";
+import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 
 type EmailCampaignModuleProps = {
   module: Module;
@@ -73,6 +66,26 @@ Par exemple : "générer des leads", "promouvoir un produit", "inviter à un év
 
 *Aucun crédit ne sera consommé tant que nous n'aurons pas finalisé votre configuration.*`;
 
+const formSchema = z.object({
+  campaignName: z.string().min(1).max(200),
+  campaignType: z.string().default("newsletter").optional(),
+  campaignObjective: z.string().min(0).optional(),
+  audienceType: z.string().default("allSubscribers").optional(),
+  audienceSize: z.number().min(1).max(100000).default(1000).optional(),
+  contentStyle: z.string().default("professional").optional(),
+  callToAction: z.string().optional(),
+  keyMessages: z.array(z.string()).min(1).max(5).default([""]).optional(),
+  sendImmediately: z.boolean().default(false).optional(),
+  scheduledDate: z.string().optional(),
+  scheduledTime: z.string().optional(),
+  selectedIntegration: z.string().optional().nullable(),
+  enableTracking: z.boolean().default(true).optional(),
+  trackOpens: z.boolean().default(true).optional(),
+  trackClicks: z.boolean().default(true).optional(),
+  enableConversionTracking: z.boolean().default(false).optional(),
+});
+type FormType = z.infer<typeof formSchema>;
+
 export default function EmailCampaignModule({
   module,
 }: EmailCampaignModuleProps) {
@@ -89,38 +102,99 @@ export default function EmailCampaignModule({
   const [currentGenerationStep, setCurrentGenerationStep] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const form = useAppForm({
+    defaultValues: {
+      campaignName: "",
+      campaignType: "newsletter",
+      campaignObjective: "",
+      audienceType: "allSubscribers",
+      audienceSize: 1000,
+      contentStyle: "professional",
+      callToAction: "",
+      keyMessages: [""],
+      sendImmediately: false,
+      scheduledDate: "",
+      scheduledTime: "",
+      selectedIntegration: "",
+      enableTracking: true,
+      trackOpens: true,
+      trackClicks: true,
+      enableConversionTracking: false,
+    } as FormType,
+    validators: {
+      onSubmit: formSchema,
+    },
+    onSubmitInvalid(props) {
+      console.log(props.formApi.getAllErrors());
+
+      toast.error("Veuillez corriger les champs du formulaire.");
+    },
+    onSubmit: async () => {
+      console.log("buildFullContext()", buildFullContext());
+
+      if (isSubmitting.current || loading) return;
+      if (!validateForm()) return;
+      if (loading || !hasEnoughCredits(currentCost()) || !sessionId) return;
+
+      setError(null);
+
+      isSubmitting.current = true;
+      setLoading(true);
+
+      setCurrentGenerationStep("Génération du contenu avec l'IA...");
+      setProgress(40);
+
+      const generationMessage =
+        "Générer maintenant le contenu complet avec toutes les informations collectées";
+
+      const response = await chatWithModule({
+        message: generationMessage,
+        content: { chatState: "confirmed" },
+      });
+
+      if (response.success) {
+        setProgress(50);
+        setCurrentGenerationStep("Génération en cours en arrière-plan...");
+        chatRef.current?.addMessage({
+          type: "bot",
+          message: response.data.data.outputMessage || "",
+          data: null,
+        });
+        toast.success("Génération lancée !", {
+          description:
+            'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
+          duration: 5000,
+        });
+
+        setLoading(false);
+        setProgress(0);
+        setCurrentGenerationStep("");
+        isSubmitting.current = false;
+        return {
+          success: true,
+        } as const;
+      }
+      console.error("Erreur du chat du module:", response);
+      chatRef.current?.addMessage({
+        type: "bot",
+        message: `❌ **Erreur de génération**
+  
+            Une erreur est survenue lors de la génération du contenu.
+  
+            **Solutions possibles :**
+            • Réessayez la génération
+            • Vérifiez vos crédits
+            • Contactez le support si le problème persiste`,
+        data: null,
+      });
+      return {
+        success: false,
+      } as const;
+    },
+  });
   // ✅ ÉTATS PRINCIPAUX - CHAT
-  const [currentStep, setCurrentStep] = useState(0);
-
-  // ✅ CONFIGURATION CAMPAGNE
-  const [campaignObjective, setCampaignObjective] = useState("");
-  const [campaignType, setCampaignType] = useState("newsletter");
-  const [audienceType, setAudienceType] = useState("allSubscribers");
-  const [contentStyle, setContentStyle] = useState("professional");
-  const [campaignName, setCampaignName] = useState("");
-
-  // ✅ CONTENU
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailContent, setEmailContent] = useState("");
-  const [callToAction, setCallToAction] = useState("");
-  const [keyMessages, setKeyMessages] = useState([""]);
-
-  // ✅ PLANNING ET ENVOI
-  const [sendImmediately, setSendImmediately] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
-
-  // ✅ TRACKING ET ANALYTICS
-  const [enableTracking, setEnableTracking] = useState(true);
-  const [trackOpens, setTrackOpens] = useState(true);
-  const [trackClicks, setTrackClicks] = useState(true);
-  const [enableConversionTracking, setEnableConversionTracking] =
-    useState(false);
+  const [currentStep] = useState(0);
   const [activeTab, setActiveTab] = useState("chat");
-
-  // ✅ INTÉGRATIONS
-  const [selectedIntegration, setSelectedIntegration] = useState("");
-  const [audienceSize, setAudienceSize] = useState(1000);
 
   // ✅ RÉFÉRENCES
   const isSubmitting = useRef(false);
@@ -142,29 +216,37 @@ export default function EmailCampaignModule({
     [config]
   );
   const currentCost = () => {
+    const {
+      campaignType: _campaignType,
+      audienceType: _audienceType,
+      audienceSize: _audienceSize,
+      enableConversionTracking: _enableConversionTracking,
+      selectedIntegration: _selectedIntegration,
+    } = form.store.state.values;
+
     let baseCost = config.baseCost;
 
     // Coût selon le type de campagne
-    const campaignConfig = campaignTypesFromAPI[campaignType];
+    const campaignConfig = campaignTypesFromAPI[_campaignType || ""];
     if (campaignConfig) {
       baseCost *= campaignConfig.cost;
     }
 
     // Coût selon l'audience
-    const audienceConfig = audienceTypesFromAPI[audienceType];
+    const audienceConfig = audienceTypesFromAPI[_audienceType || ""];
     if (audienceConfig) {
       baseCost *= audienceConfig.cost;
     }
 
     // Coût selon la taille de l'audience (par tranche de 1000)
-    baseCost += Math.ceil(audienceSize / 1000) * 2;
+    baseCost += Math.ceil((_audienceSize || 0) / 1000) * 2;
 
     // Options premium
-    if (enableConversionTracking) baseCost += 5;
+    if (_enableConversionTracking) baseCost += 5;
 
     // Intégration setup
-    if (selectedIntegration) {
-      const integrationConfig = integrationOptionsFromAPI[selectedIntegration];
+    if (_selectedIntegration) {
+      const integrationConfig = integrationOptionsFromAPI[_selectedIntegration];
       if (integrationConfig) {
         baseCost += integrationConfig.setupCost;
       }
@@ -172,20 +254,33 @@ export default function EmailCampaignModule({
 
     return Math.max(Math.ceil(baseCost), 15);
   };
-  const validKeyMessages = keyMessages.filter((msg) => msg.trim());
 
   const buildFullContext = () => {
-    console.log("DEBUG AUTH USER dans buildFullContext:", {
-      authUser: authUser,
-      plan: authUser?.plans?.name,
-      permissions: permissions,
-      isPremium: permissions.data?.isPremium,
-    });
+    const {
+      campaignObjective,
+      campaignType,
+      audienceSize,
+      audienceType,
+      callToAction,
+      campaignName,
+      contentStyle,
+      enableConversionTracking,
+      enableTracking,
+      scheduledDate,
+      scheduledTime,
+      selectedIntegration,
+      sendImmediately,
+      trackClicks,
+      trackOpens,
+    } = form.store.state.values;
+    const validKeyMessages = (form.store.state.values.keyMessages || []).filter(
+      (msg: string) => msg.trim()
+    );
 
     return {
       campaign: {
-        name: campaignName.trim(),
-        objective: campaignObjective.trim(),
+        name: campaignName?.trim(),
+        objective: campaignObjective?.trim(),
         type: campaignType,
         style: contentStyle,
       },
@@ -194,9 +289,7 @@ export default function EmailCampaignModule({
         size: audienceSize,
       },
       content: {
-        subject: emailSubject.trim(),
-        body: emailContent.trim(),
-        callToAction: callToAction.trim(),
+        callToAction: callToAction?.trim(),
         keyMessages: validKeyMessages,
       },
       automation: {
@@ -220,9 +313,7 @@ export default function EmailCampaignModule({
         currentStep: currentStep,
         isComplete: currentStep === 999,
         hasPreConfig: Boolean(
-          campaignObjective.trim() ||
-            emailSubject.trim() ||
-            validKeyMessages.length > 0
+          campaignObjective?.trim() || (validKeyMessages?.length || 0) > 0
         ),
       },
       metadata: {
@@ -257,21 +348,28 @@ export default function EmailCampaignModule({
     }
 
     // Pour le chat, on est plus flexible sur la validation
-    if (!campaignObjective.trim() && currentStep < 999) {
+    if (
+      !(form.store.state.values.campaignObjective || "").trim() &&
+      currentStep < 999
+    ) {
       toast.error("Veuillez terminer la conversation avec l'assistant IA.");
       return false;
     }
 
     // Vérifications Premium
     if (
-      campaignTypesFromAPI[campaignType]?.premium &&
+      campaignTypesFromAPI[form.store.state.values.campaignType || ""]
+        ?.premium &&
       !permissions.data?.isPremium
     ) {
       toast.error("Ce type de campagne est réservé aux abonnés Premium.");
       return false;
     }
 
-    if (audienceSize > 10000 && !permissions.data?.isPremium) {
+    if (
+      (form.store.state.values.audienceSize || 0) > 10000 &&
+      !permissions.data?.isPremium
+    ) {
       toast.error(
         "Les audiences de plus de 10 000 contacts nécessitent un abonnement Premium."
       );
@@ -281,85 +379,20 @@ export default function EmailCampaignModule({
     return true;
   };
 
-  const handleSubmit = async () => {
-    if (isSubmitting.current || loading) return;
-    if (!validateForm()) return;
-    if (loading || !hasEnoughCredits(currentCost()) || !sessionId) return;
-
-    setError(null);
-
-    isSubmitting.current = true;
-    setLoading(true);
-
-    setCurrentGenerationStep("Génération du contenu avec l'IA...");
-    setProgress(40);
-
-    const generationMessage =
-      "Générer maintenant le contenu complet avec toutes les informations collectées";
-
-    const response = await chatWithModule({
-      message: generationMessage,
-      content: { chatState: "confirmed" },
-    });
-
-    if (response.success) {
-      setProgress(50);
-      setCurrentGenerationStep("Génération en cours en arrière-plan...");
-      chatRef.current?.addMessage({
-        type: "bot",
-        message: response.data.data.outputMessage || "",
-        data: null,
-      });
-      toast.success("Génération lancée !", {
-        description:
-          'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
-        duration: 5000,
-      });
-
-      setLoading(false);
-      setProgress(0);
-      setCurrentGenerationStep("");
-      isSubmitting.current = false;
-      return {
-        success: true,
-      } as const;
-    }
-    console.error("Erreur du chat du module:", response);
-    chatRef.current?.addMessage({
-      type: "bot",
-      message: `❌ **Erreur de génération**
-  
-            Une erreur est survenue lors de la génération du contenu.
-  
-            **Solutions possibles :**
-            • Réessayez la génération
-            • Vérifiez vos crédits
-            • Contactez le support si le problème persiste`,
-      data: null,
-    });
-    return {
-      success: false,
-    } as const;
-  };
-
   const addKeyMessage = () => {
-    if (keyMessages.length < 5) {
-      setKeyMessages((prev) => [...prev, ""]);
+    const km = form.store.state.values.keyMessages || [];
+    if ((km.length || 0) < 5) {
+      form.setFieldValue("keyMessages", (prev) => [...(prev || []), ""]);
     }
   };
 
   const removeKeyMessage = (index: number) => {
-    if (keyMessages.length > 1) {
-      setKeyMessages((prev) => prev.filter((_, i) => i !== index));
+    const km = form.store.state.values.keyMessages || [];
+    if ((km.length || 0) > 1) {
+      form.setFieldValue("keyMessages", (prev) =>
+        (prev || []).filter((_, i) => i !== index)
+      );
     }
-  };
-
-  const updateKeyMessage = (index: number, value: string) => {
-    setKeyMessages((prev) => {
-      const newMessages = [...prev];
-      newMessages[index] = value;
-      return newMessages;
-    });
   };
 
   return (
@@ -406,7 +439,7 @@ export default function EmailCampaignModule({
           </CardDescription>
           <div className="flex items-center space-x-2 text-sm">
             <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full "bg-green-500`}></div>
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
               <span className={`text-green-600`}>{"Connecté"}</span>
             </div>
             <span className="text-muted-foreground">•</span>
@@ -445,398 +478,210 @@ export default function EmailCampaignModule({
               )}
             </TabsList>
 
-            <TabsContent value="chat" className="space-y-4">
-              {/* Indicateur amélioré */}
-              <div className="bg-gray-50 border rounded-lg p-3 text-xs space-y-1">
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full"bg-green-500"`}></div>
-                  <span className="font-medium">État :</span>
-                  <span>{"Connecté"}</span>
-                </div>
-                <div className="text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded">
-                  💡 Les crédits ne seront utilisés qu'après validation de votre
-                  configuration
-                </div>
-                <div className="grid grid-cols-4 gap-2 text-gray-600">
-                  <div>Objectif: {campaignObjective.trim() ? "✅" : "❌"}</div>
-                  <div>Audience: {audienceSize !== 1000 ? "✅" : "❌"}</div>
-                  <div>
-                    Messages: {validKeyMessages.length > 0 ? "✅" : "❌"}
+            <form
+              id="document-form"
+              className="space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                form.handleSubmit();
+              }}
+            >
+              <TabsContent value="chat" className="space-y-4">
+                {/* Indicateur amélioré */}
+                <div className="bg-gray-50 border rounded-lg p-3 text-xs space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="font-medium">État :</span>
+                    <span>{"Connecté"}</span>
                   </div>
-                  <div>
-                    Plan: {authUser?.plans?.name || "non connecté"}{" "}
-                    {permissions.data?.isPremium ? "👑" : "🆓"}
+                  <div className="text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded">
+                    💡 Les crédits ne seront utilisés qu'après validation de
+                    votre configuration
                   </div>
-                </div>
-                <div className="text-gray-500">
-                  Balance: {currentBalance} • Session: {sessionId?.slice(-8)} •
-                  Étape: {currentStep}
-                </div>
-              </div>
-
-              <Chat
-                ref={chatRef}
-                welcomeMessage={welcomeMessage}
-                onSubmit={async ({ message }) => {
-                  const response = await chatWithModule({
-                    message,
-                  });
-                  if (response.success) {
-                    const outputMessage =
-                      response.data.data.outputMessage || "";
-                    if (
-                      // response.data.data.module_type == "ai-writer" &&
-                      outputMessage.length > 0
-                    ) {
-                      // TODO: update state after finishing workflow
-                      void setCurrentStep;
-                      void setContentStyle;
-                      void setEmailSubject;
-                      void setEmailContent;
-                      void setCallToAction;
-                      return {
-                        success: true,
-                        data: {
-                          aiResponse: outputMessage,
-                        },
-                      };
-                    }
-                  }
-
-                  console.error("❌ Chat error:", response);
-                  return {
-                    success: false,
-                    error:
-                      "error" in response
-                        ? new Error(response.error)
-                        : new Error("unknown error"),
-                    kind: "CHAT_ERROR",
-                  };
-                }}
-              />
-
-              {/* Bouton création campagne */}
-              {currentStep === 999 && (
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="font-semibold mb-2 text-green-800 flex items-center">
-                      <CheckCircle className="h-5 w-5 mr-2" />
-                      Configuration terminée !
-                    </h3>
-                    <p className="text-sm text-green-700 mb-3">
-                      Votre campagne est prête à être générée avec les
-                      paramètres définis par l'IA.
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium">Objectif:</span>{" "}
-                        {campaignObjective || "Défini par IA"}
-                      </div>
-                      <div>
-                        <span className="font-medium">Audience:</span>{" "}
-                        {audienceSize.toLocaleString()} contacts
-                      </div>
-                      <div>
-                        <span className="font-medium">Type:</span>{" "}
-                        {campaignTypesFromAPI[campaignType]?.label}
-                      </div>
-                      <div>
-                        <span className="font-medium">Coût total:</span>
-                        <Badge
-                          variant="default"
-                          className="bg-green-600 text-white ml-2"
-                        >
-                          {currentCost()} crédits
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={() => handleSubmit()}
-                    disabled={loading || !hasEnoughCredits(currentCost())}
-                    className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                    size="lg"
+                  <form.Subscribe
+                    selector={(s) => ({
+                      campaignObjective: s.values.campaignObjective,
+                      audienceSize: s.values.audienceSize,
+                      keyMessages: s.values.keyMessages,
+                    })}
                   >
-                    {loading ? (
-                      <div className="flex items-center space-x-2">
-                        <LoadingSpinner />
-                        <span>Création en cours...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <Send className="h-4 w-4" />
-                        <span>
-                          🚀 Créer la campagne ({currentCost()} crédits)
-                        </span>
+                    {({ campaignObjective, audienceSize, keyMessages }) => (
+                      <div className="grid grid-cols-4 gap-2 text-gray-600">
+                        <div>
+                          Objectif:{" "}
+                          {(campaignObjective || "").trim() ? "✅" : "❌"}
+                        </div>
+                        <div>
+                          Audience:{" "}
+                          {((audienceSize as number) || 1000) !== 1000
+                            ? "✅"
+                            : "❌"}
+                        </div>
+                        <div>
+                          Messages:{" "}
+                          {((keyMessages || []) as string[]).filter((m) =>
+                            m?.trim()
+                          ).length > 0
+                            ? "✅"
+                            : "❌"}
+                        </div>
+                        <div>
+                          Plan: {authUser?.plans?.name || "non connecté"}{" "}
+                          {permissions.data?.isPremium ? "👑" : "🆓"}
+                        </div>
                       </div>
                     )}
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="content" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Label htmlFor="campaignName">Nom de la campagne</Label>
-                  <Input
-                    id="campaignName"
-                    value={campaignName}
-                    onChange={(e) => setCampaignName(e.target.value)}
-                    placeholder="Ma super campagne 2024"
-                  />
+                  </form.Subscribe>
+                  <div className="text-gray-500">
+                    Balance: {currentBalance} • Session: {sessionId?.slice(-8)}{" "}
+                    • Étape: {currentStep}
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <Label htmlFor="campaignType">Type de campagne</Label>
-                  <Select value={campaignType} onValueChange={setCampaignType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(campaignTypesFromAPI).map(
-                        ([key, type]) => (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            disabled={
-                              type.premium && !permissions.data?.isPremium
-                            }
-                          >
-                            <div className="flex items-center space-x-2">
-                              <span>{type.label}</span>
-                              {type.premium && (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-amber-100 text-amber-700 text-xs"
-                                >
-                                  <Crown className="h-3 w-3 mr-1" />
-                                  Premium
-                                </Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label htmlFor="campaignObjective">
-                  Objectif de la campagne
-                </Label>
-                <Textarea
-                  id="campaignObjective"
-                  value={campaignObjective}
-                  onChange={(e) => setCampaignObjective(e.target.value)}
-                  placeholder="Décrivez l'objectif principal de votre campagne..."
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Label htmlFor="audienceType">Type d'audience</Label>
-                  <Select value={audienceType} onValueChange={setAudienceType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez l'audience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(audienceTypesFromAPI).map(
-                        ([key, audience]) => (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            disabled={
-                              audience.premium && !permissions.data?.isPremium
-                            }
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span>{audience.label}</span>
-                              {audience.premium && (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-amber-100 text-amber-700 text-xs ml-2"
-                                >
-                                  <Crown className="h-3 w-3 mr-1" />
-                                  Premium
-                                </Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-4">
-                  <Label htmlFor="audienceSize">Taille de l'audience</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="audienceSize"
-                      type="number"
-                      value={audienceSize}
-                      onChange={(e) =>
-                        setAudienceSize(parseInt(e.target.value) || 1000)
+                <Chat
+                  ref={chatRef}
+                  welcomeMessage={welcomeMessage}
+                  onSubmit={async ({ message }) => {
+                    const response = await chatWithModule({
+                      message,
+                    });
+                    if (response.success) {
+                      const outputMessage =
+                        response.data.data.outputMessage || "";
+                      if (
+                        // response.data.data.module_type == "ai-writer" &&
+                        outputMessage.length > 0
+                      ) {
+                        // TODO: update state after finishing workflow
+                        // placeholder removed
+                        // void setContentStyle;
+                        // void setEmailSubject;
+                        // void setEmailContent;
+                        // void setCallToAction;
+                        return {
+                          success: true,
+                          data: {
+                            aiResponse: outputMessage,
+                          },
+                        };
                       }
-                      min="1"
-                      max={permissions.data?.isPremium ? 100000 : 10000}
-                      className="w-32"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      contacts (max:{" "}
-                      {permissions.data?.isPremium ? "100K" : "10K"})
-                    </span>
-                  </div>
-                </div>
-              </div>
+                    }
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Messages clés à transmettre</Label>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">
-                      {validKeyMessages.length}/5
-                    </span>
-                    <Button
-                      onClick={addKeyMessage}
-                      disabled={keyMessages.length >= 5}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Ajouter
-                    </Button>
-                  </div>
-                </div>
+                    console.error("❌ Chat error:", response);
+                    return {
+                      success: false,
+                      error:
+                        "error" in response
+                          ? new Error(response.error)
+                          : new Error("unknown error"),
+                      kind: "CHAT_ERROR",
+                    };
+                  }}
+                />
 
-                <div className="space-y-3">
-                  {keyMessages.map((message, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <div className="flex-1">
-                        <Input
-                          value={message}
-                          onChange={(e) =>
-                            updateKeyMessage(index, e.target.value)
-                          }
-                          placeholder={`Message ${index + 1}: Ex: Nouveau produit révolutionnaire`}
-                        />
-                      </div>
-                      {keyMessages.length > 1 && (
-                        <Button
-                          onClick={() => removeKeyMessage(index)}
-                          variant="destructive-outline"
-                          size="sm"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
+                {/* Bouton création campagne */}
+                {currentStep === 999 && (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                      <h3 className="font-semibold mb-2 text-green-800 flex items-center">
+                        <CheckCircle className="h-5 w-5 mr-2" />
+                        Configuration terminée !
+                      </h3>
+                      <p className="text-sm text-green-700 mb-3">
+                        Votre campagne est prête à être générée avec les
+                        paramètres définis par l'IA.
+                      </p>
+                      <form.Subscribe
+                        selector={(s) => ({
+                          campaignObjective: s.values.campaignObjective,
+                          audienceSize: s.values.audienceSize,
+                          campaignType: s.values.campaignType,
+                        })}
+                      >
+                        {({
+                          campaignObjective,
+                          audienceSize,
+                          campaignType,
+                        }) => (
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium">Objectif:</span>{" "}
+                              {campaignObjective || "Défini par IA"}
+                            </div>
+                            <div>
+                              <span className="font-medium">Audience:</span>{" "}
+                              {(audienceSize as number)?.toLocaleString()}{" "}
+                              contacts
+                            </div>
+                            <div>
+                              <span className="font-medium">Type:</span>{" "}
+                              {
+                                campaignTypesFromAPI[
+                                  (campaignType as string) || ""
+                                ]?.label
+                              }
+                            </div>
+                            <div>
+                              <span className="font-medium">Coût total:</span>
+                              <Badge
+                                variant="default"
+                                className="bg-green-600 text-white ml-2"
+                              >
+                                {currentCost()} crédits
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                      </form.Subscribe>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="automation" className="space-y-6">
-              {/* Planning et envoi */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5 text-blue-500" />
-                  <h3 className="text-lg font-semibold">Planning et envoi</h3>
-                </div>
+                    <form.AppForm>
+                      <form.SubmitButton
+                        className="w-full"
+                        size="lg"
+                        disabled={loading || !hasEnoughCredits(currentCost())}
+                        isLoading={loading}
+                      >
+                        {!loading && (
+                          <div className="flex items-center space-x-2">
+                            <Send className="h-4 w-4" />
+                            <span>
+                              🚀 Créer la campagne ({currentCost()} crédits)
+                            </span>
+                          </div>
+                        )}
+                        {loading && <LoadingSpinner />}
+                      </form.SubmitButton>
+                    </form.AppForm>
+                  </div>
+                )}
+              </TabsContent>
 
+              <TabsContent value="content" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="sendImmediately"
-                        checked={sendImmediately}
-                        onCheckedChange={(checked) =>
-                          setSendImmediately(checked == true)
-                        }
-                      />
-                      <Label htmlFor="sendImmediately">
-                        Envoyer immédiatement
-                      </Label>
-                    </div>
-
-                    {!sendImmediately && (
-                      <div className="space-y-4 pl-6">
-                        <div>
-                          <Label htmlFor="scheduledDate">Date d'envoi</Label>
-                          <Input
-                            id="scheduledDate"
-                            type="date"
-                            value={scheduledDate}
-                            onChange={(e) => setScheduledDate(e.target.value)}
-                            min={new Date().toISOString().split("T")[0]}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="scheduledTime">Heure d'envoi</Label>
-                          <Input
-                            id="scheduledTime"
-                            type="time"
-                            value={scheduledTime}
-                            onChange={(e) => setScheduledTime(e.target.value)}
-                          />
-                        </div>
-                      </div>
+                  <form.AppField
+                    name="campaignName"
+                    children={(field) => (
+                      <>
+                        <field.InputField
+                          label="Nom de la campagne"
+                          placeholder="Ma super campagne 2024"
+                        />
+                      </>
                     )}
-                  </div>
+                  />
 
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-800 mb-2">
-                        💡 Conseils d'envoi
-                      </h4>
-                      <ul className="text-sm text-blue-700 space-y-1">
-                        <li>• Mardi-Jeudi : meilleurs jours</li>
-                        <li>• 10h-11h ou 14h-15h : horaires optimaux</li>
-                        <li>• Évitez lundi matin et vendredi après-midi</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Intégrations */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5 text-green-500" />
-                  <h3 className="text-lg font-semibold">Intégrations</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Plateforme d'envoi</Label>
-                  <Select
-                    value={selectedIntegration}
-                    onValueChange={setSelectedIntegration}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choisir une plateforme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(integrationOptionsFromAPI).map(
-                        ([key, integration]) => (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            disabled={
-                              integration.premium &&
-                              !permissions.data?.isPremium
-                            }
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span>{integration.label}</span>
+                  <form.AppField name="campaignType">
+                    {(field) => (
+                      <field.SelectField
+                        label="Type de campagne"
+                        placeholder="Sélectionnez un type"
+                        options={Object.entries(campaignTypesFromAPI).map(
+                          ([key, lang]) => ({
+                            label: (
                               <div className="flex items-center space-x-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {integration.setupCost} crédits
-                                </Badge>
-                                {integration.premium && (
+                                <span>{lang.label}</span>
+                                {lang.premium && (
                                   <Badge
                                     variant="secondary"
                                     className="bg-amber-100 text-amber-700 text-xs"
@@ -846,231 +691,567 @@ export default function EmailCampaignModule({
                                   </Badge>
                                 )}
                               </div>
-                            </div>
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
+                            ),
+                            value: key,
+                            // disabled:
+                            //   type.premium && !permissions.data?.isPremium,
+                          })
+                        )}
+                      />
+                    )}
+                  </form.AppField>
+                </div>
 
-                  {selectedIntegration && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-green-800">
-                          {
-                            integrationOptionsFromAPI[selectedIntegration]
-                              ?.label
-                          }{" "}
-                          sélectionné
-                        </span>
-                      </div>
-                      <p className="text-sm text-green-700">
-                        Coût d'installation :{" "}
-                        {
-                          integrationOptionsFromAPI[selectedIntegration]
-                            ?.setupCost
-                        }{" "}
-                        crédits
-                      </p>
-                      <p className="text-xs text-green-600 mt-1">
-                        Coût mensuel :{" "}
-                        {
-                          integrationOptionsFromAPI[selectedIntegration]
-                            ?.monthlyCost
-                        }{" "}
-                        crédits/mois
-                      </p>
+                <form.AppField name="campaignObjective">
+                  {(field) => (
+                    <div className="space-y-4">
+                      <field.TextareaField
+                        id="campaignObjective"
+                        label="Objectif de la campagne"
+                        placeholder="Décrivez l'objectif principal de votre campagne..."
+                        textareaClassName="min-h-[100px]"
+                      />
                     </div>
                   )}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-6">
-              {/* Tracking et métriques */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-blue-500" />
-                  <h3 className="text-lg font-semibold">
-                    Tracking et métriques
-                  </h3>
-                </div>
+                </form.AppField>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="enableTracking"
-                        checked={enableTracking}
-                        onCheckedChange={(checked) =>
-                          setEnableTracking(checked == true)
-                        }
-                      />
-                      <Label htmlFor="enableTracking">
-                        Activer le tracking
-                      </Label>
-                    </div>
-
-                    {enableTracking && (
-                      <div className="space-y-4 pl-6">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="trackOpens"
-                            checked={trackOpens}
-                            onCheckedChange={(checked) =>
-                              setTrackOpens(checked == true)
-                            }
-                          />
-                          <Label htmlFor="trackOpens">Taux d'ouverture</Label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="trackClicks"
-                            checked={trackClicks}
-                            onCheckedChange={(checked) =>
-                              setTrackClicks(checked == true)
-                            }
-                          />
-                          <Label htmlFor="trackClicks">Taux de clic</Label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableConversionTracking"
-                            checked={enableConversionTracking}
-                            onCheckedChange={(checked) =>
-                              setEnableConversionTracking(checked == true)
-                            }
-                            disabled={!permissions.data?.isPremium}
-                          />
-                          <Label htmlFor="enableConversionTracking">
-                            Tracking conversions
-                          </Label>
-                          {!permissions.data?.isPremium && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-amber-100 text-amber-700 text-xs"
-                            >
-                              <Crown className="h-3 w-3 mr-1" />
-                              Premium
-                            </Badge>
+                    <form.AppField name="audienceType">
+                      {(field) => (
+                        <field.SelectField
+                          label="Type d'audience"
+                          options={Object.entries(audienceTypesFromAPI).map(
+                            ([key, audience]) => ({
+                              label: (
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{audience.label}</span>
+                                  {audience.premium && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-amber-100 text-amber-700 text-xs ml-2"
+                                    >
+                                      <Crown className="h-3 w-3 mr-1" />
+                                      Premium
+                                    </Badge>
+                                  )}
+                                </div>
+                              ),
+                              value: key,
+                              disabled:
+                                audience.premium &&
+                                !permissions.data?.isPremium,
+                            })
                           )}
-                        </div>
-                      </div>
-                    )}
+                        />
+                      )}
+                    </form.AppField>
                   </div>
 
                   <div className="space-y-4">
-                    {enableTracking && (
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h4 className="font-medium text-blue-800 mb-2">
-                          📈 Métriques suivies
-                        </h4>
-                        <ul className="text-sm text-blue-700 space-y-1">
-                          {trackOpens && <li>• Taux d'ouverture</li>}
-                          {trackClicks && <li>• Taux de clic</li>}
-                          {enableConversionTracking && (
-                            <li>• Conversions et ROI</li>
-                          )}
-                          <li>• Désinscriptions</li>
-                          <li>• Partages sociaux</li>
-                        </ul>
-                      </div>
-                    )}
+                    <form.AppField name="audienceSize">
+                      {(field) => (
+                        <div>
+                          <field.InputField
+                            label="Taille de l'audience"
+                            type="number"
+                            min={1}
+                            max={permissions.data?.isPremium ? 100000 : 10000}
+                            className="w-32"
+                          />
+                        </div>
+                      )}
+                    </form.AppField>
+                    <span className="text-sm text-muted-foreground">
+                      contacts (max:{" "}
+                      {permissions.data?.isPremium ? "100K" : "10K"})
+                    </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Segmentation audience */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-green-500" />
-                  <h3 className="text-lg font-semibold">
-                    Segmentation audience
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-lg">
-                      <h4 className="font-medium mb-3">
-                        Répartition par appareil
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Smartphone className="h-4 w-4 text-blue-500" />
-                            <span className="text-sm">Mobile</span>
-                          </div>
-                          <span className="text-sm font-medium">65%</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Monitor className="h-4 w-4 text-green-500" />
-                            <span className="text-sm">Desktop</span>
-                          </div>
-                          <span className="text-sm font-medium">35%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-lg">
-                      <h4 className="font-medium mb-3">Engagement prévu</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Très engagés</span>
-                          <Badge variant="default" className="bg-green-600">
-                            {Math.round(audienceSize * 0.15).toLocaleString()}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Moyennement engagés</span>
-                          <Badge variant="secondary">
-                            {Math.round(audienceSize * 0.35).toLocaleString()}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Peu engagés</span>
-                          <Badge variant="outline">
-                            {Math.round(audienceSize * 0.5).toLocaleString()}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Optimisations recommandées */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-orange-500" />
-                  <h3 className="text-lg font-semibold">
-                    Optimisations recommandées
-                  </h3>
                 </div>
 
                 <div className="space-y-4">
-                  {audienceType === "allSubscribers" && (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Filter className="h-4 w-4 text-yellow-600" />
-                        <span className="font-medium text-yellow-800">
-                          Segmenter l'audience
-                        </span>
-                      </div>
-                      <p className="text-sm text-yellow-700">
-                        La segmentation peut augmenter les taux de clic de +25%.
-                      </p>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <Label>Messages clés à transmettre</Label>
+                    <form.Subscribe
+                      selector={(s) => ({ keyMessages: s.values.keyMessages })}
+                    >
+                      {(values) => {
+                        const kms = (values.keyMessages || []) as string[];
+                        const validCount = kms.filter((m) => m?.trim()).length;
+                        return (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-muted-foreground">
+                              {validCount}/5
+                            </span>
+                            <Button
+                              onClick={addKeyMessage}
+                              disabled={(kms.length || 0) >= 5}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Ajouter
+                            </Button>
+                          </div>
+                        );
+                      }}
+                    </form.Subscribe>
+                  </div>
+
+                  <div className="space-y-3">
+                    <form.Subscribe
+                      selector={(s) => ({ keyMessages: s.values.keyMessages })}
+                    >
+                      {({ keyMessages }) =>
+                        (keyMessages || []).map((_, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
+                            <div className="flex-1">
+                              <form.AppField name={`keyMessages[${index}]`}>
+                                {(field) => (
+                                  <field.InputField
+                                    label={`Message ${index + 1}`}
+                                    placeholder={`Message ${index + 1}: Ex: Nouveau produit révolutionnaire`}
+                                  />
+                                )}
+                              </form.AppField>
+                            </div>
+                            {(keyMessages || []).length > 1 && (
+                              <Button
+                                onClick={() => removeKeyMessage(index)}
+                                variant="destructive-outline"
+                                size="sm"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))
+                      }
+                    </form.Subscribe>
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
+
+              <TabsContent value="automation" className="space-y-6">
+                {/* Planning et envoi */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5 text-blue-500" />
+                    <h3 className="text-lg font-semibold">Planning et envoi</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <form.Subscribe
+                        selector={(s) => ({
+                          sendImmediately: s.values.sendImmediately,
+                        })}
+                      >
+                        {({ sendImmediately }) => (
+                          <>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="sendImmediately"
+                                checked={sendImmediately}
+                                onCheckedChange={(checked) =>
+                                  form.setFieldValue(
+                                    "sendImmediately",
+                                    checked == true
+                                  )
+                                }
+                              />
+                              <Label htmlFor="sendImmediately">
+                                Envoyer immédiatement
+                              </Label>
+                            </div>
+
+                            {!sendImmediately && (
+                              <div className="space-y-4 pl-6">
+                                <div>
+                                  <form.AppField name="scheduledDate">
+                                    {(field) => (
+                                      <field.InputField
+                                        label="Date d'envoi"
+                                        type="date"
+                                        min={
+                                          new Date().toISOString().split("T")[0]
+                                        }
+                                      />
+                                    )}
+                                  </form.AppField>
+                                </div>
+                                <div>
+                                  <form.AppField name="scheduledTime">
+                                    {(field) => (
+                                      <field.InputField
+                                        label="Heure d'envoi"
+                                        type="time"
+                                      />
+                                    )}
+                                  </form.AppField>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </form.Subscribe>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 className="font-medium text-blue-800 mb-2">
+                          💡 Conseils d'envoi
+                        </h4>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                          <li>• Mardi-Jeudi : meilleurs jours</li>
+                          <li>• 10h-11h ou 14h-15h : horaires optimaux</li>
+                          <li>• Évitez lundi matin et vendredi après-midi</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Intégrations */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <Settings className="h-5 w-5 text-green-500" />
+                    <h3 className="text-lg font-semibold">Intégrations</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <form.AppField name="selectedIntegration">
+                      {(field) => (
+                        <field.SelectField
+                          label="Plateforme d'envoi"
+                          options={Object.entries(
+                            integrationOptionsFromAPI
+                          ).map(([key, integration]) => ({
+                            label: (
+                              <div className="flex items-center justify-between w-full">
+                                <span>{integration.label}</span>
+                                <div className="flex items-center space-x-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {integration.setupCost} crédits
+                                  </Badge>
+                                  {integration.premium && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-amber-100 text-amber-700 text-xs"
+                                    >
+                                      <Crown className="h-3 w-3 mr-1" />
+                                      Premium
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ),
+                            value: key,
+                            disabled:
+                              integration.premium &&
+                              !permissions.data?.isPremium,
+                          }))}
+                        />
+                      )}
+                    </form.AppField>
+
+                    <form.Subscribe
+                      selector={(s) => ({
+                        selectedIntegration: s.values.selectedIntegration,
+                      })}
+                    >
+                      {({ selectedIntegration }) =>
+                        selectedIntegration ? (
+                          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="font-medium text-green-800">
+                                {
+                                  integrationOptionsFromAPI[
+                                    selectedIntegration ?? ""
+                                  ]?.label
+                                }{" "}
+                                sélectionné
+                              </span>
+                            </div>
+                            <p className="text-sm text-green-700">
+                              Coût d'installation :{" "}
+                              {
+                                integrationOptionsFromAPI[
+                                  selectedIntegration ?? ""
+                                ]?.setupCost
+                              }{" "}
+                              crédits
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                              Coût mensuel :{" "}
+                              {
+                                integrationOptionsFromAPI[
+                                  selectedIntegration ?? ""
+                                ]?.monthlyCost
+                              }{" "}
+                              crédits/mois
+                            </p>
+                          </div>
+                        ) : null
+                      }
+                    </form.Subscribe>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-6">
+                {/* Tracking et métriques */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-blue-500" />
+                    <h3 className="text-lg font-semibold">
+                      Tracking et métriques
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form.Subscribe
+                      selector={(s) => ({
+                        enableTracking: s.values.enableTracking,
+                        trackOpens: s.values.trackOpens,
+                        trackClicks: s.values.trackClicks,
+                        enableConversionTracking:
+                          s.values.enableConversionTracking,
+                      })}
+                    >
+                      {({
+                        enableTracking,
+                        trackOpens,
+                        trackClicks,
+                        enableConversionTracking,
+                      }) => (
+                        <>
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="enableTracking"
+                                checked={enableTracking}
+                                onCheckedChange={(checked) =>
+                                  form.setFieldValue(
+                                    "enableTracking",
+                                    checked == true
+                                  )
+                                }
+                              />
+                              <Label htmlFor="enableTracking">
+                                Activer le tracking
+                              </Label>
+                            </div>
+
+                            {enableTracking && (
+                              <div className="space-y-4 pl-6">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="trackOpens"
+                                    checked={trackOpens}
+                                    onCheckedChange={(checked) =>
+                                      form.setFieldValue(
+                                        "trackOpens",
+                                        checked == true
+                                      )
+                                    }
+                                  />
+                                  <Label htmlFor="trackOpens">
+                                    Taux d'ouverture
+                                  </Label>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="trackClicks"
+                                    checked={trackClicks}
+                                    onCheckedChange={(checked) =>
+                                      form.setFieldValue(
+                                        "trackClicks",
+                                        checked == true
+                                      )
+                                    }
+                                  />
+                                  <Label htmlFor="trackClicks">
+                                    Taux de clic
+                                  </Label>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="enableConversionTracking"
+                                    checked={enableConversionTracking}
+                                    onCheckedChange={(checked) =>
+                                      form.setFieldValue(
+                                        "enableConversionTracking",
+                                        checked == true
+                                      )
+                                    }
+                                    disabled={!permissions.data?.isPremium}
+                                  />
+                                  <Label htmlFor="enableConversionTracking">
+                                    Tracking conversions
+                                  </Label>
+                                  {!permissions.data?.isPremium && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-amber-100 text-amber-700 text-xs"
+                                    >
+                                      <Crown className="h-3 w-3 mr-1" />
+                                      Premium
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            {enableTracking && (
+                              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <h4 className="font-medium text-blue-800 mb-2">
+                                  📈 Métriques suivies
+                                </h4>
+                                <ul className="text-sm text-blue-700 space-y-1">
+                                  {trackOpens && <li>• Taux d'ouverture</li>}
+                                  {trackClicks && <li>• Taux de clic</li>}
+                                  {enableConversionTracking && (
+                                    <li>• Conversions et ROI</li>
+                                  )}
+                                  <li>• Désinscriptions</li>
+                                  <li>• Partages sociaux</li>
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </form.Subscribe>
+                  </div>
+                </div>
+
+                {/* Segmentation audience */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5 text-green-500" />
+                    <h3 className="text-lg font-semibold">
+                      Segmentation audience
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-3">
+                          Répartition par appareil
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Smartphone className="h-4 w-4 text-blue-500" />
+                              <span className="text-sm">Mobile</span>
+                            </div>
+                            <span className="text-sm font-medium">65%</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Monitor className="h-4 w-4 text-green-500" />
+                              <span className="text-sm">Desktop</span>
+                            </div>
+                            <span className="text-sm font-medium">35%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-3">Engagement prévu</h4>
+                        <div className="space-y-3">
+                          <form.Subscribe
+                            selector={(s) => ({
+                              audienceSize: s.values.audienceSize,
+                            })}
+                          >
+                            {({ audienceSize }) => (
+                              <>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm">Très engagés</span>
+                                  <Badge
+                                    variant="default"
+                                    className="bg-green-600"
+                                  >
+                                    {Math.round(
+                                      (audienceSize || 0) * 0.15
+                                    ).toLocaleString()}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm">
+                                    Moyennement engagés
+                                  </span>
+                                  <Badge variant="secondary">
+                                    {Math.round(
+                                      (audienceSize || 0) * 0.35
+                                    ).toLocaleString()}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm">Peu engagés</span>
+                                  <Badge variant="outline">
+                                    {Math.round(
+                                      (audienceSize || 0) * 0.5
+                                    ).toLocaleString()}
+                                  </Badge>
+                                </div>
+                              </>
+                            )}
+                          </form.Subscribe>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optimisations recommandées */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-orange-500" />
+                    <h3 className="text-lg font-semibold">
+                      Optimisations recommandées
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <form.Subscribe
+                      selector={(s) => ({
+                        audienceType: s.values.audienceType,
+                      })}
+                    >
+                      {({ audienceType }) =>
+                        audienceType === "allSubscribers" ? (
+                          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Filter className="h-4 w-4 text-yellow-600" />
+                              <span className="font-medium text-yellow-800">
+                                Segmenter l'audience
+                              </span>
+                            </div>
+                            <p className="text-sm text-yellow-700">
+                              La segmentation peut augmenter les taux de clic de
+                              +25%.
+                            </p>
+                          </div>
+                        ) : null
+                      }
+                    </form.Subscribe>
+                  </div>
+                </div>
+              </TabsContent>
+            </form>
           </Tabs>
 
           <div className="space-y-4">
