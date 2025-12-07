@@ -55,7 +55,7 @@ export const tootltipVariants = cva("", {
       ghost: "bg-primary text-accent-foreground fill-primary",
       link: "bg-primary text-accent-foreground fill-primary",
       success:
-        "text-white bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500",
+        "text-white bg-green-500 hover:bg-green-600 fill-green-500 dark:bg-green-600 dark:hover:bg-green-500",
     },
   },
   defaultVariants: {

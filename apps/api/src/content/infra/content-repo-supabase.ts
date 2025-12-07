@@ -481,18 +481,18 @@ export class ContentRepoSupabase implements ContentRepo {
         .eq("content_id", params.contentId)
         .select(
           `
-          *,
-          approver:profiles(
-            id,
-            full_name,
-            email
-          )
-        `
+        *,
+        approver:profiles!content_approvals_approver_id_fkey (
+          id,
+          full_name,
+          email
+        )
+      `
         )
         .maybeSingle();
 
       if (error) {
-        this.logger.error("[getApprovalHistory] failed", error, {
+        this.logger.error("[updateContentApproval] failed", error, {
           id: params.contentId,
         });
         return {

@@ -1,8 +1,12 @@
 import { buildUseCase } from "src/lib/use-case-builder";
 import { z } from "zod";
 import { ContentSchema } from "../domain/content";
+import { deepMerge } from "@oppsys/shared";
 
-export const UpdateContentBody = ContentSchema.partial();
+export const UpdateContentBody = ContentSchema.partial().omit({
+  userId: true,
+  moduleId: true,
+});
 
 export const UpdateContentInput = z.object({
   id: z.string(),
@@ -16,15 +20,25 @@ export const updateContentUseCase = buildUseCase()
     const { id, userId, updateData } = input;
     const contentResult = await ctx.contentRepo.getById({ id, userId });
     if (!contentResult.success) return contentResult;
+    if (!contentResult.data) {
+      return {
+        success: false,
+        error: new Error("Content not found"),
+        kind: "NOT_FOUND",
+      } as const;
+    }
     const oldMetadata = contentResult.data?.metadata ?? {};
     const newMetadata = updateData?.metadata ?? {};
+    const updateDataMerged = deepMerge(contentResult.data, {
+      ...updateData,
+      metadata: { ...oldMetadata, ...newMetadata },
+    });
+    const { modules, ...updateDataClean } = updateDataMerged;
+
     const result = await ctx.contentRepo.update({
       id,
       userId,
-      updateData: {
-        ...updateData,
-        metadata: { ...oldMetadata, ...newMetadata },
-      },
+      updateData: updateDataClean,
     });
     return result;
   });

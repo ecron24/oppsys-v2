@@ -354,7 +354,7 @@ export default function ContentPage() {
                     originalStatus: selectedContent.status,
                   };
 
-                  processDecisionMutation.mutateAsync({
+                  await processDecisionMutation.mutateAsync({
                     content: selectedContent,
                     user,
                     approved: true,
@@ -365,6 +365,7 @@ export default function ContentPage() {
 
                 setSelectedContent(null);
                 setApprovalLoading(false);
+                toast.warning("Publication automatique non encore implémentée");
 
                 // FIXME: it doesn't exist
                 // const response = await honoClient.api.content[":id"][
