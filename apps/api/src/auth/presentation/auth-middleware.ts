@@ -48,7 +48,6 @@ export const authenticateToken = (
     try {
       const userResult = await ctx.authRepo.getUserByToken(token);
       if (!userResult.success) {
-        ctx.logger.error("Token invalide:", userResult.error, { token });
         return c.json({ success: false, error: "Invalid token" }, 403);
       }
       userId = userResult.data.id;

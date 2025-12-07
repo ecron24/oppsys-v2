@@ -121,17 +121,11 @@ export class AuthRepoSupabase implements AuthRepo {
     return await tryCatch(async () => {
       const { data, error } = await this.supabase.auth.getUser(token);
       if (error) {
-        this.logger.error("getUserByToken error:", error, { token });
+        this.logger.error("getUserByToken INVALID_TOKEN:", error, { token });
         return { success: false, error, kind: "INVALID_TOKEN" } as const;
       }
-      const user = data?.user;
-      if (!user || !user.id) {
-        return {
-          success: false,
-          error: new Error("User not found from token"),
-          kind: "INVALID_TOKEN",
-        } as const;
-      }
+      const user = data.user;
+
       return { success: true, data: { id: user.id } } as const;
     });
   }

@@ -91,33 +91,36 @@ app.get("/", async (c) => {
 // api routes
 app.route("/", apiRouter);
 
-app.get(
-  "/openapi",
-  openAPIRouteHandler(app, {
-    documentation: {
-      info: {
-        title: "OppsYs API",
-        version: "1.0.0",
-        description: "Greeting API",
-      },
-      servers: [
-        {
-          url: `http://localhost:${env.API_PORT}`,
-          description: "Local Server",
+if (env.NODE_ENV == "dev") {
+  app.get(
+    "/openapi",
+    openAPIRouteHandler(app, {
+      documentation: {
+        info: {
+          title: "OppsYs API",
+          version: "1.0.0",
+          description: "Greeting API",
         },
-      ],
-    },
-  })
-);
+        servers: [
+          {
+            url: `http://localhost:${env.API_PORT}`,
+            description: "Local Server",
+          },
+        ],
+      },
+    })
+  );
 
-app.get("/ui", swaggerUI({ url: "/openapi" }));
+  app.get("/ui", swaggerUI({ url: "/openapi" }));
+}
 
 app.notFound((c) => {
+  logger.warn(`Not found: ${c.req.method} :: ${c.req.url}`);
   return c.json({ error: "Not found" }, 404);
 });
 
 app.onError((error, c) => {
-  console.error("Interval server error", error);
+  logger.error("Interval server error", error);
   if (error instanceof HTTPException) {
     return c.json({ error: error.message }, error.status);
   }
