@@ -4,7 +4,7 @@ import { PageLoader } from "../loading";
 import { Navigate } from "react-router";
 import { routes } from "@/routes";
 
-export function GuestRoute({ children }: GuestRouteProps) {
+export default function GuestRoute({ children }: GuestRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {

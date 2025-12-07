@@ -1,11 +1,10 @@
 import { createBrowserRouter } from "react-router";
 import { RouterProvider as RouterDomProvider } from "react-router/dom";
-import { AuthenticatedRoute } from "./guard/authenticated-route";
 import { routes } from "@/routes";
-import { GuestRoute } from "./guard/guest-route";
 import { lazy } from "react";
-import ModuleIdPage from "@/app/(sidebar)/modules/[id]/module-id-page";
 
+const AuthenticatedRoute = lazy(() => import("./guard/authenticated-route"));
+const GuestRoute = lazy(() => import("./guard/guest-route"));
 const NotFound = lazy(() => import("@/app/not-found"));
 const ProfilePage = lazy(() => import("@/app/(sidebar)/profile/profile-page"));
 const DashboardPage = lazy(
@@ -31,6 +30,9 @@ const GoogleDataPolicyPage = lazy(
 );
 const CalendarPage = lazy(
   () => import("@/app/(sidebar)/calendar/calendar-page")
+);
+const ModuleIdPage = lazy(
+  () => import("@/app/(sidebar)/modules/[id]/module-id-page")
 );
 
 const router = createBrowserRouter([

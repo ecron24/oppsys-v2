@@ -8,7 +8,7 @@ import { H2, P } from "@oppsys/ui/components/typography";
 import { PageLoader } from "../loading";
 import { routes } from "@/routes";
 
-export function AuthenticatedRoute({
+export default function AuthenticatedRoute({
   children,
   requiredRole,
 }: AuthenticatedRouteProps) {
