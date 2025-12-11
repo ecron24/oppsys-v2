@@ -35,7 +35,9 @@ export function TextareaField({
 
   return (
     <Field data-invalid={isInvalid} className={cn(className)}>
-      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>
+        {label} {required && "*"}
+      </FieldLabel>
       <InputGroup>
         <InputGroupTextarea
           {...inputProps}

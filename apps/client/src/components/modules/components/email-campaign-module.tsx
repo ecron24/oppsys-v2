@@ -634,27 +634,26 @@ export default function EmailCampaignModule({
                         )}
                       </form.Subscribe>
                     </div>
-
-                    <form.AppForm>
-                      <form.SubmitButton
-                        className="w-full"
-                        size="lg"
-                        disabled={loading || !hasEnoughCredits(currentCost())}
-                        isLoading={loading}
-                      >
-                        {!loading && (
-                          <div className="flex items-center space-x-2">
-                            <Send className="h-4 w-4" />
-                            <span>
-                              🚀 Créer la campagne ({currentCost()} crédits)
-                            </span>
-                          </div>
-                        )}
-                        {loading && <LoadingSpinner />}
-                      </form.SubmitButton>
-                    </form.AppForm>
                   </div>
                 )}
+                <form.AppForm>
+                  <form.SubmitButton
+                    className="w-full"
+                    size="lg"
+                    disabled={loading || !hasEnoughCredits(currentCost())}
+                    isLoading={loading}
+                  >
+                    {!loading && (
+                      <div className="flex items-center space-x-2">
+                        <Send className="h-4 w-4" />
+                        <span>
+                          🚀 Créer la campagne ({currentCost()} crédits)
+                        </span>
+                      </div>
+                    )}
+                    {loading && <LoadingSpinner />}
+                  </form.SubmitButton>
+                </form.AppForm>
               </TabsContent>
 
               <TabsContent value="content" className="space-y-6">
@@ -666,6 +665,7 @@ export default function EmailCampaignModule({
                         <field.InputField
                           label="Nom de la campagne"
                           placeholder="Ma super campagne 2024"
+                          required
                         />
                       </>
                     )}

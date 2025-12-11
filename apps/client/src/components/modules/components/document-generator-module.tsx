@@ -515,8 +515,9 @@ export default function DocumentGeneratorModule({
                     children={(field) => (
                       <>
                         <field.InputField
-                          label="Titre du document *"
+                          label="Titre du document"
                           placeholder="Ex: Proposition de services marketing digital"
+                          required
                           maxLength={150}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
@@ -554,9 +555,10 @@ export default function DocumentGeneratorModule({
                 children={(field) => (
                   <>
                     <field.TextareaField
-                      label="Description du contexte *"
+                      label="Description du contexte"
                       placeholder="Décrivez le contexte, l'objectif du document..."
                       textareaClassName="min-h-[80px]"
+                      required
                       maxLength={800}
                     />
                   </>
@@ -601,8 +603,9 @@ export default function DocumentGeneratorModule({
                       <form.AppField name="companyName">
                         {(field) => (
                           <field.InputField
-                            label="Nom de l'entreprise *"
+                            label="Nom de l'entreprise"
                             placeholder="Votre Entreprise SARL"
+                            required
                           />
                         )}
                       </form.AppField>

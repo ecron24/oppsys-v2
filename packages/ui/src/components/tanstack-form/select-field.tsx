@@ -35,7 +35,9 @@ export function SelectField({
 
   return (
     <Field data-invalid={isInvalid} className={cn(className)}>
-      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>
+        {label} {required && "*"}
+      </FieldLabel>
       <Select
         {...selectProps}
         value={field.state.value}
