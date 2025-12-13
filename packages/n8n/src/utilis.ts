@@ -3,7 +3,10 @@ import type { N8nInput, N8nModule, N8nResult } from "./n8n-type";
 export function extractMessageFromN8n(result: N8nResult) {
   let extractedMessage = "";
 
-  if (result.module_type == "ai-writer") {
+  if (
+    result.module_type == "ai-writer" ||
+    result.module_type == "email-campaign"
+  ) {
     return result.output.question;
   }
 

@@ -729,28 +729,28 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
                     if (response.data.data.output) {
                       setSubject(
                         response.data.data.output.result_partial?.subject?.toString() ||
-                          ""
+                          subject
                       );
                       setKeywords(
                         response.data.data.output.result_partial?.keywords?.toString() ||
-                          ""
+                          keywords
                       );
                       setTargetAudience(
                         response.data.data.output.result_partial?.audience?.toString() ||
-                          ""
+                          targetAudience
                       );
                       setSeoLanguage(
                         response.data.data.output.result_partial?.language?.toString() ||
-                          ""
+                          seoLanguage
                       );
                       // TODO: tell to the model what are length existed, to avoid length not existing
                       setLength(
                         response.data.data.output.result_partial?.length?.toString() ||
-                          ""
+                          length
                       );
                       setTone(
                         response.data.data.output.result_partial?.tone?.toString() ||
-                          ""
+                          tone
                       );
                       setChatState(response.data.data.output.state);
                     }

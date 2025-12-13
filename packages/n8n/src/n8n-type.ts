@@ -32,7 +32,8 @@ export type N8nResult =
     }
   | AiWriterOutput
   | DocumentGenerator
-  | SocialFactory;
+  | SocialFactory
+  | EmailCampaignOutput;
 
 export type DocumentGenerator = {
   module_type: "document-generator";
@@ -74,6 +75,46 @@ export type AiWriterOutput = {
       userPlan: string | null;
     } | null;
 
+    errors: string[] | null;
+  };
+};
+
+export type EmailCampaignOutput = {
+  module_type: "email-campaign";
+  output: {
+    state: "missing" | "ready_for_confirmation" | "confirmed";
+    missing_field: string | null;
+    question: string | null;
+
+    result_partial: {
+      campaign: {
+        name: string | null;
+        objective: string | null;
+        type: string | null;
+        style: string | null;
+        call_to_action: string | null;
+        key_messages: string[] | null;
+      } | null;
+      audience: {
+        type: string | null;
+        size: number | null;
+      } | null;
+    } | null;
+
+    result: {
+      campaign: {
+        name: string;
+        objective: string;
+        type: string;
+        style: string;
+        call_to_action: string;
+        key_messages: string[];
+      };
+      audience: {
+        type: string;
+        size: number;
+      };
+    } | null;
     errors: string[] | null;
   };
 };

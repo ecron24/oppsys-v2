@@ -152,6 +152,8 @@ export default function EmailCampaignModule({
         content: { chatState: "confirmed" },
       });
 
+      setLoading(false);
+      isSubmitting.current = false;
       if (response.success) {
         setProgress(50);
         setCurrentGenerationStep("Génération en cours en arrière-plan...");
@@ -165,15 +167,15 @@ export default function EmailCampaignModule({
             'Le contenu sera disponible dans "Mon Contenu" dans quelques minutes.',
           duration: 5000,
         });
-
-        setLoading(false);
         setProgress(0);
         setCurrentGenerationStep("");
-        isSubmitting.current = false;
+
         return {
           success: true,
         } as const;
       }
+      setProgress(0);
+      setCurrentGenerationStep("");
       console.error("Erreur du chat du module:", response);
       chatRef.current?.addMessage({
         type: "bot",
@@ -193,8 +195,10 @@ export default function EmailCampaignModule({
     },
   });
   // ✅ ÉTATS PRINCIPAUX - CHAT
-  const [currentStep] = useState(0);
   const [activeTab, setActiveTab] = useState("chat");
+  const [chatState, setChatState] = useState<
+    "missing" | "ready_for_confirmation" | "confirmed"
+  >("missing");
 
   // ✅ RÉFÉRENCES
   const isSubmitting = useRef(false);
@@ -283,14 +287,12 @@ export default function EmailCampaignModule({
         objective: campaignObjective?.trim(),
         type: campaignType,
         style: contentStyle,
+        callToAction: callToAction?.trim(),
+        keyMessages: validKeyMessages,
       },
       audience: {
         type: audienceType,
         size: audienceSize,
-      },
-      content: {
-        callToAction: callToAction?.trim(),
-        keyMessages: validKeyMessages,
       },
       automation: {
         sendImmediately,
@@ -309,13 +311,6 @@ export default function EmailCampaignModule({
         isPremium: permissions.data?.isPremium || false,
         balance: currentBalance || 0,
       },
-      conversation: {
-        currentStep: currentStep,
-        isComplete: currentStep === 999,
-        hasPreConfig: Boolean(
-          campaignObjective?.trim() || (validKeyMessages?.length || 0) > 0
-        ),
-      },
       metadata: {
         sessionId,
         timestamp: new Date().toISOString(),
@@ -332,7 +327,10 @@ export default function EmailCampaignModule({
     const response = await modulesService.chatWithModule(module.slug, {
       sessionId,
       message: params.message,
-      context: { ...buildFullContext(), content: params.content ?? {} },
+      context: {
+        ...buildFullContext(),
+        content: { chatState, ...(params.content || {}) },
+      },
     });
     return response;
   };
@@ -344,15 +342,6 @@ export default function EmailCampaignModule({
     }
     if (!hasEnoughCredits(currentCost())) {
       toast.error("Crédits insuffisants.");
-      return false;
-    }
-
-    // Pour le chat, on est plus flexible sur la validation
-    if (
-      !(form.store.state.values.campaignObjective || "").trim() &&
-      currentStep < 999
-    ) {
-      toast.error("Veuillez terminer la conversation avec l'assistant IA.");
       return false;
     }
 
@@ -533,8 +522,8 @@ export default function EmailCampaignModule({
                     )}
                   </form.Subscribe>
                   <div className="text-gray-500">
-                    Balance: {currentBalance} • Session: {sessionId?.slice(-8)}{" "}
-                    • Étape: {currentStep}
+                    Balance: {currentBalance} • Session:{" "}
+                    {sessionId?.slice(-8)}{" "}
                   </div>
                 </div>
 
@@ -549,15 +538,52 @@ export default function EmailCampaignModule({
                       const outputMessage =
                         response.data.data.outputMessage || "";
                       if (
-                        // response.data.data.module_type == "ai-writer" &&
+                        response.data.data.module_type == "email-campaign" &&
                         outputMessage.length > 0
                       ) {
-                        // TODO: update state after finishing workflow
-                        // placeholder removed
-                        // void setContentStyle;
-                        // void setEmailSubject;
-                        // void setEmailContent;
-                        // void setCallToAction;
+                        const { result_partial } = response.data.data.output;
+                        form.setFieldValue(
+                          "audienceSize",
+                          result_partial?.audience?.size ||
+                            form.store.state.values.audienceSize
+                        );
+                        form.setFieldValue(
+                          "audienceType",
+                          result_partial?.audience?.type ||
+                            form.store.state.values.audienceType
+                        );
+                        form.setFieldValue(
+                          "campaignName",
+                          result_partial?.campaign?.name ||
+                            form.store.state.values.campaignName
+                        );
+                        form.setFieldValue(
+                          "campaignObjective",
+                          result_partial?.campaign?.objective ||
+                            form.store.state.values.campaignObjective
+                        );
+                        form.setFieldValue(
+                          "campaignType",
+                          result_partial?.campaign?.type ||
+                            form.store.state.values.campaignType
+                        );
+                        form.setFieldValue(
+                          "contentStyle",
+                          result_partial?.campaign?.style ||
+                            form.store.state.values.contentStyle
+                        );
+                        form.setFieldValue(
+                          "callToAction",
+                          result_partial?.campaign?.call_to_action ||
+                            form.store.state.values.callToAction
+                        );
+                        form.setFieldValue(
+                          "keyMessages",
+                          result_partial?.campaign?.key_messages ||
+                            form.store.state.values.keyMessages
+                        );
+                        setChatState(response.data.data.output.state);
+
                         return {
                           success: true,
                           data: {
@@ -580,9 +606,9 @@ export default function EmailCampaignModule({
                 />
 
                 {/* Bouton création campagne */}
-                {currentStep === 999 && (
+                {chatState === "ready_for_confirmation" && (
                   <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
                       <h3 className="font-semibold mb-2 text-green-800 flex items-center">
                         <CheckCircle className="h-5 w-5 mr-2" />
                         Configuration terminée !
