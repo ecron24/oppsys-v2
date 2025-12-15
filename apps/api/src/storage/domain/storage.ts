@@ -27,9 +27,29 @@ const TalentAnalyzerSchema = z.object({
   bucket: z.literal("talent-analyzer"),
 });
 
+const TranscriptionFileSchema = z.object({
+  fileName: z.string(),
+  fileType: z.enum([
+    "audio/mpeg",
+    "audio/wav",
+    "audio/mp4",
+    "audio/flac",
+    "video/mp4",
+    "video/mov",
+    "video/avi",
+  ]),
+  fileSize: z
+    .number()
+    .int()
+    .positive()
+    .max(10 * 1024 * 1024), // 10mb
+  bucket: z.literal("transcription-files"),
+});
+
 export const GenerateUploadUrlInputSchema = z.discriminatedUnion("bucket", [
   DocumentsRagSchema,
   TalentAnalyzerSchema,
+  TranscriptionFileSchema,
 ]);
 
 export type GenerateUploadUrlInput = z.infer<

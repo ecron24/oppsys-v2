@@ -647,7 +647,7 @@ export default function SocialFactoryModule({
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full  mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

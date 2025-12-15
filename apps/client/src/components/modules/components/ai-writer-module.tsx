@@ -386,27 +386,12 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
       return;
     }
     toast.warning("Pas encore implémenté");
+
+    // FIXME: just to avoid lint error
+    void setImageOption;
+    void setKeywordLoading;
+    void setGeneratingImage;
     return;
-
-    setKeywordLoading(true);
-    const response = await modulesService.executeModule(module.slug, {
-      input: {
-        action: "seo-research",
-        keyword: seoKeywordResearch.trim(),
-        language: seoLanguage,
-        volume: seoVolume,
-      },
-    });
-
-    setKeywordLoading(false);
-    // if (response.success && response.data?.output.data?.keywords) {
-    //   const keywords = response.data.output.data.keywords as string[];
-    //   setGeneratedKeywords(keywords);
-    //   toast.success(`${keywords.length} keywords found!`);
-    //   return;
-    // }
-    console.error("Keyword research error:", response);
-    toast.error("Error during keyword research");
   };
 
   const handleGenerateImage = useCallback(async () => {
@@ -421,32 +406,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
     }
     toast.warning("Pas encore implémenté");
     return;
-
-    setGeneratingImage(true);
-    const response = await modulesService.executeModule(module.slug, {
-      input: {
-        action: "generate-image",
-        prompt: imagePrompt.trim(),
-        style: imageStyle,
-        count: imageCount,
-      },
-    });
-
-    setGeneratingImage(false);
-    if (response.success) {
-      setImageOption("generate");
-      toast.success("Images generated successfully!");
-      return;
-    }
-    console.error("Image generation error:", response);
-    toast.error("Error during image generation");
-  }, [
-    imagePrompt,
-    imageStyle,
-    imageCount,
-    permissions.data?.isPremium,
-    module.slug,
-  ]);
+  }, [imagePrompt, permissions]);
 
   // // Initialize session on mount
   // useEffect(() => {
@@ -546,7 +506,7 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

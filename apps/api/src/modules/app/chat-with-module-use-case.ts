@@ -4,6 +4,7 @@ import { z } from "zod";
 import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { InsufficientCreditError } from "../domain/exception";
 import { IsoDatetime } from "src/common/common-schema";
+import type { N8nInput } from "@oppsys/n8n";
 
 export const ChatWithModuleBodySchema = z.object({
   sessionId: z.string(),
@@ -58,11 +59,8 @@ export const chatWithModuleUseCase = buildUseCase()
       if (!deductResult.success) return deductResult;
     }
 
-    const chatInput = {
+    const chatInput: N8nInput = {
       ...body,
-      moduleType: params.id,
-      timestamp: new Date().toISOString(),
-      isChatMode: true,
     };
 
     // Create usage record
@@ -133,18 +131,6 @@ export const chatWithModuleUseCase = buildUseCase()
     }
 
     const chatResponse = {
-      // message: executionResult.data?.message,
-      // nextStep:
-      //   executionResult.data?.next_step ||
-      //   executionResult.data?.nextStep ||
-      //   null,
-      // options: (executionResult.data?.options || {}) as Record<string, unknown>,
-      // type: executionResult.data?.type || "text",
-      // context: executionResult.data?.context || {},
-      // isComplete:
-      //   executionResult.data?.is_complete ||
-      //   executionResult.data?.isComplete ||
-      //   false,
       data: executionResult.data,
     };
 

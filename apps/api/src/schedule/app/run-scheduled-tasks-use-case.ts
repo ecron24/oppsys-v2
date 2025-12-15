@@ -1,3 +1,4 @@
+import type { N8nInput } from "@oppsys/n8n";
 import { buildUseCase } from "../../lib/use-case-builder";
 import z from "zod";
 
@@ -28,15 +29,20 @@ export const runScheduledTasksUseCase = buildUseCase()
       // Get module details
       if (!task.modules) return;
       const module = task.modules;
+      const n8nModule = {
+        id: module.id,
+        name: module.name,
+        slug: module.slug,
+        endpoint: module.endpoint,
+        n8nTriggerType: "STANDARD" as const,
+      };
+      const n8nInput: N8nInput = {
+        context: { ...(task.payload || {}) },
+      };
       // Execute workflow
       const resultN8n = await ctx.n8n.executeWorkflow({
-        module: {
-          id: module.id,
-          name: module.name || "",
-          slug: module.slug || "",
-          endpoint: module.endpoint || "",
-        },
-        input: task.payload,
+        module: n8nModule,
+        input: n8nInput,
         userId: task.userId,
         userEmail: task.profiles?.email || "",
       });

@@ -139,7 +139,7 @@ export default function CalendarPage() {
       payload: unknown;
     }) =>
       modulesService.executeModule(moduleSlug, {
-        input: payload as Record<string, unknown>,
+        context: payload as Record<string, unknown>,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduledTasks"] });

@@ -36,11 +36,8 @@ import {
   Mic,
   FileAudio,
   Video,
-  Download,
   Play,
   Pause,
-  Copy,
-  CheckCircle,
   AlertCircle,
   Clock,
   Info,
@@ -52,6 +49,8 @@ import {
 import type { Module } from "../module-types";
 import type { LucideIcon } from "lucide-react";
 import { MODULES_IDS } from "@oppsys/api/client";
+import type { FileStorage } from "@/components/storage/storage-type";
+import { storageService } from "@/components/storage/storage-service";
 
 type Config = Extract<
   Module["config"],
@@ -72,38 +71,6 @@ type TranscriptionOptions = {
   generateSummary: boolean;
   customInstructions: string;
   publishToContent: boolean;
-};
-
-type ValidationResult = {
-  valid: boolean;
-  error?: string;
-};
-
-type FileType = {
-  maxSize: number;
-  formats: string[];
-  cost: number;
-  maxDuration: number;
-  label: string;
-  description: string;
-};
-
-type QualityLevel = {
-  multiplier: number;
-  label: string;
-  accuracy: string;
-};
-
-type Language = {
-  code: string;
-  label: string;
-  flag: string;
-};
-
-type OutputFormat = {
-  value: string;
-  label: string;
-  icon: string;
 };
 
 const ICONS: Record<string, LucideIcon> = {
@@ -133,18 +100,19 @@ export default function TranscriptionModule({
     [config]
   );
   const qualityLevelsFromAPI = useMemo(
-    () => (config?.qualityLevels || {}) as Record<string, QualityLevel>,
+    () => config?.qualityLevels || {},
     [config]
   );
 
   // ÉTATS
   const [transcriptionType, setTranscriptionType] =
     useState<TranscriptionType>("audio");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState<boolean>(false);
+  const [fileUploadProgress, setFileUploadProgress] = useState<number>(0);
+  const [fileStorage, setFileStorage] = useState<FileStorage | null>(null);
   const [language, setLanguage] = useState<string>("auto");
   const [quality, setQuality] = useState<string>("standard");
   const [outputFormat, setOutputFormat] = useState<string>("text");
-  const [fileName, setFileName] = useState<string>("");
   const [options, setOptions] = useState<TranscriptionOptions>({
     speakerDiarization: false,
     removeFillers: true,
@@ -158,12 +126,10 @@ export default function TranscriptionModule({
   const [recordingTime, setRecordingTime] = useState<number>(0);
   const [liveTranscript, setLiveTranscript] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [currentStep, setCurrentStep] = useState<string>("");
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [usageId, setUsageId] = useState<string | null>(null);
 
   // RÉFÉRENCES
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -172,11 +138,10 @@ export default function TranscriptionModule({
 
   // CALCULS DÉRIVÉS
   const currentCost = useMemo<number>(() => {
-    const baseType = typesFromAPI[transcriptionType] as FileType;
+    const baseType = typesFromAPI[transcriptionType];
     if (!baseType) return 0;
     const baseCost = baseType.cost;
-    const qualityMultiplier =
-      (qualityLevelsFromAPI[quality] as QualityLevel)?.multiplier || 1;
+    const qualityMultiplier = qualityLevelsFromAPI[quality]?.multiplier || 1;
     const featuresMultiplier =
       (options.speakerDiarization ? 1.3 : 1) *
       (options.generateSummary ? 1.2 : 1) *
@@ -186,15 +151,13 @@ export default function TranscriptionModule({
 
   // VARIABLES DÉRIVÉES
   const currentBalance = balance || 0;
-  const currentType = (typesFromAPI[transcriptionType] as FileType) || {};
-  const currentQuality = (qualityLevelsFromAPI[quality] as QualityLevel) || {};
+  const currentType = typesFromAPI[transcriptionType] || {};
+  const currentQuality = qualityLevelsFromAPI[quality] || {};
 
   // FONCTIONS DE GESTION
   const handleTranscriptionTypeChange = (newType: TranscriptionType) => {
     setTranscriptionType(newType);
     if (newType === "live") {
-      setUploadedFile(null);
-      setFileName("");
       if (audioPreview) {
         URL.revokeObjectURL(audioPreview);
         setAudioPreview(null);
@@ -202,12 +165,13 @@ export default function TranscriptionModule({
     }
   };
 
-  const validateFile = (file: File): ValidationResult => {
+  const validateFile = (file: File) => {
     if (!file) return { valid: false, error: "Aucun fichier sélectionné" };
-    const { maxSize, formats } = currentType;
+    const { formats } = currentType;
     if (!formats.includes(file.type)) {
       return { valid: false, error: "Format non supporté" };
     }
+    const maxSize = currentType.maxSize || 0;
     if (file.size > maxSize) {
       const maxSizeMB = Math.round(maxSize / (1024 * 1024));
       return {
@@ -218,29 +182,62 @@ export default function TranscriptionModule({
     return { valid: true };
   };
 
-  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files?.length !== 1) {
+      toast.error("Veuillez sélectionner un seul fichier.");
+      return;
+    }
+    const file = files[0];
     if (!file) return;
     const validation = validateFile(file);
     if (!validation.valid) {
       toast.error("Fichier invalide", { description: validation.error });
       return;
     }
-    setUploadedFile(file);
-    setFileName(file.name);
-    if (file.type.startsWith("audio/")) {
-      if (audioPreview) URL.revokeObjectURL(audioPreview);
-      const audioUrl = URL.createObjectURL(file);
-      setAudioPreview(audioUrl);
+    setUploadingFile(true);
+    setFileUploadProgress(0);
+
+    const response = await storageService.generateUrlAndUploadFile(
+      "transcription-files",
+      file
+    );
+
+    if (response.success) {
+      const fileUploaded: FileStorage = {
+        id: `${Date.now()}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        path: response.data.filePath,
+        uploadedAt: new Date().toISOString(),
+      };
+      setFileStorage(fileUploaded);
+
+      toast.success(`Document ajouté: ${file.name}`);
+      setFileUploadProgress(100);
+
+      if (file.type.startsWith("audio/")) {
+        if (audioPreview) URL.revokeObjectURL(audioPreview);
+        const audioUrl = URL.createObjectURL(file);
+        setAudioPreview(audioUrl);
+      }
+      toast.success("Fichier ajouté avec succès");
+      setUploadingFile(false);
+      setFileUploadProgress(0);
+      return;
     }
-    toast.success("Fichier ajouté avec succès");
+
+    setUploadingFile(false);
+    setFileUploadProgress(0);
+    const error = response.error;
+    toast.error(`Erreur pour ${file.name}: ${error}`);
   };
 
   const removeFile = () => {
     if (audioPreview) URL.revokeObjectURL(audioPreview);
-    setUploadedFile(null);
-    setFileName("");
     setAudioPreview(null);
+    setFileStorage(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -270,7 +267,7 @@ export default function TranscriptionModule({
       toast.error("Vous devez être connecté.");
       return false;
     }
-    if (transcriptionType !== "live" && !uploadedFile) {
+    if (transcriptionType !== "live" && !fileStorage) {
       toast.error("Fichier requis.");
       return false;
     }
@@ -292,24 +289,22 @@ export default function TranscriptionModule({
 
     isSubmitting.current = true;
     setLoading(true);
-    setResult(null);
     setCurrentStep("Lancement du processus...");
     setProgress(50);
 
-    const moduleId = module?.slug || "podcast-transcriber";
+    const moduleId = module.slug;
     const apiPayload = {
-      input: {
+      context: {
         transcriptionType,
         language,
         quality,
         outputFormat,
+        file: fileStorage,
         fileName:
-          uploadedFile?.name ||
+          fileStorage?.name ||
           (transcriptionType === "live"
             ? "transcription_en_direct.txt"
             : "fichier_inconnu"),
-        fileSize: uploadedFile?.size,
-        fileType: uploadedFile?.type,
         options: {
           speakerDiarization: options.speakerDiarization,
           removeFillers: options.removeFillers,
@@ -324,56 +319,28 @@ export default function TranscriptionModule({
       },
     };
 
-    try {
-      setCurrentStep("Communication avec le service de transcription...");
-      const response = await modulesService.executeModule(moduleId, apiPayload);
-      if (response.success) {
-        setProgress(100);
-        setCurrentStep("Processus terminé !");
-        toast.success("Transcription lancée !", {
-          description:
-            "Votre transcription sera bientôt prête sur la page 'Mon Contenu'.",
-        });
-        setUsageId(response.data?.usageId || null);
-      } else {
-        throw new Error(response.error || "Une erreur est survenue.");
-      }
-    } catch (error) {
-      console.error("Erreur d'exécution du module:", error);
-      setError((error as Error).message);
-      toast.error(`Échec: ${(error as Error).message}`);
-    } finally {
+    setCurrentStep("Communication avec le service de transcription...");
+    const response = await modulesService.executeModule(moduleId, apiPayload);
+    isSubmitting.current = false;
+
+    if (response.success) {
+      setProgress(100);
+      setCurrentStep("Processus terminé !");
+      toast.success("Transcription lancée !", {
+        description:
+          "Votre transcription sera bientôt prête sur la page 'Mon Contenu'.",
+      });
       setLoading(false);
       setProgress(0);
       setCurrentStep("");
-      isSubmitting.current = false;
+      return;
     }
-  };
-
-  const copyResult = async () => {
-    if (result) {
-      try {
-        await navigator.clipboard.writeText(result);
-        toast.success("Résultat copié");
-      } catch {
-        toast.error("Erreur lors de la copie");
-      }
-    }
-  };
-
-  const downloadResult = () => {
-    if (result) {
-      const blob = new Blob([result], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `transcription-${new Date().getTime()}.${outputFormat === "text" ? "txt" : outputFormat}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Résultat téléchargé");
-    }
+    console.error("Erreur d'exécution du module:", error);
+    setError(response.error);
+    toast.error(`Échec: ${response.error}`);
+    setLoading(false);
+    setProgress(0);
+    setCurrentStep("");
   };
 
   const getIconForType = (key: string): LucideIcon => {
@@ -387,10 +354,8 @@ export default function TranscriptionModule({
     setOptions((prev) => ({ ...prev, [key]: value }));
   };
 
-  console.log("languagesFromAPI", languagesFromAPI);
-
   return (
-    <Card className="w-full max-w-5xl mx-auto">
+    <Card className="w-full mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -453,8 +418,8 @@ export default function TranscriptionModule({
                       key={key}
                       className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
                         transcriptionType === key
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
-                          : "border-border hover:border-blue-500/50"
+                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 dark:bg-blue-900/30 dark:ring-blue-400/25 dark:border-blue-400"
+                          : "border-border hover:border-blue-500/50 dark:border-slate-700 dark:hover:border-blue-400/50 dark:bg-transparent"
                       }`}
                       onClick={() =>
                         handleTranscriptionTypeChange(key as TranscriptionType)
@@ -462,20 +427,20 @@ export default function TranscriptionModule({
                     >
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <IconComponent className="h-4 w-4 text-blue-600" />
-                          <span className="font-medium text-sm">
-                            {(type as FileType).label}
+                          <IconComponent className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <span className="font-medium text-sm text-slate-900 dark:text-slate-100">
+                            {type.label}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {(type as FileType).description}
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">
+                          {type.description}
                         </p>
                         <div className="flex items-center justify-between">
                           <Badge variant="outline" className="text-xs">
-                            {(type as FileType).cost} crédits
+                            {type.cost} crédits
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Max: {(type as FileType).maxDuration} min
+                          <span className="text-xs text-muted-foreground dark:text-muted-foreground">
+                            Max: {type.maxDuration} min
                           </span>
                         </div>
                       </div>
@@ -507,20 +472,32 @@ export default function TranscriptionModule({
                   </Label>
                   <div className="mt-2 text-xs text-muted-foreground">
                     <p>
-                      Taille max: {Math.round(currentType.maxSize / 1048576)}{" "}
-                      MB. Durée max: {currentType.maxDuration} minutes.
+                      Taille max:{" "}
+                      {Math.round((currentType.maxSize || 0) / 1048576)} MB.
+                      Durée max: {currentType.maxDuration} minutes.
                     </p>
                   </div>
                 </div>
-                {uploadedFile && (
+                {uploadingFile && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span>Upload en cours...</span>
+                      <span>{Math.round(fileUploadProgress)}%</span>
+                    </div>
+                    <Progress value={fileUploadProgress} className="h-2" />
+                  </div>
+                )}
+                {fileStorage && (
                   <div className="bg-muted/50 rounded-lg p-4 border">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <FileAudio className="h-8 w-8 text-primary" />
                         <div>
-                          <p className="font-medium text-sm">{fileName}</p>
+                          <p className="font-medium text-sm">
+                            {fileStorage.name}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {(uploadedFile.size / 1048576).toFixed(2)} MB
+                            {(fileStorage.size / 1048576).toFixed(2)} MB
                           </p>
                         </div>
                       </div>
@@ -556,7 +533,7 @@ export default function TranscriptionModule({
                   </SelectTrigger>
                   <SelectContent>
                     {Array.isArray(languagesFromAPI) &&
-                      languagesFromAPI.map((lang: Language) => (
+                      languagesFromAPI.map((lang) => (
                         <SelectItem key={lang.code} value={lang.code}>
                           <span>{lang.flag}</span> {lang.label}
                         </SelectItem>
@@ -574,9 +551,9 @@ export default function TranscriptionModule({
                     {Object.entries(qualityLevelsFromAPI).map(
                       ([key, level]) => (
                         <SelectItem key={key} value={key}>
-                          <div>{(level as QualityLevel).label}</div>
+                          <div>{level.label}</div>
                           <div className="text-xs text-muted-foreground">
-                            {(level as QualityLevel).accuracy}
+                            {level.accuracy}
                           </div>
                         </SelectItem>
                       )
@@ -591,7 +568,7 @@ export default function TranscriptionModule({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {outputFormatsFromAPI.map((format: OutputFormat) => (
+                    {outputFormatsFromAPI.map((format) => (
                       <SelectItem key={format.value} value={format.value}>
                         {format.icon} {format.label}
                       </SelectItem>
@@ -769,9 +746,8 @@ export default function TranscriptionModule({
               <div>
                 <strong>Format :</strong>{" "}
                 {
-                  outputFormatsFromAPI.find(
-                    (f: OutputFormat) => f.value === outputFormat
-                  )?.label
+                  outputFormatsFromAPI.find((f) => f.value === outputFormat)
+                    ?.label
                 }
               </div>
               <div>
@@ -798,7 +774,7 @@ export default function TranscriptionModule({
           onClick={handleSubmit}
           disabled={
             loading ||
-            (transcriptionType !== "live" && !uploadedFile) ||
+            (transcriptionType !== "live" && !fileStorage) ||
             (transcriptionType === "live" && !liveTranscript.trim()) ||
             !hasEnoughCredits(currentCost)
           }
@@ -817,40 +793,6 @@ export default function TranscriptionModule({
             </div>
           )}
         </Button>
-
-        {result && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <Label>Transcription terminée</Label>
-              </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={copyResult}>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copier
-                </Button>
-                <Button variant="outline" size="sm" onClick={downloadResult}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Télécharger
-                </Button>
-              </div>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-4 border max-h-96 overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-sm font-mono">
-                {result}
-              </pre>
-            </div>
-            {usageId && (
-              <p className="text-xs text-muted-foreground">
-                ID d'usage: {usageId}
-              </p>
-            )}
-            <Button variant="outline" onClick={() => setResult(null)} size="sm">
-              Fermer
-            </Button>
-          </div>
-        )}
 
         {!hasEnoughCredits(currentCost) && currentCost > 0 && (
           <div className="flex items-start space-x-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">

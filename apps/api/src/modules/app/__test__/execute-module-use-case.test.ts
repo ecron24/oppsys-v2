@@ -23,8 +23,7 @@ const makeModule = (overrides?: Partial<Module>): Module => ({
 });
 
 const DEFAULT_BODY = {
-  input: {},
-  saveOutput: false,
+  context: {},
   timeout: 30000,
   priority: "normal" as const,
 };
@@ -385,57 +384,12 @@ describe("executeModuleUseCase", () => {
 
     const res = await executeModuleUseCase(ctx, {
       params: { id: "mod-slug-1" },
-      body: { ...DEFAULT_BODY, saveOutput: true },
+      body: { ...DEFAULT_BODY },
       user: { id: "u1", email: "u@example.com", role: "client" },
     });
 
     expect(moduleRepo.updateUsage).toHaveBeenCalled();
     expect(notificationRepo.create).toHaveBeenCalled();
-    expect(res.success).toBe(true);
-  });
-
-  it("does not save output when saveOutput is false", async () => {
-    const module = makeModule({ creditCost: 0 });
-    const usage = { id: "usage-x", usedAt: new Date().toISOString() };
-    const moduleRepo = {
-      findByIdOrSlug: vi.fn(async () => ({ success: true, data: module })),
-      createUsage: vi.fn(async () => ({ success: true, data: usage })),
-      updateUsage: vi.fn(async () => ({ success: true })),
-    } as unknown as OppSysContext["moduleRepo"];
-
-    const n8n = {
-      executeWorkflow: vi.fn(async () => ({
-        success: true,
-        data: { result: "ok" },
-      })),
-    } as unknown as OppSysContext["n8n"];
-    const contentRepo = {
-      create: vi.fn(),
-    } as unknown as OppSysContext["contentRepo"];
-    const profileRepo = {
-      checkCredits: vi.fn(() => ({
-        success: true,
-        data: { hasEnoughCredits: true },
-      })),
-      deductCredits: vi.fn(() => ({
-        success: true,
-        data: { hasEnoughCredits: true },
-      })),
-      getByIdWithPlan: vi.fn(() => ({
-        success: true,
-        data: { creditBalance: 0 },
-      })),
-    } as unknown as OppSysContext["profileRepo"];
-
-    const ctx = mockCtx({ moduleRepo, n8n, contentRepo, profileRepo });
-
-    const res = await executeModuleUseCase(ctx, {
-      params: { id: "mod-slug" },
-      body: DEFAULT_BODY,
-      user: { id: "u1", email: "u@example.com", role: "client" },
-    });
-
-    expect(contentRepo.create).not.toHaveBeenCalled();
     expect(res.success).toBe(true);
   });
 
@@ -480,7 +434,7 @@ describe("executeModuleUseCase", () => {
 
     const res = await executeModuleUseCase(ctx, {
       params: { id: "mod-slug" },
-      body: { ...DEFAULT_BODY, saveOutput: true },
+      body: { ...DEFAULT_BODY },
       user: { id: "u1", email: "u@example.com", role: "client" },
     });
 
@@ -638,7 +592,7 @@ describe("executeModuleUseCase", () => {
 
     const res = await executeModuleUseCase(ctx, {
       params: { id: "mod-slug" },
-      body: { ...DEFAULT_BODY, saveOutput: true },
+      body: { ...DEFAULT_BODY },
       user: { id: "u1", email: "udj@e.com", role: "client" },
     });
 

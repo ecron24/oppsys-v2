@@ -292,7 +292,7 @@ export default function YouTubeModule({ module }: YouTubeModuleProps) {
 
     const moduleId = module?.slug || "youtube-uploader";
     const apiPayload = {
-      input: {
+      context: {
         title: title.trim(),
         description: description.trim(),
         tags: tags
@@ -367,7 +367,7 @@ export default function YouTubeModule({ module }: YouTubeModuleProps) {
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full  mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

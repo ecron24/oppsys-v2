@@ -4,8 +4,7 @@ import {
   type OppSysSupabaseClient,
 } from "@oppsys/supabase";
 import type { N8nInput, N8nModule, N8nResult } from "./n8n-type";
-import { determineTriggerType } from "./trigger-type";
-import { buildChatInput, extractMessageFromN8n } from "./utilis";
+import { extractMessageFromN8n } from "./utilis";
 import { toSnakeCase } from "@oppsys/shared";
 
 const logger = createLoggerPino("execute-workflow-n8n");
@@ -53,7 +52,6 @@ export function createN8nInstance({
 
     const userProfile = profileResult.data;
     const userPlan = userProfile.plan_name?.toLowerCase() || "free";
-    const isPremium = userProfile.plan_name && userProfile.plan_name !== "Free";
     const userStatus = "active";
 
     const authData = {
@@ -71,110 +69,31 @@ export function createN8nInstance({
         id: module.id,
         name: module.name,
         slug: module.slug,
-        trigger_type: "STANDARD", // Sera mis à jour ci-dessous
+        trigger_type: module.n8nTriggerType,
       },
     };
 
-    let triggerType = determineTriggerType(module, input);
-    authData.module_info.trigger_type = triggerType;
-
-    let payload;
-
-    // CONSTRUCTION DU PAYLOAD SELON LE TYPE
-    if (input.isChatMode && input.sessionId && input.message) {
-      // MODE CHAT EXPLICITE
-      payload = {
-        sessionId: input.sessionId,
-        input: {
-          message: input.message,
-          context: input.context || {},
-          module_slug: module.slug,
-          module_name: module.name,
-          module_id: module.id,
-          moduleType: input.moduleType,
-          timestamp: input.timestamp || new Date().toISOString(),
-        },
-        metadata: {
-          worker_result_id: input.sessionId,
-          client_id: userEmail,
-          module: {
-            id: module.id,
-            name: module.name,
-            slug: module.slug,
-          },
-        },
-        auth: authData,
-      };
-    } else if (module.slug === "real-estate-lease-generator") {
-      // FORMAT SPÉCIFIQUE POUR LE GÉNÉRATEUR IMMOBILIER
-      payload = {
-        input: {
-          ...input,
-          module_slug: module.slug,
-          module_name: module.name,
-          module_id: module.id,
-        },
-        user: {
-          id: userId,
-          email: userEmail,
-          plan: userPlan,
-          credit_balance: userProfile.credit_balance,
-        },
+    let payload = {
+      sessionId: input.sessionId,
+      input: {
+        message: input.message,
+        context: input.context || {},
+        module_slug: module.slug,
+        module_name: module.name,
+        module_id: module.id,
+        timestamp: new Date().toISOString(),
+      },
+      metadata: {
+        worker_result_id: input.sessionId,
+        client_id: userEmail,
         module: {
           id: module.id,
           name: module.name,
           slug: module.slug,
         },
-        auth: authData,
-        save_output: true,
-        timeout: 120000,
-      };
-    } else if (triggerType === "CHAT") {
-      payload = {
-        sessionId: userId,
-        chatInput: JSON.stringify(
-          buildChatInput({
-            module,
-            input,
-            user: {
-              plan: userPlan,
-              isPremium: isPremium,
-              balance: userProfile.credit_balance || 0,
-            },
-          })
-        ),
-        metadata: {
-          worker_result_id: userId,
-          client_id: userEmail,
-          module: {
-            id: module.id,
-            name: module.name,
-            slug: module.slug,
-          },
-        },
-        auth: authData,
-      };
-    } else {
-      // MODULES STANDARDS
-      payload = {
-        input: {
-          ...input,
-          module_slug: module.slug,
-          module_name: module.name,
-          module_id: module.id,
-        },
-        user: {
-          id: userId,
-          email: userEmail,
-        },
-        module: {
-          id: module.id,
-          name: module.name,
-          slug: module.slug,
-        },
-        auth: authData,
-      };
-    }
+      },
+      auth: authData,
+    };
 
     // CONFIGURATION DES HEADERS
     const headers: Record<string, string> = {
@@ -194,23 +113,7 @@ export function createN8nInstance({
     // Logging de l'exécution
     logger.info(
       toSnakeCase({
-        module: module.name,
-        user: userEmail,
-        plan: userPlan,
-        credits: userProfile.credit_balance,
-        trigger_type: triggerType,
-        auth_method: "Basic Auth (validated)",
-        endpoint: module.endpoint,
-        payload_preview: {
-          sessionId: payload.sessionId || null,
-          hasChatInput: !!payload.chatInput,
-          hasInput: !!payload.input,
-          triggerType: triggerType,
-          isChatMode: input.isChatMode || false,
-          messagePreview: input.message
-            ? input.message.substring(0, 50) + "..."
-            : null,
-        },
+        payload,
       }),
       `Executing n8n workflow`
     );
@@ -265,8 +168,6 @@ export function createN8nInstance({
       logger.info(
         {
           user: userEmail,
-          plan: userPlan,
-          execution_time: Date.now(),
           has_result: !!result,
         },
         `N8N Success for ${module.name}`
@@ -293,7 +194,6 @@ export function createN8nInstance({
       logger.error(
         {
           user: userEmail,
-          plan: userPlan,
           error: errorMessage,
           payload_sent: payload,
         },
@@ -316,3 +216,5 @@ type N8nInstanceParams = {
   N8N_WEBHOOK_AUTH_USER: string;
   N8N_WEBHOOK_AUTH_PASS: string;
 };
+
+export * from "./n8n-type";

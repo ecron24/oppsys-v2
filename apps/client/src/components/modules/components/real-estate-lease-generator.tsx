@@ -48,16 +48,14 @@ import {
   Scale,
   UserCheck,
   Mail,
-  Download,
   CheckCircle,
   AlertCircle,
-  Info,
   Crown,
   FileSignature,
   Upload,
   Trash2,
 } from "lucide-react";
-import type { Module, ExecuteModuleData } from "../module-types";
+import type { Module } from "../module-types";
 import type {
   LeaseType,
   Template,
@@ -181,7 +179,6 @@ export default function RealEstateLeaseGenerator({
   const [progress, setProgress] = useState<number>(0);
   const [currentStep, setCurrentStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ExecuteModuleData | null>(null);
   const isSubmitting = useRef<boolean>(false);
 
   // États pour les templates et formats
@@ -375,7 +372,6 @@ export default function RealEstateLeaseGenerator({
 
     isSubmitting.current = true;
     setLoading(true);
-    setResult(null);
     setCurrentStep("Préparation des données...");
     setProgress(20);
 
@@ -394,7 +390,7 @@ export default function RealEstateLeaseGenerator({
     );
 
     const apiPayload = {
-      input: {
+      context: {
         leaseType,
         title: title.trim(),
         templateFile: determineTemplatePath(),
@@ -469,30 +465,10 @@ export default function RealEstateLeaseGenerator({
       setProgress(100);
       setCurrentStep("Document généré avec succès !");
       toast.success("Document généré avec succès !");
-      setResult(response.data);
       return;
     }
     setError("Aucune réponse du serveur");
     toast.error(`Échec: Aucune réponse du serveur`);
-  };
-
-  // Téléchargement du document
-  const downloadDocument = () => {
-    if (
-      result?.output.moduleType == "unknown" &&
-      result?.output?.result &&
-      typeof result.output.result === "object" &&
-      "documentUrl" in result.output.result &&
-      result.output.result.documentUrl
-    ) {
-      const link = document.createElement("a");
-      link.href = result.output.result.documentUrl.toString();
-      link.download = `bail-${title.toLowerCase().replace(/[^a-z0-9]/g, "-")}.docx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Document téléchargé");
-    }
   };
 
   // Préparation des variables pour les templates
@@ -539,7 +515,7 @@ export default function RealEstateLeaseGenerator({
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full  mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -1468,45 +1444,7 @@ export default function RealEstateLeaseGenerator({
               </div>
             )}
           </Button>
-          {result && (
-            <Button
-              onClick={downloadDocument}
-              variant="outline"
-              disabled={loading}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Télécharger
-            </Button>
-          )}
         </div>
-
-        {result && (
-          <div className="space-y-4 border-t pt-6">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <Label>Document généré avec succès !</Label>
-            </div>
-            {result.output.moduleType == "unknown" &&
-              result?.output?.result &&
-              typeof result.output.result === "object" &&
-              "documentUrl" in result.output.result && (
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <p>
-                      Votre document est prêt. Vous pouvez le télécharger ou
-                      l'envoyer par email.
-                    </p>
-                    {sendEmail && "emailSent" in result.output.result && (
-                      <p className="text-green-600 mt-2">
-                        Le document a été envoyé par email.
-                      </p>
-                    )}
-                  </AlertDescription>
-                </Alert>
-              )}
-          </div>
-        )}
       </CardContent>
     </Card>
   );

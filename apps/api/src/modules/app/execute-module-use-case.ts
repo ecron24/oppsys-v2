@@ -5,10 +5,10 @@ import { UserInContextSchema } from "src/lib/get-user-in-context";
 import { createNotificationUseCase } from "src/notification/app/create-notification-use-case";
 import { InsufficientCreditError } from "../domain/exception";
 import { toCamelCase } from "@oppsys/shared";
+import type { N8nInput } from "@oppsys/n8n";
 
 export const ExecuteModuleBodySchema = z.object({
-  input: z.record(z.string(), z.any()),
-  saveOutput: z.boolean().default(true),
+  context: z.record(z.string(), z.any()).default({}),
   timeout: z.number().int().min(5000).max(300000).default(30000),
   priority: z.enum(["low", "normal", "high"]).default("normal"),
 });
@@ -86,13 +86,17 @@ export const executeModuleUseCase = buildUseCase()
       }
     }
 
+    const chatInput: N8nInput = {
+      ...body,
+    };
+
     // 4. Create usage record
     const usageData: Omit<ModuleUsage, "id" | "usedAt"> = {
       userId: user.id,
       moduleId: module.id,
       moduleSlug: module.slug,
       creditsUsed: module.creditCost,
-      input: body.input,
+      input: chatInput,
       status: "pending" as const,
       errorMessage: null,
       executionTime: null,
@@ -141,12 +145,13 @@ export const executeModuleUseCase = buildUseCase()
       name: module.name,
       slug: module.slug,
       endpoint: module.endpoint,
+      n8nTriggerType: "STANDARD" as const,
     };
 
     // 5. Execute module
     const executionResult = await ctx.n8n.executeWorkflow({
       module: n8nModule,
-      input: body.input,
+      input: chatInput,
       userId: user.id,
       userEmail: user.email,
     });
@@ -225,68 +230,6 @@ export const executeModuleUseCase = buildUseCase()
         execution_time: executionTime,
       },
     });
-
-    // 7. Save content
-    // saving content must be in workflow
-    // if (body.saveOutput && executionResult.data.module_type == "unknown") {
-    //   const output = executionResult.data;
-    //   const content = (output?.content ||
-    //     output?.text ||
-    //     output?.result ||
-    //     output?.generated_content ||
-    //     (typeof output?.data === "string"
-    //       ? output.data
-    //       : JSON.stringify(output?.data || output))) as string;
-
-    //   const title = (output?.title ||
-    //     output?.name ||
-    //     output?.subject ||
-    //     `Contenu généré par ${module.name}`) as string;
-
-    //   // Détection intelligente du type
-    //   const rawtype = (output?.type ||
-    //     output?.content_type ||
-    //     (module.name.toLowerCase().includes("article")
-    //       ? "article"
-    //       : module.name.toLowerCase().includes("social")
-    //         ? "social-post"
-    //         : module.name.toLowerCase().includes("video")
-    //           ? "video"
-    //           : module.name.toLowerCase().includes("document")
-    //             ? "document"
-    //             : "other")) as string;
-    //   const type = ContentTypeSchema.safeParse(rawtype).data || "other";
-
-    //   // Métadonnées enrichies
-    //   const metadata = {
-    //     module_name: module.name,
-    //     module_slug: module.slug,
-    //     created_at: new Date().toISOString(),
-    //     output_keys: Object.keys(output || {}),
-    //     content_length: content?.length || 0,
-    //     word_count: content ? content.split(/\s+/).length : 0,
-    //     has_url: !!(output?.url || output?.link),
-    //     generation_source: "api",
-    //     content: content,
-    //     ...output?.metadata,
-    //     original_output: output,
-    //   };
-    //   const url = (output?.url || output?.link) as string | undefined;
-    //   if (content) {
-    //     await ctx.contentRepo.create({
-    //       userId: user.id,
-    //       contentData: {
-    //         moduleId: module.id,
-    //         moduleSlug: module.slug,
-    //         title: title?.substring(0, 200),
-    //         type,
-    //         status: "draft",
-    //         metadata,
-    //         url,
-    //       },
-    //     });
-    //   }
-    // }
 
     const updatedUserResult = await ctx.profileRepo.getByIdWithPlan(user.id);
     if (!updatedUserResult.success) return updatedUserResult;

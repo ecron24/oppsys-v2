@@ -9,6 +9,7 @@ import { calculateUploadCost, validateYouTubeData } from "./youtube-utils";
 import { InsufficientCreditError } from "src/modules/domain/exception";
 import { createDownloadUrlUseCase } from "./create-download-url-use-case";
 import { env } from "src/env";
+import type { N8nInput } from "@oppsys/n8n";
 
 export const CreateYouTubeUploadInputSchema = z.object({
   body: YouTubeUploadOptionsSchema,
@@ -186,49 +187,59 @@ export const createYouTubeUploadUseCase = buildUseCase()
       status: "uploading",
     });
 
+    const n8nModule = {
+      id: module.id,
+      name: module.name,
+      slug: module.slug,
+      endpoint: module.endpoint,
+      n8nTriggerType: "STANDARD" as const,
+    };
+
     // Préparer les données pour N8N
-    const n8nInput = {
-      uploadId: uploadResult.data.id,
+    const n8nInput: N8nInput = {
+      context: {
+        uploadId: uploadResult.data.id,
 
-      // Métadonnées vidéo
-      title: upload.title,
-      description: upload.description || undefined,
-      tags: upload.tags,
-      videoType: upload.videoType,
-      privacy: upload.privacy,
-      category: upload.category,
+        // Métadonnées vidéo
+        title: upload.title,
+        description: upload.description || undefined,
+        tags: upload.tags,
+        videoType: upload.videoType,
+        privacy: upload.privacy,
+        category: upload.category,
 
-      // URLs des fichiers
-      videoUrl: upload.videoFileUrl,
-      videoFilename: upload.videoFileName,
-      videoSize: upload.videoFileSize,
-      videoTypeMime: upload.videoFileType,
+        // URLs des fichiers
+        videoUrl: upload.videoFileUrl,
+        videoFilename: upload.videoFileName,
+        videoSize: upload.videoFileSize,
+        videoTypeMime: upload.videoFileType,
 
-      // Thumbnail
-      thumbnailUrl: upload.thumbnailFileUrl,
-      thumbnailFilename: upload.thumbnailFileName,
-      generateAiThumbnail: upload.generateAiThumbnail,
+        // Thumbnail
+        thumbnailUrl: upload.thumbnailFileUrl,
+        thumbnailFilename: upload.thumbnailFileName,
+        generateAiThumbnail: upload.generateAiThumbnail,
 
-      // Configuration YouTube
-      youtubeConfig: {
-        notifySubscribers: true,
-        autoChapters: true,
-        enableComments: true,
-        enableRatings: true,
+        // Configuration YouTube
+        youtubeConfig: {
+          notifySubscribers: true,
+          autoChapters: true,
+          enableComments: true,
+          enableRatings: true,
+        },
+
+        // Callback URL pour recevoir le résultat
+        callbackUrl: `${env.API_BASE_URL}/api/youtube/${uploadResult.data.id}/callback`,
+
+        // Métadonnées utilisateur
+        userId: user.id,
+        userEmail: user.email ?? "unknown@example.com",
       },
-
-      // Callback URL pour recevoir le résultat
-      callbackUrl: `${env.API_BASE_URL}/api/youtube/${uploadResult.data.id}/callback`,
-
-      // Métadonnées utilisateur
-      userId: user.id,
-      userEmail: user.email ?? "unknown@example.com",
     };
 
     // Execute upload
     const executeResult = await ctx.n8n.executeWorkflow({
       input: n8nInput,
-      module,
+      module: n8nModule,
       userId: user.id,
       userEmail: user.email ?? "unknown@example.com",
     });

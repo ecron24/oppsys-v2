@@ -219,7 +219,7 @@ export default function TalentAnalyzer({ module }: TalentAnalyzerProps) {
       const validateResult = validateTalentAnalyzerFile(file);
       if (!validateResult.success) continue;
 
-      // Créer URL d'upload
+      // Créer URL d'upload and upload
       const response = await storageService.generateUrlAndUploadFile(
         "talent-analyzer",
         file
@@ -557,7 +557,7 @@ export default function TalentAnalyzer({ module }: TalentAnalyzerProps) {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-4">
+    <div className="w-full  mx-auto space-y-4">
       {/* ✅ ENCART DE PRÉSENTATION STANDARDISÉ */}
       <Card>
         <CardHeader>

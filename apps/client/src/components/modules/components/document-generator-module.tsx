@@ -230,7 +230,7 @@ export default function DocumentGeneratorModule({
       const moduleSlug = module.slug;
 
       const apiPayload = {
-        input: {
+        context: {
           documentType,
           title: value.title.trim(),
           description: value.description.trim(),
@@ -385,7 +385,7 @@ export default function DocumentGeneratorModule({
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full  mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

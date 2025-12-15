@@ -505,26 +505,15 @@ export const TranscriptionConfigSchema = z
     outputFormats: z.array(
       z.object({ icon: z.string(), label: z.string(), value: z.string() })
     ),
-    qualityLevels: z.object({
-      high: z.object({
+    qualityLevels: z.record(
+      z.string(),
+      z.object({
         label: z.string(),
         accuracy: z.string(),
         multiplier: z.number(),
         description: z.string(),
-      }),
-      premium: z.object({
-        label: z.string(),
-        accuracy: z.string(),
-        multiplier: z.number(),
-        description: z.string(),
-      }),
-      standard: z.object({
-        label: z.string(),
-        accuracy: z.string(),
-        multiplier: z.number(),
-        description: z.string(),
-      }),
-    }),
+      })
+    ),
   })
   .transform((cfg) => ({ ...cfg, configType: "transcription" as const }));
 

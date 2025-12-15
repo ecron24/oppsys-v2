@@ -19,7 +19,9 @@ export const generateUploadUrlUseCase = buildUseCase()
     const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = `${userId}/${timestamp}_${safeName}`;
 
-    // TODO: limit file by user quota
+    // TODO:
+    // - limit file by user quota
+    // - remove file after some time
     const signedResult = await createSignedUploadUrl(
       { supabase: ctx.supabase },
       { bucket, filePath }

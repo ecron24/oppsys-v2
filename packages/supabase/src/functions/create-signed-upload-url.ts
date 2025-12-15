@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { createFn } from "./fn-builder";
 
-export const BucketSchema = z.enum(["documents-rag", "talent-analyzer"]);
+export const BucketSchema = z.enum([
+  "documents-rag",
+  "talent-analyzer",
+  "transcription-files",
+]);
 
 const inputSchema = z.object({
   bucket: BucketSchema,

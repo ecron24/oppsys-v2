@@ -389,7 +389,7 @@ export default function EmailCampaignModule({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-4">
+    <div className="w-full  mx-auto space-y-4">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
