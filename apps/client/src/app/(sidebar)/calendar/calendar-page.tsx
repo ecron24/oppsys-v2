@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
-import dayjs from "dayjs";
+import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePremiumFeatures } from "@/hooks/use-premium-features";
@@ -37,7 +37,7 @@ import { LinkButton } from "@/components/link-button";
 import { routes } from "@/routes";
 import { PageLoader } from "@/components/loading";
 
-const localizer = momentLocalizer(dayjs);
+const localizer = momentLocalizer(moment);
 
 type ViewType = "month" | "week" | "day" | "agenda" | "list";
 
@@ -309,7 +309,7 @@ export default function CalendarPage() {
             <div className="space-y-4">
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-2" />
-                {dayjs(selectedEvent.executionTime).format("LLL")}
+                {moment(selectedEvent.executionTime).format("LLL")}
               </div>
 
               {/* Afficher l'icône du réseau social */}

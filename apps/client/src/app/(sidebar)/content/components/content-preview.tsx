@@ -14,7 +14,7 @@ import {
   getCorrectModuleSlug,
   extractPostContent,
 } from "../utils/content-utils";
-import type { Content, ContentMetadata } from "../content-types";
+import type { Content } from "../content-types";
 import { Button } from "@oppsys/ui/components/button";
 import { H4, P } from "@oppsys/ui/components/typography";
 import { toast } from "@oppsys/ui/lib/sonner";
@@ -173,85 +173,17 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
   }
 
   // Module article-write
-  if (moduleSlug === "article-writer") {
-    // Parser metadata sécurisé
-    let metadata: ContentMetadata = {};
-    try {
-      if (typeof content.metadata === "string") {
-        metadata = JSON.parse(content.metadata);
-      } else if (content.metadata && typeof content.metadata === "object") {
-        metadata = content.metadata;
-      } else {
-        metadata = {};
-      }
-    } catch {
-      metadata = {};
-    }
-
+  if (moduleSlug === "ai-writer") {
     // Sources de contenu (ordre prioritaire)
-    const htmlContent =
-      metadata.content ||
-      (metadata.display &&
-        typeof metadata.display == "object" &&
-        "content" in metadata.display &&
-        metadata.display?.content?.toString()) ||
-      content.htmlPreview ||
-      "";
+    const htmlContent = content.htmlPreview;
 
     return (
       <div className="space-y-4">
-        {/* En-tête */}
-        <div className="bg-muted/50 p-4 rounded-lg border">
-          <div className="flex items-center justify-between mb-3">
-            <H4 className="font-medium flex items-center">
-              <FileText className="h-4 w-4 mr-2 text-blue-600" />
-              Article généré
-            </H4>
-            <div className="text-xs text-muted-foreground">
-              {new Date(content.createdAt).toLocaleDateString()}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-            <div>
-              <strong>Type :</strong>{" "}
-              {metadata.contentType?.toString() || "Blog"}
-            </div>
-            <div>
-              <strong>Ton :</strong>{" "}
-              {metadata.tone?.toString() || "Professionnel"}
-            </div>
-            <div>
-              <strong>Langue :</strong> {metadata.language?.toString() || "FR"}
-            </div>
-            <div>
-              <strong>Mots :</strong> {metadata.wordCount?.toString() || "N/A"}
-            </div>
-          </div>
-
-          {metadata.targetKeywords && (
-            <div className="mb-3">
-              <span className="text-sm font-medium">Mots-clés : </span>
-              <span className="text-sm text-muted-foreground">
-                {metadata.targetKeywords.toString()}
-              </span>
-            </div>
-          )}
-        </div>
-
         {/* Contenu HTML */}
         {htmlContent ? (
           <div className="bg-white p-6 rounded-lg border max-h-[600px] overflow-y-auto">
             <div
-              className="prose prose-sm max-w-none
-                prose-headings:text-gray-900 prose-headings:font-bold
-                prose-p:text-gray-700 prose-p:leading-relaxed
-                prose-strong:text-gray-900 prose-strong:font-semibold
-                prose-ul:list-disc prose-ul:pl-5
-                prose-ol:list-decimal prose-ol:pl-5
-                prose-li:text-gray-700 prose-li:mb-1
-                prose-a:text-blue-600 prose-a:underline
-                prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5"
+              className="prose prose-lg"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           </div>
@@ -295,20 +227,23 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
           <Button
             variant={"success"}
             onClick={() => {
-              const filename = `${(content.title || "article").replace(/[^a-zA-Z0-9]/g, "_")}.html`;
+              const filename = `${content.title.replace(/[^a-zA-Z0-9]/g, "_")}.html`;
               const fullHtml = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>${metadata.title || content.title}</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50 p-8">
-  <article class="prose prose-lg max-w-4xl mx-auto bg-white p-8 rounded-lg shadow">
-    ${htmlContent}
-  </article>
-</body>
-</html>`;
+                <html lang="fr">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                  <title>${content.title}</title>
+
+                  <!-- Play CDN + typography plugin (v4 compatible via cdn.tailwindcss.com) -->
+                  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+                </head>
+                <body class="bg-gray-50 p-8">
+                  <article class="prose prose-lg max-w-4xl mx-auto bg-white p-8 rounded-lg shadow">
+                    ${htmlContent}
+                  </article>
+                </body>
+                </html>`;
 
               const blob = new Blob([fullHtml], {
                 type: "text/html;charset=utf-8",
@@ -332,7 +267,7 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
     );
   }
 
-  if (content.type === "social-post" || moduleSlug === "social-factory") {
+  if (moduleSlug === "social-factory") {
     const {
       postContent,
       hashtags,
