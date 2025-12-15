@@ -48,8 +48,6 @@ const FormationPromptingModule = lazy(
 const RealEstateLeaseGenerator = lazy(
   () => import("@/components/modules/components/real-estate-lease-generator")
 );
-
-// ✅ NOUVEAUX MODULES AJOUTÉS
 const CompetitorAnalysisModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
 );
@@ -66,7 +64,7 @@ const ContentTranslatorModule = lazy(
   () => import("@/components/modules/components/placeholder-module")
 );
 const TalentAnalyzerModule = lazy(
-  () => import("@/components/modules/components/placeholder-module")
+  () => import("@/components/modules/components/talent-analyzer-module")
 );
 const LeadGeneratorModule = lazy(
   () => import("@/components/modules/components/placeholder-module")

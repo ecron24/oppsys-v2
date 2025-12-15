@@ -50,7 +50,7 @@ import type { RagDocument } from "@/components/documents/document-types";
 import { modulesService } from "../service/modules-service";
 import { documentService } from "@/components/documents/document-service";
 import { MODULES_IDS } from "@oppsys/api/client";
-import { validateDocumentFile } from "@/components/documents/document-validator";
+import { validateDocumentFile } from "@/components/storage/file-storage-validator";
 import { LinkButton } from "@/components/link-button";
 import { routes } from "@/routes";
 

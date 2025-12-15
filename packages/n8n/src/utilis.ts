@@ -5,7 +5,8 @@ export function extractMessageFromN8n(result: N8nResult) {
 
   if (
     result.module_type == "ai-writer" ||
-    result.module_type == "email-campaign"
+    result.module_type == "email-campaign" ||
+    result.module_type == "talent-analyzer"
   ) {
     return result.output.question;
   }

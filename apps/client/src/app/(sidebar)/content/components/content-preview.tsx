@@ -18,6 +18,7 @@ import type { Content, ContentMetadata } from "../content-types";
 import { Button } from "@oppsys/ui/components/button";
 import { H4, P } from "@oppsys/ui/components/typography";
 import { toast } from "@oppsys/ui/lib/sonner";
+import { HtmlPreview } from "./html-preview";
 
 export const ContentPreview = ({ content }: ContentPreviewProps) => {
   const moduleSlug = getCorrectModuleSlug(content);
@@ -475,12 +476,7 @@ export const ContentPreview = ({ content }: ContentPreviewProps) => {
   }
 
   if (content.htmlPreview) {
-    return (
-      <div
-        className="prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: content.htmlPreview }}
-      />
-    );
+    return <HtmlPreview html={content.htmlPreview} />;
   }
 
   return (

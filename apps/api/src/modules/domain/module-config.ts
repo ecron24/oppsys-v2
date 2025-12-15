@@ -398,21 +398,63 @@ export const AiWriterConfigSchema = z
 export const TalentAnalyzerConfigSchema = z
   .object({
     baseCost: z.number(),
-    analysisTypes: z.object({
-      cvScreening: z.object({
-        cost: z.number(),
+
+    analysisTypes: z.record(
+      z.string(),
+      z.object({
         label: z.string(),
+        cost: z.number(),
+        description: z.string(),
+        features: z.array(z.string()),
+        duration: z.string(),
+        icon: z.string(),
         maxCvs: z.number().optional(),
-      }),
-      jobMatching: z.object({ cost: z.number(), label: z.string() }),
-      talentAssessment: z.object({
-        cost: z.number(),
-        label: z.string(),
+        maxProfiles: z.number().optional(),
         premium: z.boolean().optional(),
-      }),
-    }),
+      })
+    ),
+    industries: z.record(
+      z.string(),
+      z.object({
+        label: z.string(),
+        multiplier: z.number(),
+        icon: z.string(),
+        skillsFocus: z.array(z.string()),
+        specialties: z.array(z.string()),
+      })
+    ),
+    scoringLevels: z.record(
+      z.string(),
+      z.object({
+        label: z.string(),
+        cost: z.number(),
+        description: z.string(),
+        features: z.array(z.string()),
+        premium: z.boolean().optional(),
+      })
+    ),
+    hrOptions: z.record(
+      z.string(),
+      z.object({
+        label: z.string(),
+        cost: z.number(),
+        description: z.string(),
+        premium: z.boolean().optional(),
+      })
+    ),
+    premiumFeatures: z.array(z.string()),
+    availableCriteria: z.array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        icon: z.string(),
+      })
+    ),
   })
-  .transform((cfg) => ({ ...cfg, configType: "talent-analyzer" as const }));
+  .transform((cfg) => ({
+    ...cfg,
+    configType: "talent-analyzer" as const,
+  }));
 
 /* ------------------ 14. content-translator ------------------ */
 export const ContentTranslatorConfigSchema = z

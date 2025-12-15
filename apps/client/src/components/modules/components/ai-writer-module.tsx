@@ -71,8 +71,9 @@ import { documentService } from "../../documents/document-service";
 import { LoadingSpinner } from "../../loading";
 import type { RagDocument } from "../../documents/document-types";
 import { MODULES_IDS } from "@oppsys/api/client";
-import { validateDocumentFile } from "@/components/documents/document-validator";
+import { validateDocumentFile } from "@/components/storage/file-storage-validator";
 import { Chat, type ChatRef } from "../shared/chat";
+import type { Message } from "../module-types";
 import { generateUuid } from "@/lib/generate-uuid";
 
 type AiWriterModuleProps = {
@@ -175,6 +176,9 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
   // Chat States
   const sessionId = useMemo(() => generateUuid(), []);
   const [activeTab, setActiveTab] = useState("chat");
+  const [conversationHistory, setConversationHistory] = useState<Message[]>([
+    { message: welcomeMessage, timestamp: new Date(), type: "bot", data: null },
+  ]);
 
   //  ref
   const isSubmitting = useRef(false);
@@ -711,6 +715,8 @@ export default function AIWriterModule({ module }: AiWriterModuleProps) {
             <Chat
               ref={chatRef}
               welcomeMessage={welcomeMessage}
+              conversationHistory={conversationHistory}
+              setConversationHistory={setConversationHistory}
               onSubmit={async ({ message }) => {
                 const content: Record<string, string> = {};
                 if (subject.length > 0) {

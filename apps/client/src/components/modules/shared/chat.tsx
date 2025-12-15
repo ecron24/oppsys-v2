@@ -14,16 +14,13 @@ import { ChatMessage } from "./chat-message";
 
 export type ChatRef = {
   addMessage: (msg: Omit<Message, "timestamp">) => void;
+  sendInputMessage: (userInput: string) => Promise<void>;
 };
 
 export const Chat = forwardRef(function Chat(
-  { welcomeMessage, onSubmit }: ChatProps,
+  { onSubmit, conversationHistory, setConversationHistory }: ChatProps,
   ref
 ) {
-  const [conversationHistory, setConversationHistory] = useState<Message[]>([
-    { message: welcomeMessage, timestamp: new Date(), type: "bot", data: null },
-  ]);
-
   const [userInput, setUserInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,10 +37,15 @@ export const Chat = forwardRef(function Chat(
             { ...msg, timestamp: new Date() },
           ]);
         },
+        sendInputMessage: async (input: string) => sendMessage(input),
       }) as ChatRef
   );
 
   const handleSubmit = async () => {
+    sendMessage(userInput);
+  };
+
+  const sendMessage = async (userInput: string) => {
     const currentMessage = userInput.trim();
     if (!currentMessage || isSubmitting) return;
 
@@ -162,6 +164,10 @@ export const Chat = forwardRef(function Chat(
 
 type ChatProps = {
   welcomeMessage: string;
+  conversationHistory: Message[];
+  setConversationHistory: (
+    value: Message[] | ((prev: Message[]) => Message[])
+  ) => void;
   onSubmit: (params: {
     message: string;
     history: Message[];

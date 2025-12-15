@@ -33,7 +33,8 @@ export type N8nResult =
   | AiWriterOutput
   | DocumentGenerator
   | SocialFactory
-  | EmailCampaignOutput;
+  | EmailCampaignOutput
+  | TalentAnalyserOutput;
 
 export type DocumentGenerator = {
   module_type: "document-generator";
@@ -114,6 +115,26 @@ export type EmailCampaignOutput = {
         type: string;
         size: number;
       };
+    } | null;
+    errors: string[] | null;
+  };
+};
+
+export type TalentAnalyserOutput = {
+  module_type: "talent-analyzer";
+  output: {
+    state: "missing" | "ready_for_confirmation" | "confirmed";
+    missing_field: string | null;
+    question: string | null;
+    result_partial: {
+      jobPosition: string | null;
+      jobDescription: string | null;
+      objective: string | null;
+    } | null;
+    result: {
+      jobPosition: string;
+      jobDescription: string;
+      objective: string;
     } | null;
     errors: string[] | null;
   };

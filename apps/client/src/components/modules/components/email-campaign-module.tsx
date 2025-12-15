@@ -46,6 +46,7 @@ import { LoadingSpinner } from "../../loading";
 import type { MODULES_IDS } from "@oppsys/api";
 import { useMemo, useRef, useState } from "react";
 import { Chat, type ChatRef } from "../shared/chat";
+import type { Message } from "../module-types";
 import z from "zod";
 import { useAppForm } from "@oppsys/ui/components/tanstack-form/form-setup";
 import { generateUuid } from "@/lib/generate-uuid";
@@ -101,6 +102,9 @@ export default function EmailCampaignModule({
   const [progress, setProgress] = useState(0);
   const [currentGenerationStep, setCurrentGenerationStep] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<Message[]>([
+    { message: welcomeMessage, timestamp: new Date(), type: "bot", data: null },
+  ]);
 
   const form = useAppForm({
     defaultValues: {
@@ -530,6 +534,8 @@ export default function EmailCampaignModule({
                 <Chat
                   ref={chatRef}
                   welcomeMessage={welcomeMessage}
+                  conversationHistory={conversationHistory}
+                  setConversationHistory={setConversationHistory}
                   onSubmit={async ({ message }) => {
                     const response = await chatWithModule({
                       message,
@@ -660,26 +666,26 @@ export default function EmailCampaignModule({
                         )}
                       </form.Subscribe>
                     </div>
+                    <form.SubmitButton
+                      className="w-full"
+                      size="lg"
+                      disabled={loading || !hasEnoughCredits(currentCost())}
+                      isLoading={loading}
+                    >
+                      {!loading && (
+                        <div className="flex items-center space-x-2">
+                          <Send className="h-4 w-4" />
+                          <span>
+                            🚀 Créer la campagne ({currentCost()} crédits)
+                          </span>
+                        </div>
+                      )}
+                      {loading && <LoadingSpinner />}
+                    </form.SubmitButton>
                   </div>
                 )}
-                <form.AppForm>
-                  <form.SubmitButton
-                    className="w-full"
-                    size="lg"
-                    disabled={loading || !hasEnoughCredits(currentCost())}
-                    isLoading={loading}
-                  >
-                    {!loading && (
-                      <div className="flex items-center space-x-2">
-                        <Send className="h-4 w-4" />
-                        <span>
-                          🚀 Créer la campagne ({currentCost()} crédits)
-                        </span>
-                      </div>
-                    )}
-                    {loading && <LoadingSpinner />}
-                  </form.SubmitButton>
-                </form.AppForm>
+
+                <form.AppForm></form.AppForm>
               </TabsContent>
 
               <TabsContent value="content" className="space-y-6">

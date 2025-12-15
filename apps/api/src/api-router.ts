@@ -15,6 +15,7 @@ import { formationRouter } from "./formations/presentation/formation-router";
 import { templateRouter } from "./templates/presentation/template-router";
 import { youtubeRouter } from "./youtube/presentation/youtube-router";
 import { planRouter } from "./plan/presentation/plan-router";
+import { storageRouter } from "./storage/presentation/storage-router";
 
 export const apiRouter = honoRouter((ctx) => {
   const publicApiRouter = new Hono()
@@ -37,7 +38,8 @@ export const apiRouter = honoRouter((ctx) => {
     .route("/api/formations", formationRouter)
     .route("/api/templates", templateRouter)
     .route("/api/plans", planRouter)
-    .route("/api/youtube", youtubeRouter);
+    .route("/api/youtube", youtubeRouter)
+    .route("/api/storage", storageRouter);
 
   const router = new Hono()
     .route("/", publicApiRouter)

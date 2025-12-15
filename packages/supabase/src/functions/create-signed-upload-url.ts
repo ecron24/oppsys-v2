@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { createFn } from "./fn-builder";
 
+export const BucketSchema = z.enum(["documents-rag", "talent-analyzer"]);
+
 const inputSchema = z.object({
-  bucket: z.string().min(1),
+  bucket: BucketSchema,
   filePath: z.string().min(1),
   options: z
     .object({
@@ -30,7 +32,7 @@ export const createSignedUploadUrl = createFn()
       return {
         success: false,
         kind: "STORAGE_ERROR",
-        error: error || new Error("Failed to create signed upload url"),
+        error: error,
       } as const;
     }
 
