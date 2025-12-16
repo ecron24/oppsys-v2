@@ -32,7 +32,6 @@ import {
   Scale,
   Briefcase,
   FileCheck,
-  Eye,
   Settings,
   CheckCircle,
   AlertCircle,
@@ -174,7 +173,6 @@ export default function DocumentGeneratorModule({
   const [progress, setProgress] = useState<number>(0);
   const [currentStep, setCurrentStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [usageId, setUsageId] = useState<string | null>(null);
   const [ragDocuments, setRagDocuments] = useState<RagDocument[]>([]);
   const [uploadingRag, setUploadingRag] = useState<boolean>(false);
   const [ragUploadProgress, setRagUploadProgress] = useState<number>(0);
@@ -278,7 +276,6 @@ export default function DocumentGeneratorModule({
           description:
             "Votre document sera bientôt prêt sur la page 'Mon Contenu'.",
         });
-        setUsageId(response.data?.usageId);
         setProgress(0);
         return;
       }
@@ -826,42 +823,6 @@ export default function DocumentGeneratorModule({
                   {loading && <LoadingSpinner />}
                 </form.SubmitButton>
               </form.AppForm>
-
-              {usageId && (
-                <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <Label>Tâche de génération lancée avec succès !</Label>
-                  </div>
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      <p>
-                        Votre document est en cours de création. Il apparaîtra
-                        sur votre page "Mon Contenu" dans quelques instants, dès
-                        que le lien sera généré par nos systèmes.
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        ID de suivi : {usageId}
-                      </p>
-                    </AlertDescription>
-                  </Alert>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" asChild>
-                      <a href="/mon-contenu">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Aller à "Mon Contenu"
-                      </a>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setUsageId(null)}
-                    >
-                      Fermer
-                    </Button>
-                  </div>
-                </div>
-              )}
             </form>
           </TabsContent>
 
