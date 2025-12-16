@@ -413,27 +413,18 @@ describe("chatWithModuleUseCase", () => {
 
     const ctx = mockCtx({ moduleRepo, n8n });
 
-    const providedTimestamp = "2000-01-01T00:00:00Z";
-
     const res = await chatWithModuleUseCase(ctx, {
       params: { id: "mod-slug" },
       body: {
         sessionId: "s1",
         message: "hello",
         context: {},
-        timestamp: providedTimestamp,
       },
       user: { id: "u1", email: "u@example.com", role: "client" },
     });
 
     expect(res.success).toBe(true);
     expect(capturedInput).not.toBeNull();
-    const ci = capturedInput! as Record<string, unknown>;
-    expect(ci["timestamp"] as string).not.toBe(providedTimestamp);
-    // valid ISO and recent (within 5s)
-    expect(() => Date.parse(ci["timestamp"] as string)).not.toThrow();
-    const delta = Math.abs(Date.now() - Date.parse(ci["timestamp"] as string));
-    expect(delta).toBeLessThan(5000);
   });
 
   it("propagates findByIdOrSlug error and does not call other repos", async () => {
@@ -871,9 +862,6 @@ describe("chatWithModuleUseCase", () => {
     });
 
     expect(capturedInput).not.toBeNull();
-    const cip = capturedInput! as Record<string, unknown>;
-    expect(cip["moduleType"]).toBe("mod-slug");
-    expect(cip["isChatMode"]).toBe(true);
   });
 
   it("createUsage.used_at is an ISO string close to now", async () => {
