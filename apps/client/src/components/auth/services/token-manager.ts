@@ -70,6 +70,7 @@ class TokenManager {
     if (currentTime >= expirationTime - bufferTime) {
       console.warn("⚠️ Token expiré ou proche de l'expiration, refreshing...");
       // refresh token in background
+      // Broken if awaiting here
       authService.refreshSession().then((refreshResult) => {
         if (!refreshResult) return refreshResult;
         if (!refreshResult.data?.accessToken)
@@ -81,6 +82,9 @@ class TokenManager {
 
         this.sessionResult = refreshResult;
       });
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // wait for 1 second to let the refresh happen
+      if (this.sessionResult?.success) return this.sessionResult;
+      // sessionResult = this.sessionResult;
     }
     return sessionResult;
   }
