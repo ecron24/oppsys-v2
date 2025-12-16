@@ -31,7 +31,6 @@ export const ContentSchema = z.object({
   userId: UuidSchema,
   moduleId: nullableSchema(UuidSchema),
   type: ContentTypeSchema,
-  // TODO: check if I'm type: z.enum(["article", "video", "audio", "image", "data", "social-post"]),
   title: z.string(),
   url: nullableSchema(z.url()),
   filePath: StringNullableSchema,
