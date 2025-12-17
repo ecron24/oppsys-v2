@@ -69,7 +69,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     chown nextjs:nodejs .next
 
 # Copie des fichiers de production
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/apps/website/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/website/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/website/.next/static ./.next/static
 
