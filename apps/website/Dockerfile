@@ -47,6 +47,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Copie des dépendances et du code source
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
+# forcce copy
+COPY . .
 COPY apps/website/ ./
 
 # Build Next.js
@@ -69,9 +71,6 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# forcce copy
-COPY . .
 
 USER nextjs
 
