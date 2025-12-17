@@ -4,6 +4,9 @@ FROM node:18-alpine AS base
 # Installer les dépendances système nécessaires
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 # Étape des dépendances
 FROM base AS deps
@@ -12,7 +15,7 @@ FROM base AS deps
 COPY apps/website/package.json ./
 
 # 3. Installation des dépendances externes
-RUN npm install --legacy-peer-deps
+RUN pnpm i
 
 # Étape de build
 FROM base AS builder

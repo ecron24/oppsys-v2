@@ -2,6 +2,9 @@
 FROM node:22-alpine AS builder
 
 WORKDIR /app
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 # Copier les fichiers de configuration
 COPY apps/admin/package.json ./apps/admin/
