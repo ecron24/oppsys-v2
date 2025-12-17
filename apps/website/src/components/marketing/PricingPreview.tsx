@@ -1,4 +1,5 @@
-// apps/website/src/components/marketing/PricingPreview.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -113,7 +114,7 @@ export function PricingPreview() {
             setPlans(previewPlans);
           }
         }
-      } catch (error) {
+      } catch {
         console.log("Utilisation des plans par défaut (erreur API)");
       } finally {
         setLoading(false);
@@ -141,7 +142,7 @@ export function PricingPreview() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {plans.map((plan, index) => (
+            {plans.map((plan) => (
               <div
                 key={plan.id}
                 className={`bg-white rounded-2xl shadow-sm border-2 transition-all duration-300 hover:shadow-lg ${

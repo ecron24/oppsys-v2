@@ -1,4 +1,5 @@
-// apps/website/src/app/auth/login/page.tsx - CORRECTION FINALE
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect } from "react"; // ✅ Ajout ici
@@ -117,7 +118,7 @@ export default function LoginPage() {
 
       console.log("[Magic Link] URL de redirection:", redirectUrl);
 
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           // ✅ CORRECTION : Pointer vers votre AuthCallback.jsx existant

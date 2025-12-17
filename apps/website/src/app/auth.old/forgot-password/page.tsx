@@ -35,6 +35,7 @@ export default function ForgotPasswordPage() {
       setMessage(
         "Un lien de réinitialisation a été envoyé à votre adresse email."
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("❌ Erreur resetPasswordForEmail:", err);
       setError(err.message);

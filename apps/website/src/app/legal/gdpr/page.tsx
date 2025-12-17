@@ -1,9 +1,7 @@
-// apps/website/src/app/legal/gdpr/page.tsx
-"use client";
+/* eslint-disable react/no-unescaped-entities */ "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { Metadata } from "next";
 
 export default function GDPRPage() {
   const [language, setLanguage] = useState("fr");

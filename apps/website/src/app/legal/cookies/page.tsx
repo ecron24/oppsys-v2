@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Metadata } from "next";
 
 export default function CookiesPage() {
   const [language, setLanguage] = useState("fr");

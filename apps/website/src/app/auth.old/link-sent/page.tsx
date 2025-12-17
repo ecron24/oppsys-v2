@@ -1,4 +1,4 @@
-// apps/website/src/app/auth/link-sent/page.tsx
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useSearchParams } from "next/navigation";

@@ -1,52 +1,17 @@
-// apps/website/next.config.js
+import type { NextConfig } from "next";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-
-  // 🚨 CORRECTION: output standalone pour Docker
+const nextConfig: NextConfig = {
   output: "standalone",
-
-  // ✅ AJOUT: Configuration pour résoudre les modules monorepo
-  experimental: {
-    esmExternals: "loose",
-    // typedRoutes: true, // Désactivé pour éviter les erreurs de build
-  },
-
-  // ✅ NOUVEAU: Transpile les packages du monorepo
-  transpilePackages: [],
-
-  // ✅ NOUVEAU: Configuration webpack pour résoudre les aliases
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    };
-
-    return config;
-  },
-
-  env: {
-    NEXT_PUBLIC_APP_URL:
-      process.env.NEXT_PUBLIC_APP_URL || "https://app.oppsys.io",
-    NEXT_PUBLIC_ADMIN_URL:
-      process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.oppsys.io",
-    NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || "https://api.oppsys.io",
-  },
-
-  images: {
-    domains: [
-      "oppsys.io",
-      "app.oppsys.io",
-      "admin.oppsys.io",
-      "api.oppsys.io",
-      "n8n.oppsys.io",
-    ],
-    formats: ["image/webp", "image/avif"],
-  },
-
-  // Optimisation pour la production
+  // images: {
+  //   domains: [
+  //     "oppsys.io",
+  //     "app.oppsys.io",
+  //     "admin.oppsys.io",
+  //     "api.oppsys.io",
+  //     "n8n.oppsys.io",
+  //   ],
+  //   formats: ["image/webp", "image/avif"],
+  // },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
@@ -102,4 +67,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

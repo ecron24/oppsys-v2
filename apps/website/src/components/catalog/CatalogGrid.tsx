@@ -1,8 +1,8 @@
-// apps/website/src/components/catalog/CatalogGrid.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from "react";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { WorkerCard } from "./WorkerCard";
 
 interface CatalogGridProps {

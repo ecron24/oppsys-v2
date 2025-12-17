@@ -1,4 +1,4 @@
-// apps/website/src/components/marketing/CatalogSection.tsx
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState } from "react";

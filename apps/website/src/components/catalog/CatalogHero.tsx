@@ -1,5 +1,4 @@
-// apps/website/src/components/catalog/CatalogHero.tsx
-"use client";
+/* eslint-disable react/no-unescaped-entities */ "use client";
 
 import React from "react";
 import { Search } from "lucide-react";

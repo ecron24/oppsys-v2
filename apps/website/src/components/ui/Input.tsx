@@ -1,10 +1,10 @@
 // apps/website/src/components/ui/Input.tsx
-import { forwardRef } from "react";
+import { ComponentProps, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+type InputProps = ComponentProps<"input"> & {
   error?: string;
-}
+};
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, type = "text", error, ...props }, ref) => {

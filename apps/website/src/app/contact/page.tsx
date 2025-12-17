@@ -1,13 +1,13 @@
-// apps/website/src/app/contact/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function ContactPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const planType = searchParams.get("plan") || "";
   const lookupKey = searchParams.get("lookup_key") || "";

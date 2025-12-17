@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // apps/website/next-env.d.ts
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />

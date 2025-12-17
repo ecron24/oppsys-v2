@@ -1,9 +1,7 @@
-// apps/website/src/app/legal/privacy/page.tsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { Metadata } from "next";
 
 export default function PrivacyPolicyPage() {
   const [language, setLanguage] = useState("fr");

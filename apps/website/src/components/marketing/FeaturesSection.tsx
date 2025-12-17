@@ -1,4 +1,4 @@
-// apps/website/src/components/marketing/FeaturesSection.tsx
+/* eslint-disable react/no-unescaped-entities */
 import Link from "next/link";
 import { PenTool, Share2, Mic, FileText, ArrowRight } from "lucide-react";
 

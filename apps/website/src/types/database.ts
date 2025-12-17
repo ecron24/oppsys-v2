@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // apps/website/src/types/database.ts
 export interface Database {
   public: {

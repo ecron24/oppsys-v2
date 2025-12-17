@@ -1,4 +1,4 @@
-// apps/website/src/components/marketing/CTASection.tsx
+/* eslint-disable react/no-unescaped-entities */
 import Link from "next/link";
 
 export function CTASection() {

@@ -1,12 +1,12 @@
 // apps/website/src/components/ui/Button.tsx
-import { forwardRef } from "react";
+import { ComponentProps, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonProps = ComponentProps<"button"> & {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
-}
+};
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (

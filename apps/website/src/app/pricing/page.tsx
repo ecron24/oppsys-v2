@@ -1,8 +1,8 @@
-// apps/website/src/app/pricing/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { CheckCircle, XCircle, Mail, Phone } from "lucide-react";
 
 // ✅ TYPES SIMPLIFIÉS
@@ -45,7 +45,6 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
     const fetchPlans = async () => {

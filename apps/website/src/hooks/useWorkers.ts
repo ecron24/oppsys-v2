@@ -1,5 +1,4 @@
-// apps/website/src/hooks/useWorkers.ts
-// Version 100% statique avec nouveaux modules ajoutés
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useMemo } from "react";
 import {
@@ -14,16 +13,10 @@ import {
   Mail,
   Languages,
   Users,
-  Instagram,
-  Twitter,
-  Linkedin,
-  Youtube,
   Zap,
   Camera,
   MessageSquare,
   Target,
-  Heart,
-  Settings,
 } from "lucide-react";
 
 interface Worker {

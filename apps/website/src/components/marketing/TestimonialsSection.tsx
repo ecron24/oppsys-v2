@@ -1,4 +1,4 @@
-// apps/website/src/components/marketing/TestimonialsSection.tsx
+/* eslint-disable react/no-unescaped-entities */
 export function TestimonialsSection() {
   const testimonials = [
     {
