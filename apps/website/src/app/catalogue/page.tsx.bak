@@ -1,0 +1,22 @@
+// apps/website/src/app/catalogue/page.tsx
+import { Metadata } from 'next';
+import { CatalogSection } from '../../components/marketing/CatalogSection';
+
+export const metadata: Metadata = {
+  title: 'Catalogue des Workers IA - OppSys',
+  description: 'Découvrez notre collection complète d\'outils d\'intelligence artificielle pour automatiser vos tâches : création de contenu, réseaux sociaux, transcription et bien plus.',
+  keywords: 'IA, automatisation, outils, workers, intelligence artificielle, productivité',
+  openGraph: {
+    title: 'Catalogue des Workers IA - OppSys',
+    description: 'Plus de 20 outils d\'IA pour automatiser vos tâches quotidiennes',
+    type: 'website',
+    url: 'https://oppsys.io/catalogue',
+  },
+  alternates: {
+    canonical: 'https://oppsys.io/catalogue',
+  },
+};
+
+export default function CataloguePage() {
+  return <CatalogSection />;
+}

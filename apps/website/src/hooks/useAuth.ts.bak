@@ -1,0 +1,41 @@
+// apps/website/src/hooks/useAuth.ts
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createSupabaseClient } from '@/lib/supabase'
+import type { User } from '@supabase/supabase-js'
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createSupabaseClient()
+
+  useEffect(() => {
+    // Récupérer la session initiale
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
+      setLoading(false)
+    }
+
+    getInitialSession()
+
+    // Écouter les changements d'auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  return {
+    user,
+    loading,
+    signOut: () => supabase.auth.signOut()
+  }
+}

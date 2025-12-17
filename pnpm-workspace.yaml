@@ -3,9 +3,9 @@ packages:
   - apps/*
 
 catalog:
-  "@tanstack/react-form": ^1.23.7
-  "@types/react": ^19.1.13
-  "@types/react-dom": ^19.1.9
+  '@tanstack/react-form': ^1.23.7
+  '@types/react': ^19.1.13
+  '@types/react-dom': ^19.1.9
   hono: ^4.9.9
   react: ^19.1.1
   react-dom: ^19.1.1
@@ -14,6 +14,8 @@ catalog:
   zod: 4.1.11
 
 onlyBuiltDependencies:
-  - "@swc/core"
-  - "@tailwindcss/oxide"
+  - '@swc/core'
+  - '@tailwindcss/oxide'
   - esbuild
+  - sharp
+  - unrs-resolver

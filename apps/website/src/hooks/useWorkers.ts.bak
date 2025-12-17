@@ -1,0 +1,337 @@
+// apps/website/src/hooks/useWorkers.ts
+// Version 100% statique - Plus d'appels DB ou API !
+
+import { useState, useMemo } from 'react';
+import {
+  PenTool, Share2, Mic, FileText, Globe, BarChart3,
+  Instagram, Twitter, Linkedin, Youtube, Mail, Users,
+  Zap, Brain, Camera, MessageSquare
+} from 'lucide-react';
+
+interface Worker {
+  id: string; // Gardé en string car les UUIDs sont des strings
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  icon: any;
+  color: string; // ✅ AJOUTÉ pour compatibilité avec WorkerCard
+  timeToComplete: string;
+  time_to_complete?: string;
+  rating: number;
+  difficulty: string; // ✅ AJOUTÉ pour compatibilité avec WorkerCard
+  popular: boolean;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon: any;
+  count: number;
+}
+
+interface UseWorkersResult {
+  workers: Worker[];
+  categories: Category[];
+  filteredWorkers: Worker[];
+  loading: boolean;
+  error: string | null;
+  stats: {
+    totalWorkers: number;
+    popularWorkers: number;
+    totalCategories: number;
+    averageRating: number;
+  };
+  selectedCategory: string;
+  searchQuery: string;
+  sortBy: string;
+  setSelectedCategory: (category: string) => void;
+  setSearchQuery: (query: string) => void;
+  setSortBy: (sort: string) => void;
+  resetFilters: () => void;
+}
+
+// ✅ DONNÉES STATIQUES - Workers (compatibles avec votre WorkerCard)
+const STATIC_WORKERS: Worker[] = [
+  {
+    id: '37992b12-5064-4b72-8ac8-646eaecdbcdc',
+    name: 'Social Factory',
+    description: 'Créez des posts engageants pour tous vos réseaux sociaux avec l\'IA. Optimisé pour Facebook, Instagram, LinkedIn et X (Twitter).',
+    category: 'social',
+    tags: ['réseaux sociaux', 'content marketing', 'automation', 'multi-plateformes'],
+    icon: Share2,
+    color: 'bg-blue-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '2-5 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.8,
+    popular: true
+  },
+  {
+    id: '7d89e3ac-a455-441e-95ca-f7f773c28edb',
+    name: 'Article Writer',
+    description: 'Rédigez des articles de blog optimisés SEO avec une structure professionnelle et un contenu de qualité.',
+    category: 'content',
+    tags: ['blog', 'seo', 'rédaction', 'contenu'],
+    icon: PenTool,
+    color: 'bg-green-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '5-10 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.7,
+    popular: true
+  },
+  {
+    id: '024f675e-945b-4aea-8b57-3151ed1d3cfd',
+    name: 'AI Copywriter',
+    description: 'Générez des textes marketing percutants pour vos campagnes, emails et pages de vente.',
+    category: 'marketing',
+    tags: ['copywriting', 'marketing', 'conversion', 'emails'],
+    icon: Brain,
+    color: 'bg-orange-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '2-3 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.6,
+    popular: true
+  },
+  {
+    id: '55ad81eb-375a-488e-9e08-9d064984fcd6',
+    name: 'Audio Transcription',
+    description: 'Convertissez vos fichiers audio et vidéo en texte avec une précision exceptionnelle.',
+    category: 'transcription',
+    tags: ['audio', 'transcription', 'vidéo', 'sous-titres'],
+    icon: Mic,
+    color: 'bg-purple-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '1-15 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.5,
+    popular: false
+  },
+  {
+    id: 'b54556c4-d874-4f05-9639-1d9f3879daf2',
+    name: 'Document Generator',
+    description: 'Créez des documents professionnels (PDF, DOCX, ODT) automatiquement à partir de templates.',
+    category: 'productivity',
+    tags: ['documents', 'pdf', 'templates', 'automatisation'],
+    icon: FileText,
+    color: 'bg-indigo-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '3-7 min',
+    difficulty: 'Intermédiaire', // ✅ AJOUTÉ
+    rating: 4.4,
+    popular: false
+  },
+  {
+    id: '4da058fa-08a2-4ac3-b7b4-31f269c82e91',
+    name: 'Instagram Posts',
+    description: 'Créez des posts Instagram parfaits avec votre image de marque et les tendances actuelles.',
+    category: 'social',
+    tags: ['instagram', 'posts', 'stories', 'hashtags'],
+    icon: Instagram,
+    color: 'bg-pink-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '2-4 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.8,
+    popular: true
+  },
+  {
+    id: '30a83522-2f2c-4da0-ad8e-927a8aa54d01',
+    name: 'Facebook Posts',
+    description: 'Optimisez votre présence Facebook avec des posts engageants et des CTA efficaces.',
+    category: 'social',
+    tags: ['facebook', 'engagement', 'cta', 'marketing'],
+    icon: Users,
+    color: 'bg-blue-600 text-white', // ✅ AJOUTÉ
+    timeToComplete: '2-4 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.6,
+    popular: false
+  },
+  {
+    id: '3b45922f-9df9-40b9-a347-248115ca4a2f',
+    name: 'LinkedIn Posts',
+    description: 'Créez du contenu professionnel pour LinkedIn qui génère de l\'engagement B2B.',
+    category: 'social',
+    tags: ['linkedin', 'b2b', 'professionnel', 'networking'],
+    icon: Linkedin,
+    color: 'bg-blue-700 text-white', // ✅ AJOUTÉ
+    timeToComplete: '3-5 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.7,
+    popular: true
+  },
+  {
+    id: 'a7fd954c-ff58-450c-a14e-27ec6d2b9b8d',
+    name: 'X Posts (Twitter)',
+    description: 'Créez des tweets viraux et engageants adaptés aux tendances du moment.',
+    category: 'social',
+    tags: ['twitter', 'x', 'viral', 'trending'],
+    icon: Twitter,
+    color: 'bg-gray-900 text-white', // ✅ AJOUTÉ
+    timeToComplete: '1-3 min',
+    difficulty: 'Facile', // ✅ AJOUTÉ
+    rating: 4.5,
+    popular: false
+  },
+  {
+    id: 'email-marketing-tool',
+    name: 'Email Marketing IA',
+    description: 'Créez des campagnes email personnalisées et optimisées pour la conversion.',
+    category: 'marketing',
+    tags: ['email', 'marketing', 'campagnes', 'personnalisation'],
+    icon: Mail,
+    color: 'bg-red-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '5-8 min',
+    difficulty: 'Intermédiaire', // ✅ AJOUTÉ
+    rating: 4.3,
+    popular: false
+  },
+  {
+    id: 'video-editor-ai',
+    name: 'Video Editor IA',
+    description: 'Éditez vos vidéos automatiquement avec l\'intelligence artificielle.',
+    category: 'content',
+    tags: ['vidéo', 'édition', 'montage', 'automatique'],
+    icon: Camera,
+    color: 'bg-yellow-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '10-30 min',
+    difficulty: 'Avancé', // ✅ AJOUTÉ
+    rating: 4.2,
+    popular: false
+  },
+  {
+    id: 'chatbot-builder',
+    name: 'Chatbot Builder',
+    description: 'Créez des chatbots intelligents pour votre site web et vos réseaux sociaux.',
+    category: 'productivity',
+    tags: ['chatbot', 'intelligence artificielle', 'support', 'automatisation'],
+    icon: MessageSquare,
+    color: 'bg-teal-500 text-white', // ✅ AJOUTÉ
+    timeToComplete: '15-30 min',
+    difficulty: 'Intermédiaire', // ✅ AJOUTÉ
+    rating: 4.1,
+    popular: false
+  }
+];
+
+// ✅ DONNÉES STATIQUES - Catégories
+const STATIC_CATEGORIES: Category[] = [
+  {
+    id: 'all',
+    name: 'Tous les outils',
+    icon: Globe,
+    count: STATIC_WORKERS.length
+  },
+  {
+    id: 'social',
+    name: 'Réseaux sociaux',
+    icon: Share2,
+    count: STATIC_WORKERS.filter(w => w.category === 'social').length
+  },
+  {
+    id: 'content',
+    name: 'Création de contenu',
+    icon: PenTool,
+    count: STATIC_WORKERS.filter(w => w.category === 'content').length
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    icon: BarChart3,
+    count: STATIC_WORKERS.filter(w => w.category === 'marketing').length
+  },
+  {
+    id: 'transcription',
+    name: 'Transcription',
+    icon: Mic,
+    count: STATIC_WORKERS.filter(w => w.category === 'transcription').length
+  },
+  {
+    id: 'productivity',
+    name: 'Productivité',
+    icon: Zap,
+    count: STATIC_WORKERS.filter(w => w.category === 'productivity').length
+  }
+];
+
+export function useWorkers(): UseWorkersResult {
+  // ✅ SIMPLIFICATION : Plus de states de chargement !
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("popular");
+
+  // ✅ SUPPRIMÉ : Tous les useEffect, pas besoin de charger quoi que ce soit !
+
+  // ✅ FILTRAGE ET TRI - Version simplifiée
+  const filteredWorkers = useMemo(() => {
+    let filtered = STATIC_WORKERS;
+
+    // Filtrage par catégorie
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((worker: Worker) => worker.category === selectedCategory);
+    }
+
+    // Filtrage par recherche
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((worker: Worker) =>
+        worker.name.toLowerCase().includes(query) ||
+        worker.description.toLowerCase().includes(query) ||
+        worker.tags.some((tag: string) => tag.toLowerCase().includes(query))
+      );
+    }
+
+    // Tri
+    filtered.sort((a: Worker, b: Worker) => {
+      switch (sortBy) {
+        case "popular":
+          // D'abord par popularité, puis par rating
+          if (a.popular && !b.popular) return -1;
+          if (!a.popular && b.popular) return 1;
+          return b.rating - a.rating;
+        case "rating":
+          return b.rating - a.rating;
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "time":
+          // Extraire le premier nombre du temps
+          const aTime = parseInt(a.timeToComplete.match(/\d+/)?.[0] || '0');
+          const bTime = parseInt(b.timeToComplete.match(/\d+/)?.[0] || '0');
+          return aTime - bTime;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [selectedCategory, searchQuery, sortBy]);
+
+  // ✅ CALCUL DES STATISTIQUES - Version simplifiée
+  const stats = useMemo(() => {
+    return {
+      totalWorkers: STATIC_WORKERS.length,
+      popularWorkers: STATIC_WORKERS.filter(w => w.popular).length,
+      totalCategories: STATIC_CATEGORIES.filter(c => c.id !== 'all').length,
+      averageRating: STATIC_WORKERS.reduce((sum, w) => sum + w.rating, 0) / STATIC_WORKERS.length
+    };
+  }, []);
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+    setSortBy("popular");
+  };
+
+  return {
+    workers: STATIC_WORKERS,
+    categories: STATIC_CATEGORIES,
+    filteredWorkers,
+    loading: false, // ✅ Toujours false car pas de chargement
+    error: null,    // ✅ Toujours null car pas d'erreur possible
+    stats,
+    selectedCategory,
+    searchQuery,
+    sortBy,
+    setSelectedCategory,
+    setSearchQuery,
+    setSortBy,
+    resetFilters
+  };
+}
