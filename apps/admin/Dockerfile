@@ -4,7 +4,6 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copier les fichiers de configuration
-COPY package.json package-lock.json ./
 COPY apps/admin/package.json ./apps/admin/
 
 # Installer les dépendances
