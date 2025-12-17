@@ -10,21 +10,38 @@ import {
 import { unwrap } from "@oppsys/shared";
 // import { mockContents } from "./mock-data";
 
-export const useContentState = (user: User | null) => {
+export const useContentState = (
+  user: User | null,
+  page = 1,
+  limit = 12,
+  selectedType: string | undefined = undefined
+) => {
+  const queryKey = queryKeys.content.paginated({
+    userId: user?.id,
+    page,
+    limit,
+    type: selectedType,
+  });
+
   const {
-    data: contents = [],
+    data: paginated,
     isLoading,
     error,
     refetch,
-  } = useQuery<Content[]>({
-    queryKey: queryKeys.content.userId(user?.id),
+  } = useQuery({
+    queryKey,
     enabled: !!user?.id,
     queryFn: async () => {
-      const response = await contentService.getUserContent({ limit: "1000" });
-      if (response.success) return response.data.data;
-      throw new Error(response.error);
+      const response = await contentService.getUserContent({
+        limit: String(limit),
+        page: String(page),
+        type: selectedType,
+      });
+      return unwrap(response);
     },
   });
+
+  const contents = paginated?.data || [];
 
   const updateContentMutation = useMutation({
     mutationFn: async ({
@@ -34,19 +51,27 @@ export const useContentState = (user: User | null) => {
       contentId: string;
       updates: Partial<Content>;
     }) => {
-      queryClient.setQueryData<Content[]>(["userContents", user?.id], (old) =>
-        old
-          ? old.map((c) => (c.id === contentId ? { ...c, ...updates } : c))
-          : []
-      );
+      queryClient.setQueryData<typeof paginated>(queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.map((c) =>
+            c.id === contentId ? { ...c, ...updates } : c
+          ),
+        };
+      });
     },
   });
 
   const removeContentMutation = useMutation({
     mutationFn: async (contentId: string) => {
-      queryClient.setQueryData<Content[]>(["userContents", user?.id], (old) =>
-        old ? old.filter((c) => c.id !== contentId) : []
-      );
+      queryClient.setQueryData<typeof paginated>(queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.filter((c) => c.id !== contentId),
+        };
+      });
     },
   });
 
@@ -117,7 +142,7 @@ export const useContentState = (user: User | null) => {
       }
 
       await contentService.deleteContent({ content, user });
-      deleteContentMutation.mutate({ content, user });
+      removeContentMutation.mutate(content.id);
       toast.success("Article refusé et supprimé.");
       return data;
     },
@@ -135,6 +160,7 @@ export const useContentState = (user: User | null) => {
 
   return {
     contents,
+    pagination: paginated?.pagination,
     loading: isLoading,
     error: error instanceof Error ? error.message : null,
     refetch,

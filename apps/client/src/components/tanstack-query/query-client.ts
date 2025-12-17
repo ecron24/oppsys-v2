@@ -34,5 +34,17 @@ export const queryKeys = {
   },
   content: {
     userId: (userId?: string) => ["contents", userId],
+    paginated: (opts: {
+      userId?: string;
+      page: number;
+      limit: number;
+      type?: string;
+    }) => [
+      "contents",
+      opts.userId,
+      opts.page.toString(),
+      opts.limit.toString(),
+      opts.type,
+    ],
   },
 };
