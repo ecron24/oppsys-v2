@@ -34,9 +34,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = authService.onAuthStateChange(async (_, session) => {
+    } = authService.onAuthStateChange(async (event, session) => {
+      console.log("onAuthStateChange", "event", event, "session", session);
+
+      if (event === "TOKEN_REFRESHED") return;
       if (session?.user) {
-        await queryClient.invalidateQueries({
+        queryClient.invalidateQueries({
           queryKey: queryKeys.auth.user,
         });
         return;
