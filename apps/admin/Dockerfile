@@ -1,26 +1,18 @@
-# Build simple sans TailwindCSS
-FROM node:22-alpine AS builder
-
+FROM node:22-alpine AS base
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-# Copier les fichiers de configuration
-COPY apps/admin/package.json ./apps/admin/
-
-# forcce copy
+FROM base AS builder
+RUN apk update
+RUN apk add --no-cache libc6-compat
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm add -g turbo
+WORKDIR /app
 COPY . .
-
-
-# Installer les dépendances
-RUN pnpm i
-
-# Copier le code source
-COPY apps/admin/ ./apps/admin/
-
-# Build
-WORKDIR /app/apps/admin
+RUN turbo prune @oppsys/admin --docker
+ 
+FROM base AS build
 
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
@@ -34,26 +26,14 @@ ENV VITE_ADMIN_EMAIL=$VITE_ADMIN_EMAIL
 ENV VITE_ADMIN_API_URL=$VITE_ADMIN_API_URL
 ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
 
-RUN npm run build
+WORKDIR /app
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/full/ .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm turbo run build --filter=@oppsys/admin
 
-# Stage production
-FROM nginx:alpine
-
-COPY --from=builder /app/apps/admin/dist /usr/share/nginx/html
-
-RUN echo 'server { \
-    listen 80; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html; \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location /health { \
-        access_log off; \
-        return 200 "healthy\n"; \
-        add_header Content-Type text/plain; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
-
+FROM nginx:1.29.2-alpine AS prod
+COPY apps/admin/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/admin/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

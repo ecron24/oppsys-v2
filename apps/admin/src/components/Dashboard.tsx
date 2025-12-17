@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { supabase, signOut } from "../lib/supabase";
@@ -10,7 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-export default function Dashboard({ user, onLogout }) {
+export default function Dashboard({ user, onLogout }: any) {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,

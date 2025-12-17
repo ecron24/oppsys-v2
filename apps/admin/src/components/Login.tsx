@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/Login.jsx
-import { useState } from "react";
+import React, { useState } from "react";
 import { signIn } from "../lib/supabase";
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin }: any) {
   const [email, setEmail] = useState(
     import.meta.env.VITE_ADMIN_EMAIL || "admin@oppsys.io"
   );
@@ -10,7 +11,7 @@ export default function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -20,7 +21,7 @@ export default function Login({ onLogin }) {
     if (result.success) {
       onLogin(result.user);
     } else {
-      setError(result.error);
+      setError(result.error || "");
     }
 
     setLoading(false);

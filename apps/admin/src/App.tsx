@@ -3,14 +3,11 @@ import { useState, useEffect } from "react";
 import { checkAdminAccess } from "./lib/supabase";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
+import type { User } from "@supabase/supabase-js";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   const checkAuth = async () => {
     const { isAdmin, user: currentUser } = await checkAdminAccess();
@@ -22,13 +19,18 @@ function App() {
     setLoading(false);
   };
 
-  const handleLogin = (loggedInUser) => {
+  const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
   };
 
   const handleLogout = () => {
     setUser(null);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkAuth();
+  }, []);
 
   if (loading) {
     return (

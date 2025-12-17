@@ -36,7 +36,7 @@ export const checkAdminAccess = async () => {
 };
 
 // Fonction de connexion
-export const signIn = async (email, password) => {
+export const signIn = async (email: string, password: string) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -56,7 +56,8 @@ export const signIn = async (email, password) => {
     }
 
     return { success: true, user: data.user };
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     return { success: false, error: error.message };
   }
 };
