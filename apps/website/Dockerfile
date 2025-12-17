@@ -47,6 +47,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Copie des dépendances et du code source
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
+RUN pnpm i
 # forcce copy
 COPY . .
 COPY apps/website/ ./
