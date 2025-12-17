@@ -48,9 +48,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 COPY . .
+# COPY apps/website/ ./
 RUN pnpm i
 # forcce copy
-COPY apps/website/ ./
 
 # Build Next.js
 RUN npm run build
