@@ -1,8 +1,9 @@
 import { tokenManager } from "@/components/auth/services/token-manager";
+import { env } from "@/env";
 import type { ApiRouter } from "@oppsys/api";
 import { hc } from "hono/client";
 
-export const honoClient = hc<ApiRouter>("http://localhost:4441/", {
+export const honoClient = hc<ApiRouter>(env.API_URL, {
   headers: async () => {
     const records: Record<string, string> = await tokenManager.tokenInHeader();
     return records;
