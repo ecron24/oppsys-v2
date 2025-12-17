@@ -3,7 +3,7 @@ import { env } from "@/env";
 import type { ApiRouter } from "@oppsys/api";
 import { hc } from "hono/client";
 
-export const honoClient = hc<ApiRouter>(env.API_URL, {
+export const honoClient = hc<ApiRouter>(env.VITE_API_URL, {
   headers: async () => {
     const records: Record<string, string> = await tokenManager.tokenInHeader();
     return records;
