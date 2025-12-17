@@ -9,6 +9,10 @@ RUN corepack enable
 # Copier les fichiers de configuration
 COPY apps/admin/package.json ./apps/admin/
 
+# forcce copy
+COPY . .
+
+
 # Installer les dépendances
 RUN pnpm i
 

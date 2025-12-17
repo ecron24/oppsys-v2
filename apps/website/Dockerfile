@@ -14,6 +14,9 @@ FROM base AS deps
 # 1. Copier seulement le package.json du website
 COPY apps/website/package.json ./
 
+# forcce copy
+COPY . .
+
 # 3. Installation des dépendances externes
 RUN pnpm i
 
