@@ -11,20 +11,8 @@ FROM base AS deps
 # 1. Copier seulement le package.json du website
 COPY apps/website/package.json ./
 
-# 2. Suppression temporaire des dépendances locales
-RUN sed -i '/"@oppsys\/shared-config":/d' package.json && \
-    sed -i '/"@oppsys\/shared-services":/d' package.json && \
-    sed -i '/"@oppsys\/shared-ui":/d' package.json
-
 # 3. Installation des dépendances externes
 RUN npm install --legacy-peer-deps
-
-# 4. Copie et installation des packages locaux
-COPY packages/shared-config ./packages/shared-config
-COPY packages/shared-services ./packages/shared-services
-COPY packages/shared-ui ./packages/shared-ui
-
-RUN npm install ./packages/shared-config ./packages/shared-services ./packages/shared-ui
 
 # Étape de build
 FROM base AS builder
