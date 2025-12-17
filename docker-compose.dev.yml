@@ -1,0 +1,93 @@
+services:
+  # ===== WEBSITE MARKETING (Next.js) =====
+  oppsys-website:
+    build:
+      context: .
+      dockerfile: apps/website/Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-production}
+        #  Next.js : Variables NEXT_PUBLIC_ passées au build
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      #  Next.js : Variables d'environnement pour le runtime
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_ADMIN_URL=${NEXT_PUBLIC_ADMIN_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+    restart: unless-stopped
+
+
+  # ===== FRONTEND ADMIN (React App) =====
+  oppsys-admin:
+    container_name: oppsys-v2-oppsys-admin-1
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-production}
+        #  React App : Variables REACT_APP_ passées au build
+        VITE_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        VITE_ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@oppsys.io}
+        VITE_ADMIN_API_URL: https://${API_DOMAIN:-api.oppsys.io}
+        VITE_DEMO_MODE: ${DEMO_MODE:-true}
+    environment:
+      #  Vite : Variables d'environnement pour le runtime
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - VITE_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@oppsys.io}
+      - VITE_ADMIN_API_URL=https://${API_DOMAIN:-api.oppsys.io}
+      - VITE_DEMO_MODE=${DEMO_MODE:-true}
+    restart: unless-stopped
+    depends_on:
+      - oppsys-api
+
+  # ===== BACKEND API UNIFIÉ =====
+  oppsys-api:
+    container_name: oppsys-v2-api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: ${TARGET:-prod} # change with "build" in case we want to have docker for "dev" and "prod"
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/api:/app/apps/api
+      - /app/node_modules
+    env_file:
+      - ./apps/api/.env.prod
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  # ===== FRONTEND CLIENT (React App) =====
+  oppsys-client:
+    container_name: oppsys-v2-client
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+      target: ${TARGET:-prod}
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_API_URL: ${VITE_API_URL}
+    volumes:
+      - ./apps/client:/app/apps/client
+      - /app/node_modules
+    env_file:
+      - ./apps/client/.env.prod
+    restart: unless-stopped
+

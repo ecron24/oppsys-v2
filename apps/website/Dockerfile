@@ -1,27 +1,21 @@
 # Étape de base
-FROM node:18-alpine AS base
-
-# Installer les dépendances système nécessaires
-RUN apk add --no-cache libc6-compat
+FROM node:22-alpine AS base
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-# Étape des dépendances
-FROM base AS deps
-
-# 1. Copier seulement le package.json du website
-COPY apps/website/package.json ./
-
-# forcce copy
+# Étape to prepare builder
+FROM base AS builder
+RUN apk update
+RUN apk add --no-cache libc6-compat
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm add -g turbo
+WORKDIR /app
 COPY . .
-
-# 3. Installation des dépendances externes
-RUN pnpm i
+RUN turbo prune @oppsys/website --docker
 
 # Étape de build
-FROM base AS builder
+FROM base AS build
 WORKDIR /app
 
 # Déclaration des variables d'environnement pour Next.js
@@ -44,19 +38,14 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copie des dépendances et du code source
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
-COPY . .
-# COPY apps/website/ ./
-RUN pnpm i
-# forcce copy
-
-# Build Next.js
-RUN npm run build
+WORKDIR /app
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/full/ .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm turbo run build --filter=@oppsys/website
 
 # Étape de production
-FROM base AS runner
+FROM base AS prod
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -65,13 +54,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Configuration des permissions
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
-    mkdir -p .next && \
-    chown nextjs:nodejs .next
+    mkdir -p /app/.next && \
+    chown nextjs:nodejs /app/.next
 
 # Copie des fichiers de production
-COPY --from=builder /app/apps/website/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/website/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/website/.next/static ./.next/static
+COPY --from=build /app/apps/website/public ./apps/website/public
+# .next/standalone contains /apps/websiite
+COPY --from=build --chown=nextjs:nodejs /app/apps/website/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /app/apps/website/.next/static ./apps/website/.next/static
 
 USER nextjs
 
@@ -79,4 +69,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/website/server.js"]
