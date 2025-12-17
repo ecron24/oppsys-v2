@@ -28,7 +28,6 @@ services:
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
     restart: unless-stopped
 
-
   # ===== FRONTEND ADMIN (React App) =====
   oppsys-admin:
     container_name: oppsys-v2-oppsys-admin-1
@@ -90,4 +89,3 @@ services:
     env_file:
       - ./apps/client/.env.prod
     restart: unless-stopped
-
