@@ -35,16 +35,16 @@ function buildTransports(isDev: boolean): TransportMultiOptions {
     ],
   };
 
-  if (isDev) {
-    const pinoPretty: TransportSingleOptions = {
-      target: "pino-pretty",
-      options: {
-        colorize: true,
-        ignore: "pid,hostname",
-      },
-    };
-    transports.targets = [...transports.targets, pinoPretty];
-  }
+  // if (isDev) {
+  const pinoPretty: TransportSingleOptions = {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+      ignore: "pid,hostname",
+    },
+  };
+  transports.targets = [...transports.targets, pinoPretty];
+  // }
 
   return transports;
 }

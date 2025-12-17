@@ -20,6 +20,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm turbo run build --filter=@oppsys/client
 
 FROM nginx:1.29.2-alpine AS prod
+COPY apps/client/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/client/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
