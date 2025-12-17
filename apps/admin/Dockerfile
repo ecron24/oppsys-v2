@@ -7,8 +7,7 @@ WORKDIR /app
 COPY apps/admin/package.json ./apps/admin/
 
 # Installer les dépendances
-RUN npm ci --workspaces=false --include-workspace-root
-RUN npm ci --workspace=apps/admin
+RUN pnpm i
 
 # Copier le code source
 COPY apps/admin/ ./apps/admin/
