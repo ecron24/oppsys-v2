@@ -1,3 +1,4 @@
+import { BucketSchema } from "@oppsys/supabase";
 import z from "zod";
 
 export const DocumentsRagSchema = z.object({
@@ -55,3 +56,8 @@ export const GenerateUploadUrlInputSchema = z.discriminatedUnion("bucket", [
 export type GenerateUploadUrlInput = z.infer<
   typeof GenerateUploadUrlInputSchema
 >;
+
+export const CreateSigneUrlInputSchema = z.object({
+  bucket: BucketSchema,
+  filePath: z.string().min(1),
+});

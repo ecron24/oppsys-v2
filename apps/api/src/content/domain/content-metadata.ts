@@ -1,4 +1,7 @@
-import { StringNullableSchema } from "src/common/common-schema";
+import {
+  NumberNullableSchema,
+  StringNullableSchema,
+} from "src/common/common-schema";
 import { z } from "zod";
 
 const ContactInfoSchema = z.object({
@@ -80,6 +83,15 @@ export const ContentMetadataSchema = z
     originalStatus: StringNullableSchema,
     approvedAt: StringNullableSchema,
     approvalFeedback: StringNullableSchema,
+    fileInfo: z
+      .object({
+        fileName: StringNullableSchema,
+        fileSize: NumberNullableSchema,
+        mimeType: StringNullableSchema,
+        format: StringNullableSchema,
+        path: z.string(),
+      })
+      .optional(),
   })
   // Fallback
   .catchall(z.unknown());

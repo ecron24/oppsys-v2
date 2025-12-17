@@ -49,8 +49,6 @@ export const tootltipVariants = cva("", {
       outline:
         "border bg-background fill-background dark:bg-input/30 dark:border-input",
       secondary: "bg-secondary text-secondary-foreground fill-secondary",
-      "secondary-outline":
-        "bg-secondary text-secondary-foreground fill-secondary",
       muted: "bg-muted text-muted-foreground fill-muted",
       ghost: "bg-primary text-accent-foreground fill-primary",
       link: "bg-primary text-accent-foreground fill-primary",

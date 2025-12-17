@@ -8,7 +8,6 @@ import {
   DialogFooter,
 } from "@oppsys/ui/components/dialog";
 import { TooltipButton } from "@oppsys/ui/components/tooltip-button";
-import { getCorrectModuleSlug } from "../utils/content-utils";
 import { ContentPreview } from "./content-preview";
 import { Link } from "react-router";
 import { Calendar, Edit, Share2, Trash, XCircle } from "lucide-react";
@@ -25,7 +24,7 @@ export function DialogViewContent({
   onApproveAndPublish,
   onDelete,
 }: DialogViewContentProps) {
-  const moduleSlug = getCorrectModuleSlug(content);
+  const moduleSlug = content.moduleSlug;
 
   return (
     <Dialog
@@ -46,7 +45,6 @@ export function DialogViewContent({
                 <span className="text-sm font-medium text-primary">
                   Réseau :{" "}
                   {(() => {
-                    const moduleSlug = getCorrectModuleSlug(content);
                     return moduleSlug || "Réseau inconnu";
                   })()}
                 </span>

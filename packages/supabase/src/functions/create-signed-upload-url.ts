@@ -5,6 +5,7 @@ export const BucketSchema = z.enum([
   "documents-rag",
   "talent-analyzer",
   "transcription-files",
+  "document-generator",
 ]);
 
 const inputSchema = z.object({

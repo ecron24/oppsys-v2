@@ -370,21 +370,15 @@ export default function RealEstateLeaseGenerator({
     setError(null);
     if (!validateForm()) return;
 
+    toast.warning("Cette fonctionnalité n'est pas encore implémentée.");
+    return;
+
     isSubmitting.current = true;
     setLoading(true);
     setCurrentStep("Préparation des données...");
     setProgress(20);
 
-    // ✅ UTILISER Le slug DE LA BDD
     const moduleSlug = fullModuleConfig.slug;
-
-    if (!moduleSlug) {
-      setError("Configuration du module incomplète");
-      setLoading(false);
-      isSubmitting.current = false;
-      return;
-    }
-
     const selectedCountryInfo = availableCountries.find(
       (country) => country.code === selectedCountry
     );
@@ -457,18 +451,19 @@ export default function RealEstateLeaseGenerator({
     setProgress(60);
 
     const response = await modulesService.executeModule(moduleSlug, apiPayload);
-    setLoading(false);
-    setProgress(0);
-    setCurrentStep("");
-    isSubmitting.current = false;
-    if (response.success && response.data) {
-      setProgress(100);
-      setCurrentStep("Document généré avec succès !");
-      toast.success("Document généré avec succès !");
-      return;
-    }
-    setError("Aucune réponse du serveur");
-    toast.error(`Échec: Aucune réponse du serveur`);
+    void response; // just avoir lint error
+    // setLoading(false);
+    // setProgress(0);
+    // setCurrentStep("");
+    // isSubmitting.current = false;
+    // if (response.success && response.data) {
+    //   setProgress(100);
+    //   setCurrentStep("Document généré avec succès !");
+    //   toast.success("Document généré avec succès !");
+    //   return;
+    // }
+    // setError("Aucune réponse du serveur");
+    // toast.error(`Échec: Aucune réponse du serveur`);
   };
 
   // Préparation des variables pour les templates

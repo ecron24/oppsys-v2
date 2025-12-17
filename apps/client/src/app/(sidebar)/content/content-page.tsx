@@ -8,7 +8,6 @@ import { usePremiumFeatures } from "@/hooks/use-premium-features";
 import { useAuth } from "@/components/auth/hooks/use-auth";
 import { Search, Folder, Plus, XCircle } from "lucide-react";
 import { CONTENT_TYPES } from "./utils/constants";
-import { getCorrectModuleSlug } from "./utils/content-utils";
 import { useContentState } from "./hooks/use-content-state";
 import { useRealtimeSubscription } from "./hooks/use-realtime-subscription";
 import { useScheduleContent } from "./hooks/use-schedule-content";
@@ -318,7 +317,7 @@ export default function ContentPage() {
                 handleUserDecision(selectedContent.id, false)
               }
               canSchedule={
-                getCorrectModuleSlug(selectedContent) === "social-factory" &&
+                selectedContent.moduleSlug === "social-factory" &&
                 permissions.data?.scheduling.canSchedule
               }
               onDelete={() =>
