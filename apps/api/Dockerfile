@@ -30,7 +30,7 @@ ENV NODE_ENV=prod
 # USER nodejs
 EXPOSE 4000
 ENV HOSTNAME="0.0.0.0"
-WORKDIR /app
+WORKDIR /app/apps/api
 CMD ["ls"]
 # CMD ["npx", "tsx", "dist/app.js"]
 
