@@ -26,11 +26,11 @@ ENV NODE_ENV=prod
 #     adduser -S nodejs -u 1001
 # COPY --from=build --chown=nodejs:nodejs /app /app
 # COPY --from=build --chown=nodejs:nodejs /app/apps/api/dist /app/apps/api/dist
-COPY --from=build /app/apps/api/dist /app/apps/api/dist
+# COPY --from=build /app/apps/api/dist /app/apps/api/dist
 # USER nodejs
 EXPOSE 4000
 ENV HOSTNAME="0.0.0.0"
-WORKDIR /app/apps/api
+WORKDIR /app
 CMD ["ls"]
 # CMD ["npx", "tsx", "dist/app.js"]
 
