@@ -22,6 +22,10 @@ RUN pnpm turbo run build --filter=@oppsys/api
 FROM node:22-alpine AS prod
 WORKDIR /app
 ENV NODE_ENV=prod
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
 # RUN addgroup -g 1001 -S nodejs && \
 #     adduser -S nodejs -u 1001
 # COPY --from=build --chown=nodejs:nodejs /app /app
