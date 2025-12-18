@@ -30,6 +30,7 @@ ENV NODE_ENV=prod
 # USER nodejs
 EXPOSE 4000
 ENV HOSTNAME="0.0.0.0"
+RUN pnpm turbo run build --filter=@oppsys/api
 WORKDIR /app/apps/api
 CMD ["ls"]
 # CMD ["npx", "tsx", "dist/app.js"]
