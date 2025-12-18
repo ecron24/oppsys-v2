@@ -26,9 +26,9 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 COPY --from=build --chown=nodejs:nodejs /app /app
 USER nodejs
-EXPOSE 4441
+EXPOSE 4000
 ENV HOSTNAME="0.0.0.0"
 WORKDIR /app/apps/api
-CMD ["npm", "run", "start"]
+CMD ["npx", "tsx", "dist/app.js"]
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:4441/health || exit 1
+    CMD curl -f http://localhost:4000/health || exit 1
