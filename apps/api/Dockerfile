@@ -28,13 +28,13 @@ RUN corepack enable
 
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
-COPY --from=build --chown=nodejs:nodejs /app /app
+# COPY --from=build --chown=nodejs:nodejs /app /app
 # COPY --from=build --chown=nodejs:nodejs /app/apps/api/dist /app/apps/api/dist
 # COPY --from=build /app/apps/api/dist /app/apps/api/dist
 # USER nodejs
 EXPOSE 4000
 ENV HOSTNAME="0.0.0.0"
-RUN pnpm turbo run build --filter=@oppsys/api
+# RUN pnpm turbo run build --filter=@oppsys/api
 WORKDIR /app/apps/api
 CMD ["ls"]
 # CMD ["npx", "tsx", "dist/app.js"]
