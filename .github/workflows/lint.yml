@@ -11,6 +11,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # SENSITIVE_VAR : $ {{ secrets.SECRET_NAME }} (remove the blank in $ and {{}})
+      NEXT_PUBLIC_SUPABASE_URL: just-avoiding-error
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: something
+      NEXT_PUBLIC_APP_URL: something
+      NEXT_PUBLIC_ADMIN_URL: something
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
