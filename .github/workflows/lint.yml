@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # SENSITIVE_VAR : $ {{ secrets.SECRET_NAME }} (remove the blank in $ and {{}})
-      NEXT_PUBLIC_SUPABASE_URL: just-avoiding-error
+      NEXT_PUBLIC_SUPABASE_URL: https://justavoidingerror.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: something
-      NEXT_PUBLIC_APP_URL: something
-      NEXT_PUBLIC_ADMIN_URL: something
+      NEXT_PUBLIC_APP_URL: https://justavoidingerror.com
+      NEXT_PUBLIC_ADMIN_URL: https://justavoidingerror.com
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
