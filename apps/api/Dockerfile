@@ -27,7 +27,7 @@ ENV NODE_ENV=prod
 # COPY --from=build --chown=nodejs:nodejs /app /app
 # COPY --from=build --chown=nodejs:nodejs /app/apps/api/dist /app/apps/api/dist
 COPY --from=build /app/apps/api/dist /app/apps/api/dist
-USER nodejs
+# USER nodejs
 EXPOSE 4000
 ENV HOSTNAME="0.0.0.0"
 WORKDIR /app/apps/api
