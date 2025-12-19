@@ -37,7 +37,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = authService.onAuthStateChange(async (event, session) => {
       console.log("onAuthStateChange", "event", event, "session", session);
 
-      if (event === "TOKEN_REFRESHED") return;
       if (session?.user) {
         queryClient.invalidateQueries({
           queryKey: queryKeys.auth.user,
